@@ -76,19 +76,6 @@ const VSTYLE=[{name:'Saltline canteen',body:'#6a2430',trim:'#a8404e',sign:'#ff8a
   {name:'DeepCo supply unit',body:'#1e4a4a',trim:'#2f7a74',sign:'#8af0e0',glow:'110,230,210'},
   {name:'Kestrel field stores',body:'#4a3a18',trim:'#8a6a24',sign:'#ffd070',glow:'255,200,110'},
   {name:'Hermit trader',body:'#4a4436',trim:'#8b8468',sign:'#ffd070',glow:'255,190,110'}];
-const VEND_POOL=[
-  {label:'Rounds x12',cost:2,w:3,give:()=>{player.inv.rounds+=12;return '12 rounds';}},
-  {label:'Shells x4',cost:3,w:2,give:()=>{player.inv.shells+=4;return '4 shells';}},
-  {label:'Nails x25',cost:2,w:1.5,give:()=>{player.inv.nails+=25;return '25 nails';}},
-  {label:'Bolts x3',cost:3,w:1,give:()=>{player.inv.bolts+=3;return '3 bolts';}},
-  {label:'Ration pack (+25 hp)',cost:3,w:2.5,give:()=>{player.hp=Math.min(maxHp(),player.hp+25);return 'a ration pack (+25 hp)';}},
-  {label:'Battery',cost:3,w:1.5,give:()=>{player.inv.battery++;return 'a battery';}},
-  {label:'Cloth roll',cost:2,w:1.5,give:()=>{player.inv.cloth++;return 'cloth';}},
-  {label:'Road flare',cost:2,w:1.5,give:()=>{player.inv.flare++;return 'a flare';}},
-  {label:'Stim shot',cost:4,w:1,give:()=>{player.stimT=30;sfx('stim');return 'a stim (kicks in now)';}},
-  {label:'Spare key',cost:4,w:0.8,give:()=>{player.inv.key++;return 'a key';}},
-  {label:'Mystery capsule',cost:8,w:0.5,give:()=>{const g=randomGear();gainGear(g);return GEAR[g].name.toLowerCase();}}
-];
 function mkVendor(tx,ty){const st=rnd(3),stock=[],pool=VEND_POOL.slice();
   for(let k=0;k<4&&pool.length;k++){const o=wpick(pool.map(q=>[q,q.w]));pool.splice(pool.indexOf(o),1);stock.push(Object.assign({sold:false},o));}
   stock.sort((a,b)=>a.cost-b.cost);return {tx,ty,style:st,name:VSTYLE[st].name,stock,state:'idle',kicks:0,ph:Math.random()*6,reward:'vend',hack:true};}

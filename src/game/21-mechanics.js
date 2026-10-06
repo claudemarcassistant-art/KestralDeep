@@ -2,7 +2,6 @@ function skillList(){return [...player.moveSkills.map((id,i)=>({t:'SHIFT',id,i,d
 function floatCost(){return 10*Math.max(0.3,1-0.06*(subPts('perc')+subPts('resolve')));}
 function lowGrav(){return !!(cond&&cond.lowg)&&state==='play';}
 function kbFr(){return lowGrav()?0.08:0.0005;}
-const WCRIT={bow:0.15,knives:0.25,pistol:0.10,smg:0.04,scatter:0.03,nailer:0.06,bolt:0.20,ray:0.08,flamer:0,fists:0.05,cutter:0.18,crowbar:0.08,bat:0.06,spear:0.12,whip:0.15,chainsaw:0.02,shield:0.04};
 function critChance(k){const b=WCRIT[k]!=null?WCRIT[k]:0.05;return b?Math.min(0.75,b+(S.crit||0)):0;}
 function critFx(e,d){if(player&&player.rs)player.rs.crits=(player.rs.crits||0)+1;float(e.x,e.y-10,'crit '+Math.round(d*10)/10,'#ffe070');sfx('hit');for(let k=0;k<6;k++)parts.push({x:e.x,y:e.y,vx:rr(-50,50),vy:rr(-50,50),t:0.25,m:0.25,c:'#ffe070',s:1});}
 function layWeb(cx,cy,ang,n){const px=-Math.sin(ang),py=Math.cos(ang);let made=0;for(let k=0;k<n;k++){const o=k-(n-1)/2,x=Math.floor((cx+px*o*TS)/TS),y=Math.floor((cy+py*o*TS)/TS);if(x<0||y<0||x>=MW||y>=MH||solid(x,y)||chasm[y*MW+x]||liq[y*MW+x]>=3)continue;webs[y*MW+x]=1;made++;}return made;}

@@ -89,55 +89,12 @@ function drawOil(tx,ty,amt){
   const ph=T*0.8+tx*0.7+ty*0.3,cols=['rgba(170,90,200,0.45)','rgba(80,170,190,0.45)','rgba(210,180,80,0.45)'];
   for(let k=0;k<2;k++){ctx.fillStyle=cols[(k+Math.floor(ph))%3];ctx.fillRect(Math.round(x-2+((h>>>(k*5))%5)),Math.round(y-1+((h>>>(k*5+3))%3)),2,1);}
 }
-const MODS={
-  greenhouse:{name:'greenhouse',kd:5,w:6,h:5,style:'slide',lock:0.1},
-  lockers:{name:'locker room',kd:6,w:5,h:4,style:'swing',lock:0.15},
-  bathroom:{name:'washroom',kd:7,w:3,h:3,style:'swing',lock:0},
-  medbay:{name:'medbay',kd:8,w:5,h:4,style:'slide',lock:0.3},
-  breakroom:{name:'break room',kd:9,w:5,h:4,style:'swing',lock:0.15},
-  lab:{name:'laboratory',kd:10,w:6,h:4,style:'slide',lock:0.5},
-  arcade:{name:'arcade',kd:11,w:5,h:4,style:'slide',lock:0.1},
-  cafeteria:{name:'cafeteria',kd:13,w:7,h:5,style:'slide',lock:0.1},
-  bathhouse:{name:'bathhouse',kd:14,w:6,h:5,style:'swing',lock:0.15},
-  court:{name:'sportsball court',kd:15,w:8,h:6,style:'slide',lock:0},
-  custodial:{name:'custodial closet',kd:16,w:3,h:3,style:'swing',lock:0.4}
-};
 const MODKD={};for(const k in MODS)MODKD[MODS[k].kd]=k;
-const FOOD={
-  ginsu:{name:'Ginsu bean',sat:5,lv:1,col:'#5ac8ff',desc:'A glowing blue bean. Mends every injury you carry.',buff:{}},
-  mushroom:{name:'Cave mushroom',sat:10,lv:1,col:'#c8a0a0',desc:'Poison builds 20% slower.',buff:{poisonRes:0.2}},
-  fruit:{name:'Deck fruit',sat:12,lv:1,col:'#e0a030',desc:'+5% move speed.',buff:{spd:0.05}},
-  nuts:{name:'Pale nuts',sat:15,lv:2,col:'#a07040',desc:'+10% max stamina.',buff:{stamina:0.1}},
-  ration:{name:'Ration bar',sat:20,lv:1,col:'#c8a060',desc:'+15% max stamina.',buff:{stamina:0.15}},
-  beans:{name:'Tinned beans',sat:30,lv:2,col:'#b86a3a',desc:'+8% move speed.',buff:{spd:0.08}},
-  paste:{name:'Protein paste',sat:25,lv:2,col:'#d8d0b0',desc:'Shoves hit 1 harder.',buff:{meleeDmg:1}},
-  coffee:{name:'Coffee pouch',sat:10,lv:1,col:'#6a4a2a',desc:'Snappier acceleration.',buff:{accel:0.3}},
-  greens:{name:'Hydroponic greens',sat:15,lv:2,col:'#6ab04a',desc:'Poison builds 30% slower.',buff:{poisonRes:0.3}},
-  candy:{name:'Candy brick',sat:10,lv:1,col:'#e06a9a',desc:'Fire 6% faster.',buff:{rof:0.06}},
-  water:{name:'Water',sat:4,lv:1,col:'#6fb3c3',desc:'Stamina recovers a little faster.',buff:{stamina:0.05}},
-  meat:{name:'Mystery meat',sat:35,lv:2,col:'#a0404a',desc:'Takes 6% off every hit. Best not to ask.',buff:{dr:0.06}},
-  flatbread:{name:'Flatbread',sat:18,lv:1,col:'#d8b878',desc:'+10% max stamina.',buff:{stamina:0.1}},
-  stew:{name:'Tuber stew',sat:30,lv:2,col:'#a8804a',desc:'+20% max stamina.',buff:{stamina:0.2}},
-  skewer:{name:'Grub skewer',sat:20,lv:1,col:'#c0a068',desc:'Shoves hit 1 harder.',buff:{meleeDmg:1}},
-  jam:{name:'Stingberry jam',sat:15,lv:2,col:'#c04a7a',desc:'Fire 8% faster.',buff:{rof:0.08}},
-  broth:{name:'Freezer broth',sat:25,lv:2,col:'#c8b090',desc:'Takes 5% off every hit.',buff:{dr:0.05}},
-  fishcake:{name:'Brine fishcake',sat:25,lv:2,col:'#a0b0a0',desc:'+8% move speed.',buff:{spd:0.08}},
-  sporefry:{name:'Spore fry',sat:15,lv:1,col:'#b0907a',desc:'Much snappier acceleration.',buff:{accel:0.35}}
-};
 function foodNeed(){return 60+35*(player.foodLv||0);}
 function gainFoodXp(a){const P=player;if(!a)return;P.foodXp=(P.foodXp||0)+a;
   while(P.foodXp>=foodNeed()){P.foodXp-=foodNeed();P.foodLv=(P.foodLv||0)+1;const heal=15+5*P.foodLv,g=5*P.foodLv;P.hp=Math.min(maxHp(),P.hp+heal);P.ghost=(P.ghost||0)+g;
     sfx('hackwin');float(P.x,P.y-12,'food level '+P.foodLv,'#e8c070');say('you feel stronger for eating well. food level '+P.foodLv+': +'+heal+' health, +'+g+' ghost health');
     for(let k=0;k<14;k++){const an=k/14*6.283;parts.push({x:P.x,y:P.y,vx:Math.cos(an)*50,vy:Math.sin(an)*50,t:0.5,m:0.5,c:k%2?'#e8c070':'#dfe8ff',s:1});}}}
-const RAW={glowcap:{name:'Glowcap fungus',col:'#5ac8ff',where:'overgrown decks, very rarely'},flour:{name:'Ration flour',col:'#e8e0c8',where:'lockers, break rooms, freezers'},syrup:{name:'Sweet syrup',col:'#d88a3a',where:'vending stock, break rooms'},
-  tuber:{name:'Pale tuber',col:'#c8b89a',where:'overgrown decks'},spores:{name:'Cave spores',col:'#b0a0c0',where:'overgrown decks. puff poison when picked'},
-  berries:{name:'Stingberries',col:'#c02a5a',where:'overgrown decks, next to stingblooms'},grubs:{name:'Wall grubs',col:'#d8c890',where:'overgrown decks, slugs'},
-  fillet:{name:'Brine fillet',col:'#9ab0b8',where:'snakes, lurkers and graspers'},frozen:{name:'Frozen stock',col:'#b8d8e8',where:'freezers, mostly in the Cold Store'}};
-const COOK=[
-  {out:'ginsu',need:{glowcap:2}},
-  {out:'flatbread',need:{flour:1},water:1},{out:'stew',need:{tuber:2},water:1},{out:'skewer',need:{grubs:2}},{out:'jam',need:{berries:2,syrup:1}},
-  {out:'broth',need:{frozen:1},water:1},{out:'fishcake',need:{fillet:1,flour:1}},{out:'sporefry',need:{spores:2}},
-  {out:'ration',need:{flour:1,syrup:1}},{out:'candy',need:{syrup:2}},{out:'paste',need:{grubs:1,fillet:1}}];
 const randRaw=()=>wpick([['flour',3],['syrup',2],['grubs',1]]);
 function cookOk(c){const P=player;return Object.keys(c.need).every(k=>(P.raw[k]||0)>=c.need[k])&&(!c.water||P.flask.has&&P.flask.kind==='water'&&P.flask.n>=c.water);}
 function cook(c){const P=player;if(cookOk(c))P.rs.cooked=(P.rs.cooked||0)+1;if(!cookOk(c)){say(c.water&&!(P.flask.kind==='water'&&P.flask.n>=c.water)?'you need a swig of water in your flask':'missing ingredients');sfx('deny');return;}
@@ -403,7 +360,6 @@ function fillHidden(r,type){
     levers.push({tx:r.x,ty:r.y+r.h-1,effect:'release',cage:c,used:false});addItem(r,pickItem());}
   else{r.type='control';levers.push({tx:r.cx,ty:r.cy,effect:wpick([['flood',3],['anomaly',depth>=2?2:1],['timer',2],['horde',2]]),reward:wpick([['doors',1],['loot',2],['map',1]]),used:false});addItem(r,pickItem());}
 }
-const HIDDEN_TYPES=[['stash',3],['secops',2],['merchant',1.5],['control',2]];
 function topWallTiles(m){const out=[];const y=m.y-1;for(let x=m.x;x<m.x+m.w;x++){const i=y*MW+x;if(map[i]===1&&map[i-1]!==0&&map[i+1]!==0&&!(x===m.ex&&y===m.ey))out.push(x);}return out;}
 function fillModule(m){
   const tw=topWallTiles(m),put=(t,e)=>addItem(m,t,e);

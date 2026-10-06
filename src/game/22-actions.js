@@ -1,6 +1,5 @@
 // ---------- actions ----------
 let flames=[];
-const MAGS={pistol:[10,1.1],smg:[30,1.7],scatter:[4,2.2],nailer:[40,1.8],bolt:[1,1.4],ray:[8,1.6],flamer:[60,2.4]};
 function magCap(w){return MAGS[w]?MAGS[w][0]:0;}
 function curGun(){const P=player,st=P.arms[P.armSet];return st&&st.off&&ARM[st.off].gun?st.off:null;}
 function magLeft(w){const P=player;if(!P.mag)P.mag={};if(P.mag[w]==null)P.mag[w]=0;return P.mag[w];}
@@ -99,7 +98,6 @@ function sawMelee(){const p=player;p.sawN=(p.sawN||0)+1;
   if(p.sawN%12===1)say('the chainsaw coughs. it needs power cells');return {dmg:2,cd:0.55,range:14,arc:0.7,kb:120};}
 function inLash(p,x,y,r,m){const ca=Math.cos(p.ang),sa=Math.sin(p.ang),rx=x-p.x,ry=y-p.y,t=rx*ca+ry*sa;if(t<4||t>m.range+2)return false;return Math.abs(rx*sa-ry*ca)<r+1.5;}
 function inJab(p,x,y,r,m){const ca=Math.cos(p.ang),sa=Math.sin(p.ang),ox=p.x-sa*3,oy=p.y+ca*3,rx=x-ox,ry=y-oy,t=rx*ca+ry*sa;if(t<2||t>m.range+2)return false;return Math.abs(rx*sa-ry*ca)<r+3;}
-const CHARGE=['bat','whip','spear','bow'];
 function fireBow(c,perfect){const p=player,w=WPN.bow;if(p.liq===4){say('you cannot draw a bow while swimming');return;}if(p.inv.bolts<=0){sfx('deny');say('out of bolts');p.mcd=0.3;return;}p.inv.bolts--;breakCloak();
   const mult=(1+1.5*c)*(perfect?1.4:1),sp=w.speed*(0.8+0.6*c),a=p.ang+rr(-w.spread,w.spread)*(1-c*0.8);
   bullets.push({x:p.x,y:p.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:0.9,dmg:w.dmg*mult*(1+0.08*U('pen')),cc:critChance('bow')+(perfect?0.25:0),p:true,kb:w.kb*(1+0.5*c),pierce:perfect,kind:'bow',hits:perfect?new Set():null});
@@ -113,7 +111,6 @@ function releaseCharge(k){const p=player,c=Math.min(1,p.chg),full=p.chg>=1,perfe
   primaryAttack(m);p.mcd=base.cd*(1+0.4*c)*(p.whiff?2:comboCd());p.mcdMax=p.mcd;shake=Math.max(shake,2+3*c);
   if(perfect){float(p.x,p.y-12,'perfect','#fff0a0');sfx('crunch_'+(k==='spear'||k==='whip'?k:'bat'));for(let q=0;q<12;q++){const a=p.ang+rr(-0.5,0.5);parts.push({x:p.x+Math.cos(p.ang)*10,y:p.y+Math.sin(p.ang)*10,vx:Math.cos(a)*rr(60,140),vy:Math.sin(a)*rr(60,140),t:0.3,m:0.3,c:'#fff0a0',s:1});}}
   else if(full)sfx('thud');}
-const COMBO_T=[[15,'frenzy','#ff7a5a'],[10,'momentum','#ffb050'],[5,'flow','#e8dcb0']];
 function comboTier(){const c=player.combo||0;for(let i=0;i<COMBO_T.length;i++)if(c>=COMBO_T[i][0])return 3-i;return 0;}
 function comboDmg(){return [1,1,1.2,1.35][comboTier()];}
 function comboCd(){return [1,0.85,0.85,0.7][comboTier()];}

@@ -14,11 +14,6 @@ function initPlayer(){
 let META={maxSector:0,ach:{},hunters:0,seen:{},setup:{start:0,mods:[]}};try{Object.assign(META,JSON.parse(localStorage.getItem('kd_meta')||'{}'));}catch(e){}
 function saveMeta(){try{localStorage.setItem('kd_meta',JSON.stringify(META));}catch(e){}}
 let runMods={};
-const MODS_RUN=[{id:'glass',name:'Glass cannon',desc:'Half max health, but everything you do hits 40% harder.',unlock:'Earn the Sharpshooter achievement.',ok:()=>META.ach.crits},
-  {id:'dark',name:'Lights out',desc:'Every deck is dark.',unlock:'Earn the Ghost of the deck achievement.',ok:()=>META.ach.quiet},
-  {id:'hunted',name:'Hunted',desc:'A hunter stalks you from the very first sector.',unlock:'Kill a sector hunter.',ok:()=>META.hunters>0},
-  {id:'lean',name:'Lean times',desc:'Far fewer supplies lying around.',unlock:'Earn the Deep diver achievement.',ok:()=>META.ach.deep},
-  {id:'swarm',name:'Swarming',desc:'Each deck holds about a third more creatures.',unlock:'Earn the Exterminator achievement.',ok:()=>META.ach.exterm}];
 function scoreMul(){return 1+0.25*Object.keys(runMods).filter(k=>runMods[k]).length;}
 function newGame(){arcadeMode=false;testMode=false;testDeck=false;biomeOverride=null;cond={light:'normal',haz:null};hazOff=false;clearSave();
   runMods={};for(const id of META.setup.mods||[]){const m=MODS_RUN.find(q=>q.id===id);if(m&&m.ok())runMods[id]=true;}

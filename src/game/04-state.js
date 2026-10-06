@@ -1,8 +1,6 @@
 // ---------- state ----------
 let vendors=[],vendUI=null,ventRooms=[],hatchRooms=[],hatches=[],levers=[],cages=[],openVent=new Uint8Array(64*64),levelTimer=0,purgeGas=false;
 let lvl=null,runScore=0,report=null,bestScore=0;try{bestScore=+(localStorage.getItem('kd_best')||0);}catch(e){}
-const KILLPTS={wasp:25,warden:600,guard:120,pod:60,trip:70,spider:70,frog:70,husk:50,crawler:40,spitter:70,brute:150,snake:60,arcsnake:90,charger:120,drone:50,slug:60,toxslug:70,snail:90,lurker:110,grasper:130,ghost:100,snare:80,dummy:0};
-const GRADES=[['S',0.8,'#ffd070'],['A',0.6,'#9fe0b0'],['B',0.4,'#8fc3d9'],['C',0.2,'#c9cfc2'],['D',0,'#b8665a']];
 function startLevelScore(){
   if(lvl&&player&&player.rs)for(const k of LVLSTAT)player.rs[k]=(player.rs[k]||0)+(lvl[k]||0);
   lvl={t:0,killPts:0,kills:0,ambush:0,hacks:0,items:0,finds:0,chests:0,rare:0,doors:0,secrets:0,dmg:0,par:60+rooms.length*8};
@@ -53,8 +51,6 @@ function drawReport(){
     if(Math.sin(T*4)>-0.3)txt('Enter or click to ride on',px+pw/2,py+ph-12,'#e8dcb0','center');}
 }
 let powerOff=false,powerPrev=null,cond={light:'normal',haz:null},hazOff=false,hz=new Uint8Array(64*64),fires=[],vents=[],anoms=[],panels=[],hackUI=null,glows=[];
-const COND_LIGHT={normal:'',lit:'floodlit',dark:'blackout'};
-const COND_HAZ={molten:'molten slag',chasm:'open chasms',overgrowth:'overgrowth',sprinklers:'fire sprinklers',fog:'thick fog',steam:'steam vents and risers',fire:'active fires',toxic:'toxic spill',anomaly:'gravity anomalies',electrical:'live cabling',volatile:'fuel stores'};
 function rollCond(type){if(!['station','flooded','cache'].includes(type))return null;
   const light=wpick([['normal',70],['lit',15],['dark',15]]);
   const haz=wpick([['none',45],['fog',12],['steam',11],['fire',type==='flooded'?0:11],['toxic',11],['anomaly',depth>=3?10:3],['electrical',type==='flooded'?12:9],['volatile',9],['overgrowth',depth>=2?8:3],['sprinklers',6],['chasm',depth>=2?8:2],['molten',depth>=3?7:0]]);

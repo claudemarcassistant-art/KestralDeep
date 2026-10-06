@@ -32,20 +32,9 @@ function learnSkill(){const pool=[...Object.keys(SKILLS).filter(k=>!player.skill
   if(MOVES[id]){player.moveSkills.push(id);say('learned '+MOVES[id].name.toLowerCase()+'. put it on SHIFT in the pack (TAB)');return;}
   player.skills.push(id);if(player.skills.length===1)player.skillIdx=0;else if(player.skills.length===2&&player.skillIdx2<0)player.skillIdx2=1;
   say('learned '+SKILLS[id].name.toLowerCase()+'. press E');}
-const CORES={body:{name:'Body',col:'#e0806a',subs:['vit','might','agility'],desc:'Each level: +5 max health, +2% move speed.'},
-  spirit:{name:'Spirit',col:'#9fe0b0',subs:['resolve','wind','grit'],desc:'Each level: +5% stamina, statuses build 5% slower.'},
-  mind:{name:'Mind',col:'#9fc3ff',subs:['dex','mem','perc'],desc:'Each level: 4% tighter aim, 3% faster fire rate and skill recharge, +5 light radius.'}};
-const SUBS={vit:{name:'Vitality',core:'body',desc:'+4 max health and slow regeneration per point.'},might:{name:'Might',core:'body',desc:'Shoves hit 6% harder and knock 8% further per point.'},agility:{name:'Agility',core:'body',desc:'+2% move speed and 5% sharper acceleration per point.'},
-  resolve:{name:'Resolve',core:'spirit',desc:'Statuses build 5% slower per point.'},wind:{name:'Wind',core:'spirit',desc:'+6% stamina and 5% faster stamina recovery per point.'},grit:{name:'Grit',core:'spirit',desc:'Take 2% less damage and resist stun 5% per point.'},
-  dex:{name:'Dexterity',core:'mind',desc:'5% tighter aim and 2% faster fire rate per point.'},mem:{name:'Memory',core:'mind',desc:'Skills and actions recharge 4% faster and the hack window is 5% wider per point.'},perc:{name:'Perception',core:'mind',desc:'+6 light radius and +3% drop chance per point.'}};
-const FILESUB={ranger:['dex','perc'],deckhand:['might'],rigger:['wind'],courier:['agility'],plating:['grit'],hazmat:['resolve'],brawler:['might','agility'],security:['dex'],armorer:['dex','perc'],surveyor:['perc','mem'],night:['perc','agility'],medic:['vit','resolve'],galley:['vit','wind'],demo:['might','grit'],mover:['agility'],psion:['mem','agility'],kinetic:['might','mem']};
 function subPts(k){const P=player;if(!P||!P.files)return 0;let n=(P.subBonus&&P.subBonus[k])||0;for(const j of P.injuries||[]){const d=INJ[j.id].sub;if(d&&d[k])n+=d[k];}for(const f in FILESUB){const t=P.files[f]||0,L=FILESUB[f];for(let i=0;i<t;i++)if(L[i%L.length]===k)n++;}return n;}
 function coreLv(c){const P=player;if(!P)return 0;return Math.max(0,Math.floor(CORES[c].subs.reduce((a,k)=>a+Math.max(0,subPts(k)),0)/3))+((P.coreBonus&&P.coreBonus[c])||0);}
 function coreProg(c){return CORES[c].subs.reduce((a,k)=>a+subPts(k),0)%3;}
-const INJ={arm:{name:'Broken arm',desc:'-1 Might, -20 max health.',sub:{might:-1},hp:-20,base:6},ribs:{name:'Cracked ribs',desc:'-20% stamina, -10 max health.',stam:-0.2,hp:-10,base:5},
-  ankle:{name:'Sprained ankle',desc:'-10% movement speed.',spd:-0.1,base:4},concussion:{name:'Concussion',desc:'-1 Memory, and your shots scatter more.',sub:{mem:-1},aim:0.25,base:4},
-  burn:{name:'Third-degree burn',desc:'-8% movement speed, -5 max health.',spd:-0.08,hp:-5,base:6},nerve:{name:'Nerve damage',desc:'-1 Dexterity, guns fire 10% slower.',sub:{dex:-1},rof:-0.1,base:5},
-  blood:{name:'Poisoned blood',desc:'-10 max health, and poison builds faster.',hp:-10,poisonRes:-0.2,base:5},frost:{name:'Frostbite',desc:'-1 Agility, -5 max health.',sub:{agility:-1},hp:-5,base:5}};
 function injHp(){const P=player;let n=0;for(const j of (P&&P.injuries)||[])n+=INJ[j.id].hp||0;return n;}
 function baseMaxHp(){return 100+5*coreLv('body')+4*subPts('vit');}
 function maxHp(){return Math.max(20,Math.round((baseMaxHp()+injHp())*(runMods.glass?0.5:1)));}

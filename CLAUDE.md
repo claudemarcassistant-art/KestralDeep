@@ -8,19 +8,25 @@ Current version: **v0.78**. The game was built iteratively in claude.ai chats up
 
 - **Source lives in `src/`** and is built into **one self-contained HTML file**, `dist/index.html` (about 640 KB). No dependencies, no external assets. All art is drawn procedurally on a canvas; all sound is synthesised with the Web Audio API. The only network request is the optional Silkscreen font from Google Fonts in `src/boot.js` (the game falls back to a built-in font if it fails).
   - `src/index.html` is the page template; the build fills in `{{styles}}` (`src/styles.css`), `{{boot}}` (`src/boot.js`: font loader and the red error overlay) and `{{game}}`.
-  - `src/game/NN-name.js` are 29 game files, split by system. `README.md` lists what each one holds.
+  - `src/data/*.js` are the content and tuning tables (creatures, weapons, items, recipes, food, crew files, achievements, NPCs, world, events, versions). Balance changes usually only touch these.
+  - `src/game/NN-name.js` are 29 game files, split by system. `README.md` lists what each file holds.
   - `scripts/build.mjs` is the build (plain Node 20+, no npm install needed).
 - **Play or test:** `npm run dev` serves http://localhost:5173 and rebuilds on every save (refresh the page). `npm run build` writes `dist/index.html`, which can also be opened straight from disk in Chrome or Edge.
 - **Playable link:** https://claudemarcassistant-art.github.io/KestralDeep/ . Every push to `main` is built and deployed by `.github/workflows/pages.yml`; other branches and pull requests are built only, which catches syntax errors.
 - The version history lives in two places and both must be updated with every change:
-  - the `VERSIONS` array (newest first) in `src/game/27-menus.js`, shown in the in-game Version history screen. `GAME_VERSION`, shown on the title screen, is read from its first entry.
+  - the `VERSIONS` array (newest first) in `src/data/versions.js`, shown in the in-game Version history screen. `GAME_VERSION`, shown on the title screen, is read from its first entry.
   - the plain-text changelog comment at the bottom of `src/index.html` (lines starting `v0.xx`)
 
 ## How the split works (design decision, v0.78)
 
-- **The game files are not ES modules.** The build joins `src/game/*.js` in filename order inside one `'use strict'` closure, exactly as the original single `<script>` was. Every file shares one scope: any file can call any function, and any file can read and reassign the ~250 top-level `let` variables (`player`, `enemies`, `state`, `depth`, ...).
+- **The source files are not ES modules.** The build joins `src/data/*.js` and then `src/game/*.js`, each folder in filename order, inside one `'use strict'` closure, exactly as the original single `<script>` was. Every file shares one scope: any file can call any function, and any file can read and reassign the ~250 top-level `let` variables (`player`, `enemies`, `state`, `depth`, ...).
 - Why: real ES modules cannot reassign another module's variables, so converting would have meant rewriting thousands of call sites with no tests to catch mistakes. The shared-scope split keeps behaviour identical: at the split, the build output was **byte-identical** to the original `kestrel-deep-v0.78.html`.
-- Files were cut at the original `// ---------- section ----------` comments, so a file's contents follow the old file's order rather than a clean system boundary (for example `drawActWorld()` sits in `03-data.js`, and food and cooking tables are in `05-levelgen.js`). See "Where things live" below.
+- The game files were cut at the original `// ---------- section ----------` comments, so a file's contents follow the old file's order rather than a clean system boundary (for example `drawActWorld()` sits in `03-equipment.js`). See "Where things live" below.
+- **Data tables live in `src/data/` and load before all game code** (design decision, v0.78, done right after the split). 68 top-level tables were moved there unchanged; the build then had the same 736 top-level statements as the original, only reordered, and the play-test passed.
+  - A table may hold callbacks (`ok:()=>...`, `make:()=>...`) that use game functions and state: those run later, so that is fine. What a table must not do is *use* game code or `let` state while it is being built (at load time), because the game files have not run yet. Calling a function declaration is allowed (they are hoisted), but only if that function does not touch state at load time.
+  - Data files load alphabetically. Today no data file uses another file's tables at load time; if one ever must, put the table it needs in an earlier file or give the files number prefixes.
+  - Derived indexes stay next to the code that uses them (for example `FILEBY` in `03-equipment.js` and `MODKD` in `05-levelgen.js`, built from `FILES` and `MODS`).
+  - Left in `src/game/` on purpose: drawing and UI constants (`SLOTCOL`, `VSTYLE`, `GUNLEN`, `TITLE_OPTS`), test-range settings (`DECKOPT`), and tables that are mostly game logic (`ARC` arcade games, `HACKR` hack options).
 - **Load order matters only for top-level code** (declarations and statements that run immediately). Function bodies can refer to anything. A new file needs a number placing it after everything its top-level code uses; renumbering is fine.
 - The build syntax-checks the joined code and reports errors as `src/game/<file>:<line>`.
 - Output is `dist/index.html`, not `dist/kestrel-deep.html`, because GitHub Pages serves `index.html` at the site root.
@@ -28,9 +34,8 @@ Current version: **v0.78**. The game was built iteratively in claude.ai chats up
 ## Next tasks (in order)
 
 1. ~~Enable GitHub Pages~~ Done: deployed from `main`, link above.
-2. ~~Split the code into files with a build step~~ Done, by section (see above). Play-tested after the split: title screen, new run, saving and continuing, route map to depth 2, test range, arcade; no errors.
-   - Not done yet from the original plan: gathering the big tables into a `src/data/` area. They are still spread across files (see "Where things live"). Moving a table is safe as long as its new file loads before any top-level code that uses it.
-3. **Balance pass** (the owner will play test runs and report findings). Keeping tunable numbers together in data files makes this much easier, so consider doing the `src/data/` move first.
+2. ~~Split the code into files with a build step~~ Done, by section (see above), and the data tables gathered into `src/data/`. Play-tested after each step: title screen, new run, saving and continuing, route map to the next deck or stop, test range, arcade, Codex, Version history, pack menu; no errors.
+3. **Balance pass** (the owner will play test runs and report findings). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
 
 ## Working conventions
 
@@ -63,33 +68,50 @@ Current version: **v0.78**. The game was built iteratively in claude.ai chats up
 
 **Special areas:** the test range (title screen) has every crew file, NPC, a creature console and a deck builder for testing; the arcade has six original mini-games (`ARC`).
 
-## Where things live (`src/game/`)
+## Where things live
+
+**Tables (`src/data/`):**
+
+| File | Tables |
+|---|---|
+| `character.js` | `SKILLS`, `ACTS`, `SLING`, `FT()`, `FILES`, `MOVES`, `CORES`, `SUBS`, `FILESUB`, `INJ` |
+| `crafting.js` | `RECIPES` (with `upgRecipe()`, `ROMAN`), `UPGS`, grinder yields `GEARY`, `ARMY`, `CONY`, `AMMOY` |
+| `creatures.js` | `ET`, `BOSSES`, `KILLPTS`, `THREAT`, `BEASTS`, `BEASTINFO` |
+| `events.js` | `TEXTEV`, `ROOMDESC` |
+| `food.js` | `FOOD`, `RAW`, `COOK` |
+| `items.js` | `IT`, `QUICK`, `FLASKCOL`, `TANKMAX`, `GEAR`, `VEND_POOL`, `TOOLS`, `RESDESC`, `CXRES` |
+| `npcs.js` | `NPCS`, `NPC_IDS` |
+| `progress.js` | `GRADES`, `MODS_RUN`, `LVLSTAT`, `ACH`, `AP_TRADES` |
+| `versions.js` | `VERSIONS`, `GAME_VERSION` |
+| `weapons.js` | `WORDER`, `ARM`, `FIST`, `IMPLEMENTS`, `WPN`, `WCRIT`, `MAGS`, `CHARGE`, `COMBO_T` |
+| `world.js` | `SECTORS`, `BNAMES`, `PAL`, `COND_LIGHT`, `COND_HAZ`, `MODS`, `ROOMNAMES`, `HAZDESC`, `LIQ`/`LIQNAME`, `BIOME`, `NODE`, `HIDDEN_TYPES` |
+
+**Code (`src/game/`):**
 
 | What | File |
 |---|---|
-| `ET`, `ARM`, `WPN`, `GEAR`, `QUICK`, `IT`, `FILES`/`FT()`, `SKILLS`, `MOVES`, `ACTS`, `SLING`, `BOSSES`, `SECTORS`, `BNAMES`, `drawActWorld()` | `03-data.js` |
-| `KILLPTS`, `COND_HAZ`, scoring, collision | `04-state.js` |
-| `genLevel()`, `genArena()`, `resetHidden()`, `MODS`, `FOOD`, `RAW`, `COOK` | `05-levelgen.js` |
+| equipping armaments, quick items, flasks, tank, tools, sling, psychic powers, `drawActWorld()` | `03-equipment.js` |
+| scoring, deck conditions, collision | `04-state.js` |
+| `genLevel()`, `genArena()`, `resetHidden()`, cooking | `05-levelgen.js` |
 | `ARC` (arcade games) | `06-arcade.js` |
-| `THREAT`, `pickType()`, `populate()` | `09-population.js` |
-| `FILESUB`, `INJ`, injuries | `10-player.js` |
-| `RECIPES`, upgrades | `11-recipes.js` |
-| `MODS_RUN`, `newGame()`, `saveRun()`, `loadRun()`, `enterLevel()` | `12-flow.js` |
+| `pickType()` (spawn weights), `populate()` | `09-population.js` |
+| injuries, cores and substats logic | `10-player.js` |
+| Workbench crafting and upgrade screens | `11-recipes.js` |
+| `newGame()`, `saveRun()`, `loadRun()`, `enterLevel()` | `12-flow.js` |
 | route map, `route`, hunter boss | `14-route-map.js` |
-| `TEXTEV`, `say()`, `float()` | `15-transit.js` |
-| `NPCS` | `17-devices-npcs.js` |
+| `say()`, `float()`, transit stops | `15-transit.js` |
+| grinder, devices, NPC behaviour | `17-devices-npcs.js` |
 | `OPTS` (options) | `18-dice-options.js` |
 | key handling (`onPress`, `menuKey`) | `19-input.js` |
-| `BEASTS`, `BEASTINFO`, `ACH`, `AP_TRADES` | `20-progress-screens.js` |
-| `WCRIT` | `21-mechanics.js` |
-| `MAGS`, `hurtPlayer()`, attacks | `22-actions.js` |
+| bestiary, run stats and achievements screens | `20-progress-screens.js` |
+| `hurtPlayer()`, attacks, reloads | `22-actions.js` |
 | `updatePlay()` and the enemy update loop | `24-update.js` |
 | `drawEnemy()`, `drawPlayer()`, `txt()`, `ui()` | `25-render-helpers.js` |
-| `VERSIONS`, `HAZDESC`, Codex (incl. `Systems` entries), title and pack menus | `27-menus.js` |
+| Codex (incl. `Systems` entries), title and pack menus | `27-menus.js` |
 | `render()` | `28-render-world.js` |
 | `frame()` | `29-loop.js` |
 
-To find anything else: `grep -n "function name(" src/game/*.js`.
+To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "const NAME=" src/data/*.js`.
 
 ## Publishing
 

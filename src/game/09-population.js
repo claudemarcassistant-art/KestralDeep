@@ -6,9 +6,6 @@ function freeTile(r){for(let t=0;t<30;t++){const tx=r.x+rnd(r.w),ty=r.y+rnd(r.h)
 function spotIn(r){const t=freeTile(r);return t?{x:t.tx*TS+TS/2+rr(-2,2),y:t.ty*TS+TS/2+rr(-2,2)}:null;}
 function fixLoot(it){if(it.type==='food'&&!FOOD[it.food])it.food=randFood();if(it.type==='raw'&&!RAW[it.raw])it.raw=randRaw();if(it.type==='tool'&&!TOOLS[it.tool])it.tool=Object.keys(TOOLS)[rnd(Object.keys(TOOLS).length)];
   if(it.type==='gear'&&!GEAR[it.gear])it.gear=randomGear();if(it.type==='file'&&!it.file){const f=randomFileId();if(f)it.file=f;else{it.type='scrap';}}return it;}
-const ROOMNAMES=[['filtration bay','intake hall','valve room','staging area','pump gallery','sluice office'],['pump hall','turbine room','pressure gallery','gauge room','sump','maintenance bay'],
-  ['sorting floor','parcel hall','conveyor bay','tally office','dispatch room','crate stacks'],['cold store','freezer aisle','meat locker','frost hall','thaw room','loading dock'],
-  ['brine works','salt pans','settling tank','pipe hall','evaporator','drain room'],['relay core','switch room','cable vault','signal hall','transformer bay','server stacks']];
 function areaName(){const P=player,tx=Math.floor(P.x/TS),ty=Math.floor(P.y/TS),inR=r=>r&&tx>=r.x&&tx<r.x+r.w&&ty>=r.y&&ty<r.y+r.h;
   if(arcadeMode)return 'arcade';if(arrival&&Math.abs(tx-arrival.cx)<=1&&Math.abs(ty-arrival.cy)<=1)return 'lift cab';if(stopMode)return stopAmbush?'lift landing':'landing';if(testMode&&!testDeck)return 'test range';
   for(const m of modules||[])if(inR(m))return MODS[m.type].name;for(const v of vaults||[])if(inR(v))return 'vault';for(const r of secrets||[])if(inR(r))return 'secret room';
@@ -20,7 +17,6 @@ function addItem(r,type,extra){if(runMods.lean&&!testMode&&Math.random()<0.45)re
 function addChest(r,tier){const t=freeTile(r);if(t)chests.push({tx:t.tx,ty:t.ty,x:t.tx*TS+TS/2,y:t.ty*TS+TS/2,tier,opened:false});}
 function randomRoom(){return rooms[1+rnd(rooms.length-1)];}
 let wetness=0;
-const THREAT={wasp:0.7,husk:1,crawler:1,slug:1,drone:1.3,spitter:1.6,snake:1.5,frog:1.6,spider:1.6,toxslug:1.6,snail:2,arcsnake:2.2,lurker:2.2,charger:2.6,grasper:2.6,ghost:2.6,guard:3,brute:3.6};
 function pickType(){return wpick([['husk',5],['crawler',depth>=2?3:1],['spitter',depth>=2?2:0],['snake',(depth>=2?1.5:0.4)+wetness*25],['arcsnake',depth>=3?0.3+depth*0.08+wetness*15:0],['charger',depth>=2?0.4+depth*0.12:0],['drone',depth>=2?1:0.2],['slug',1.2],['toxslug',depth>=2?1:0],['snail',depth>=2?0.9:0.2],['wasp',0.25+(cond&&cond.haz==='overgrowth'?2.5:0)],['guard',depth>=4?0.3+(depth-4)*0.12:0],['spider',(depth>=2?0.9:0.2)+(cond&&cond.haz==='overgrowth'?1.5:0)+(cond&&cond.light==='dark'?1:0)],['frog',(depth>=2?0.9:0.2)+wetness*12+(cond&&cond.haz==='overgrowth'?2:0)],['brute',depth>=3?0.3+(depth-3)*0.18:0]]);}
 function pickItem(){return wpick([['tool',0.2],['raw',0.5],['flask',0.3],['food',1.1],['rounds',4],['shells',depth>=2?2:0.5],['nails',depth>=2?1.5:0.5],['bolts',0.5],['scrap',4],['powder',3],['pipe',1.8],['battery',1.2],['cloth',2],['medkit',1.4]]);}
 function ownedGear(){return [...equippedList(),...player.bag];}

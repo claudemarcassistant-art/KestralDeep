@@ -20,12 +20,24 @@ src/
   index.html      page template ({{styles}}, {{boot}}, {{game}} are filled in by the build)
   styles.css      page styles
   boot.js         font loader and the on-screen error reporter
+  data/           content and tuning tables (loaded first)
+    character.js            crew files, substats, cores, skills, movement skills, psychic actions, sling, injuries
+    crafting.js             Workbench recipes and upgrades, grinder salvage yields
+    creatures.js            creature stats, bestiary order and text, kill points, threat costs, bosses
+    events.js               between-deck events, transit stop text
+    food.js                 food, raw ingredients, cooking
+    items.js                gear, quick items, tools, pickups, flasks, liquid tank, vending stock, resource text
+    npcs.js                 NPCs
+    progress.js             deck grades, run stats, achievements, point trades, challenge modifiers
+    versions.js             in-game version history
+    weapons.js              armaments, gun stats, magazines, crits, charge and combo timing
+    world.js                sectors, biome layouts, palettes, route nodes, water depths, room modules, deck conditions, hazard text
   game/           the game, split by system
     01-core.js              canvas, view sizes, shared helpers
     02-audio.js             sound synthesis
-    03-data.js              sectors, palettes, weapons, items, equipment, quick slots, flasks
+    03-equipment.js         equipping armaments, quick items, flasks, liquid tank, tools, sling, psychic powers
     04-state.js             run and world state, scoring, deck conditions, movement and collision
-    05-levelgen.js          deck generation, slime, oil, food and cooking, barrels, gas clouds, cables
+    05-levelgen.js          deck generation, slime, oil, cooking, barrels, gas clouds, cables
     06-arcade.js            arcade cabinet games, ice
     07-world-fx.js          sprinklers, fans, plants, hazards, vending machines, panels, liquids
     08-tile-art.js          tile, fire and decoration painting
@@ -53,11 +65,13 @@ src/
 scripts/build.mjs  the build
 ```
 
-The files in `src/game/` are **not** ES modules. The build joins them in filename
-order inside one `'use strict'` closure, so they share a scope: a file can use
-anything declared in an earlier one, and functions can be called from any file.
-To add a file, give it a number that places it after everything it needs at load
-time. The build checks syntax, and an error names the source file and line.
+The source files are **not** ES modules. The build joins `src/data/*.js` and then
+`src/game/*.js`, each folder in filename order, inside one `'use strict'` closure,
+so they share a scope: a file can use anything declared in an earlier one, and
+functions can be called from any file. Data loads first, so every game file can
+use any table. To add a game file, give it a number that places it after
+everything it needs at load time. The build checks syntax, and an error names the
+source file and line.
 
 ## Publishing
 

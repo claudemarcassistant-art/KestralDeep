@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // Builds dist/index.html from src/.
 //
-// The game files in src/game/ share one scope: they are concatenated in filename
-// order inside a single 'use strict' closure, exactly like the original one-file
-// build, so any file can read and reassign state declared in an earlier one.
-// Keep the numeric prefixes when adding files - they define load order.
+// The game's source files share one scope: src/data/*.js and then src/game/*.js
+// are concatenated, each folder in filename order, inside a single 'use strict'
+// closure, exactly like the original one-file build, so any file can read and
+// reassign state declared in an earlier one. Keep the numeric prefixes in
+// src/game/ when adding files - they define load order.
 //
 //   node scripts/build.mjs           build once
 //   node scripts/build.mjs --serve   build, serve on http://localhost:5173 and rebuild on change
@@ -19,8 +20,10 @@ const src = path.join(root, 'src');
 const dist = path.join(root, 'dist');
 const read = f => fs.readFileSync(path.join(src, f), 'utf8');
 
+// Data tables load first, so any game file can use them at load time.
 function gameFiles() {
-  return fs.readdirSync(path.join(src, 'game')).filter(f => f.endsWith('.js')).sort();
+  return ['data', 'game'].flatMap(d =>
+    fs.readdirSync(path.join(src, d)).filter(f => f.endsWith('.js')).sort().map(f => `${d}/${f}`));
 }
 
 // Syntax-check the joined game code and report errors against the source file, not the bundle.
@@ -29,10 +32,10 @@ function check(files, code) {
     new vm.Script(`(()=>{'use strict';\n${code}})`, { filename: 'game.js' });
   } catch (err) {
     const m = /game\.js:(\d+)/.exec(err.stack || '');
-    let line = m ? +m[1] - 1 : 0, where = 'src/game';
+    let line = m ? +m[1] - 1 : 0, where = 'src';
     for (const f of files) {
-      const n = read('game/' + f).split('\n').length - 1;
-      if (line <= n) { where = `src/game/${f}:${line}`; break; }
+      const n = read(f).split('\n').length - 1;
+      if (line <= n) { where = `src/${f}:${line}`; break; }
       line -= n;
     }
     throw new Error(`${err.name}: ${err.message}\n    at ${where}`);
@@ -42,8 +45,8 @@ function check(files, code) {
 export function build() {
   const files = gameFiles();
   const code = files.map(f => {
-    const s = read('game/' + f);
-    if (!s.endsWith('\n')) throw new Error(`src/game/${f} must end with a newline`);
+    const s = read(f);
+    if (!s.endsWith('\n')) throw new Error(`src/${f} must end with a newline`);
     return s;
   }).join('');
   check(files, code);
@@ -60,7 +63,7 @@ export function build() {
 function rebuild() {
   try {
     const r = build();
-    console.log(`built dist/index.html (${r.files} game files, ${(r.bytes / 1024).toFixed(0)} KB)`);
+    console.log(`built dist/index.html (${r.files} source files, ${(r.bytes / 1024).toFixed(0)} KB)`);
     return true;
   } catch (err) {
     console.error('build failed: ' + err.message);
