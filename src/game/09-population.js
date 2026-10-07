@@ -24,9 +24,9 @@ function randomGear(){const own=ownedGear();let pool=Object.keys(GEAR).filter(k=
   return wpick(pool.map(k=>[k,GEAR[k].w]));}
 function populate(startR,exitR){
   enemies=[];items=[];chests=[];const got={};
-  {let budget=(4+depth*1.6)*(runMods.swarm?1.33:1)*(levelMods.enemyMul||1)*rr(0.9,1.1);const caps={brute:depth<3?0:1+Math.floor((depth-3)/3),guard:depth<4?0:1+Math.floor((depth-4)/3),charger:1+Math.floor(depth/4),grasper:1+Math.floor(depth/4)},cnt={};
+  {let budget=(4+depth*1.6)*AREA*(runMods.swarm?1.33:1)*(levelMods.enemyMul||1)*rr(0.9,1.1);const caps={brute:depth<3?0:1+Math.floor((depth-3)/3),guard:depth<4?0:1+Math.floor((depth-4)/3),charger:1+Math.floor(depth/4),grasper:1+Math.floor(depth/4)},cnt={};
     const pool=rooms.filter(r=>r!==startR);const wts=pool.map(r=>Math.max(1,r.w*r.h/12)+(r===exitR?2:0));let guard=0;
-    while(budget>0.5&&pool.length&&guard++<200){let t=pickType();if(caps[t]!=null&&(cnt[t]||0)>=caps[t])t=depth>=3&&Math.random()<0.5?'crawler':'husk';const c=THREAT[t]||1.5;if(c>budget+0.5)t='husk';
+    while(budget>0.5&&pool.length&&guard++<200*AREA){let t=pickType();if(caps[t]!=null&&(cnt[t]||0)>=caps[t])t=depth>=3&&Math.random()<0.5?'crawler':'husk';const c=THREAT[t]||1.5;if(c>budget+0.5)t='husk';
       let x=Math.random()*wts.reduce((a,b)=>a+b,0),ri=0;while(x>wts[ri]&&ri<wts.length-1){x-=wts[ri];ri++;}const p=spotIn(pool[ri]);if(!p)continue;enemies.push(mkEnemy(t,p.x,p.y));cnt[t]=(cnt[t]||0)+1;budget-=THREAT[t]||1.5;
       if(t==='wasp'&&Math.random()<0.6){const extra=1+rnd(3);for(let k=0;k<extra;k++){enemies.push(mkEnemy('wasp',p.x+rr(-10,10),p.y+rr(-10,10)));budget-=THREAT.wasp;}}}}
   for(const r of rooms){if(r===startR)continue;
@@ -34,8 +34,8 @@ function populate(startR,exitR){
     for(let k=0;k<ni;k++){const t=pickItem();got[t]=1;addItem(r,t);}
   }
   if(Math.random()<0.3+Math.min(0.25,depth*0.03)){const fid=randomFileId();if(fid){const r=vaults.length&&Math.random()<0.6?vaults[rnd(vaults.length)]:randomRoom();addItem(r,'file',{file:fid});}}
-  if(Math.random()<0.45)addChest(randomRoom(),'common');
-  for(let k=0;k<(levelMods.chests||0);k++)addChest(randomRoom(),Math.random()<.3?'rare':'common');
+  for(let k=aN(1);k>0;k--)if(Math.random()<0.45)addChest(randomRoom(),'common');
+  for(let k=aN(levelMods.chests||0);k>0;k--)addChest(randomRoom(),Math.random()<.3?'rare':'common');
   for(const v of vaults){
     if(Math.random()<.65)addChest(v,'common');
     const ni=1+rnd(3);for(let k=0;k<ni;k++)addItem(v,pickItem());
@@ -57,16 +57,16 @@ function populate(startR,exitR){
   for(let k=0;k<nk;k++)addItem(randomRoom(),'key');
   for(const t of ['pipe','battery'])if(!got[t])addItem(randomRoom(),t);
   const og=cond&&cond.haz==='overgrowth';
-  {const nm=og?6+rnd(4):(Math.random()<0.2?1:0),ns=og?6+rnd(4):0;for(let k=0;k<nm+ns;k++){const q=spotIn(randomRoom());if(q)plants.push({x:q.x,y:q.y,type:k<nm?'mend':'sting',burst:false,ph:Math.random()*6});}}
-  if(og){const nv=2+rnd(3);for(let k=0;k<nv;k++){const q=spotIn(randomRoom());if(q)enemies.push(mkEnemy('snare',q.x,q.y));}
-    placeWallPlants('pod',3+rnd(3));placeWallPlants('trip',3+rnd(3));
+  {const nm=aN(og?6+rnd(4):(Math.random()<0.2?1:0)),ns=aN(og?6+rnd(4):0);for(let k=0;k<nm+ns;k++){const q=spotIn(randomRoom());if(q)plants.push({x:q.x,y:q.y,type:k<nm?'mend':'sting',burst:false,ph:Math.random()*6});}}
+  if(og){const nv=aN(2+rnd(3));for(let k=0;k<nv;k++){const q=spotIn(randomRoom());if(q)enemies.push(mkEnemy('snare',q.x,q.y));}
+    placeWallPlants('pod',aN(3+rnd(3)));placeWallPlants('trip',aN(3+rnd(3)));
     {const bl=plants.slice().sort(()=>Math.random()-0.5).slice(0,1+rnd(2));for(const pl of bl){const n=2+rnd(3);for(let k=0;k<n;k++)enemies.push(mkEnemy('wasp',pl.x+rr(-12,12),pl.y+rr(-12,12)));}}
-    const nh=3+rnd(3);for(let k=0;k<nh;k++)addItem(randomRoom(),'herb');const nf=3+rnd(3);for(let k=0;k<nf;k++)addItem(randomRoom(),'food',{food:['mushroom','fruit','nuts'][rnd(3)]});
+    const nh=aN(3+rnd(3));for(let k=0;k<nh;k++)addItem(randomRoom(),'herb');const nf=aN(3+rnd(3));for(let k=0;k<nf;k++)addItem(randomRoom(),'food',{food:['mushroom','fruit','nuts'][rnd(3)]});
     if(Math.random()<0.18)addItem(randomRoom(),'raw',{raw:'glowcap'});
-    const nr=5+rnd(4);for(let k=0;k<nr;k++){const id=['tuber','tuber','spores','grubs','berries'][rnd(5)];let placed=false;
+    const nr=aN(5+rnd(4));for(let k=0;k<nr;k++){const id=['tuber','tuber','spores','grubs','berries'][rnd(5)];let placed=false;
       if(id==='berries'||Math.random()<0.4){const pl=plants.filter(q=>!q.burst&&(id==='berries'?q.type==='sting':true));if(pl.length){const q=pl[rnd(pl.length)],qx=Math.floor(q.x/TS),qy=Math.floor(q.y/TS);for(const [dx,dy] of D8){const x=qx+dx,y=qy+dy;if(!solid(x,y)&&!plants.some(z=>Math.floor(z.x/TS)===x&&Math.floor(z.y/TS)===y)){items.push({x:x*TS+6,y:y*TS+6,type:'raw',raw:id,ph:Math.random()*6});placed=true;break;}}}}
       if(!placed)addItem(randomRoom(),'raw',{raw:id});}}
-  if(cond&&cond.haunt){const ng=3+rnd(3);for(let k=0;k<ng;k++){const r=randomRoom();enemies.push(mkEnemy('ghost',r.cx*TS+6,r.cy*TS+6));}}
+  if(cond&&cond.haunt){const ng=Math.max(1,aN(3+rnd(3)));for(let k=0;k<ng;k++){const r=randomRoom();enemies.push(mkEnemy('ghost',r.cx*TS+6,r.cy*TS+6));}}
   {const deep=[];for(let i=0;i<MW*MH;i++)if(map[i]===0&&liq[i]>=3&&kind[i]>=1)deep.push(i);
     if(deep.length>=6){const n=Math.min(3,1+Math.floor(deep.length/30));for(let k=0;k<n;k++){const pick=deep.filter(i=>liq[i]===4);const src=pick.length?pick:deep;const i=src[rnd(src.length)];
       enemies.push(mkEnemy('lurker',(i%MW)*TS+6,((i/MW)|0)*TS+6));}

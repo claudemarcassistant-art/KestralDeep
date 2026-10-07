@@ -19,7 +19,7 @@ function startTransit(tr,n){pendingNode=n;runStops++;
     nodeUI={title:'An unmarked landing',col:'#d9a441',transit:true,body:'The lift slows and stops at '+ROOMDESC[tr.room]+'. The doors stay open, waiting.',
       options:[{label:'Step out',ok:()=>true,act:()=>{startStop(tr.room);return null;}},{label:'Ride on',leave:true,ok:()=>true}]};state='node';nodeSel=0;return;}
   enterNode(n);}
-function startStop(sk){stopMode=true;stopAmbush=sk==='ambush';nodeUI=null;resetHidden();levelLabel=sk==='ambush'?'LIFT CAB':'LANDING';cond={light:sk==='ambush'?'normal':'lit',haz:null,obj:'open'};hazOff=false;
+function startStop(sk){stopMode=true;stopAmbush=sk==='ambush';nodeUI=null;setDeckSize('m');resetHidden();levelLabel=sk==='ambush'?'LIFT CAB':'LANDING';cond={light:sk==='ambush'?'normal':'lit',haz:null,obj:'open'};hazOff=false;
   map=new Uint8Array(MW*MH).fill(1);kind=new Uint8Array(MW*MH);secretHp=new Float32Array(MW*MH);openDoor=new Uint8Array(MW*MH);liq=new Uint8Array(MW*MH);hz=new Uint8Array(MW*MH);oil=new Uint8Array(MW*MH);slime=new Uint8Array(MW*MH);
   const cab={x:28,y:30,w:5,h:4,cx:30,cy:31};rooms=[cab];const carve=(r,k)=>{for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++){map[y*MW+x]=0;kind[y*MW+x]=k;}};carve(cab,1);
   vaults=[];secrets=[];ventRooms=[];hatchRooms=[];fires=[];vents=[];anoms=[];panels=[];vendors=[];chests=[];items=[];enemies=[];barrels=[];risers=[];testLabels=[];

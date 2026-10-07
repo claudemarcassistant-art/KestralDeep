@@ -59,8 +59,8 @@ function shove(){
     if(solid(tx,ty)){if(map[ty*MW+tx]===3)damageSecret(tx,ty,m.dmg*2);else sfx('thud');break;}}
 }
 function liqAt(x,y){const tx=Math.floor(x/TS),ty=Math.floor(y/TS);if(tx<0||ty<0||tx>=MW||ty>=MH)return 0;const i=ty*MW+tx;return ice[i]?0:flot[i]?1:liq[i];}
-let ice=new Uint8Array(64*64);
-let flot=new Uint8Array(64*64);
+let ice=new Uint8Array(MW*MH);
+let flot=new Uint8Array(MW*MH);
 function placeFlotsam(){flot=new Uint8Array(MW*MH);const deep=[];for(let i=0;i<MW*MH;i++)if(map[i]===0&&liq[i]===4)deep.push(i);
   if(deep.length<20||Math.random()>0.3)return;const n=1+(Math.random()<0.25?1:0);
   for(let k=0;k<n;k++){let i=deep[rnd(deep.length)];const len=2+rnd(3);
@@ -314,7 +314,7 @@ function alertOn(){return depth>=3&&!stopMode&&!arcadeMode&&!(testMode&&!testDec
 let alertLock=false;
 function alertMul(){return 1-(perk('lowprofile')?0.2:0)-(perk('ductrat')?0.2:0)-(perk('quietmind')?0.15:0);}
 function alertAdd(v){if(!alertOn()||alertLock)return;alertM+=v*alertMul();}
-function updateAlert(dt){if(!alertOn()||alertLock){newSeen=0;return;}alertM+=newSeen*0.045*alertMul();newSeen=0;
+function updateAlert(dt){if(!alertOn()||alertLock){newSeen=0;return;}alertM+=newSeen*0.045*alertMul()/AREA;newSeen=0;
   if(alertM>=75&&!alertRumble){alertRumble=true;say('something far below is starting to stir');sfx('hiss');}
   if(alertM>=100){alertM=0;alertRumble=false;alertWaves++;runAlertWaves++;
     const cnt=3+Math.floor(depth/3)+alertWaves,p=player,far=rooms.filter(r=>Math.hypot(r.cx*TS-p.x,r.cy*TS-p.y)>100);

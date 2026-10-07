@@ -1,13 +1,13 @@
 // ---------- state ----------
-let vendors=[],vendUI=null,ventRooms=[],hatchRooms=[],hatches=[],levers=[],cages=[],openVent=new Uint8Array(64*64),levelTimer=0,purgeGas=false;
+let vendors=[],vendUI=null,ventRooms=[],hatchRooms=[],hatches=[],levers=[],cages=[],openVent=new Uint8Array(MW*MH),levelTimer=0,purgeGas=false;
 let lvl=null,runScore=0,report=null,bestScore=0;try{bestScore=+(localStorage.getItem('kd_best')||0);}catch(e){}
 function startLevelScore(){
   if(lvl&&player&&player.rs)for(const k of LVLSTAT)player.rs[k]=(player.rs[k]||0)+(lvl[k]||0);
-  lvl={t:0,killPts:0,kills:0,ambush:0,hacks:0,items:0,finds:0,chests:0,rare:0,doors:0,secrets:0,dmg:0,par:60+rooms.length*8};
+  lvl={t:0,killPts:0,kills:0,ambush:0,hacks:0,items:0,finds:0,chests:0,rare:0,doors:0,secrets:0,dmg:0,par:Math.round(60*AREA)+rooms.length*8};
   let pot=0;for(const e of enemies)pot+=KILLPTS[e.type]||0;
   for(const c of chests)pot+=c.tier==='rare'?150:75;
-  pot+=(liftState==='idle'||(cond&&cond.obj==='both')?400+(1+(depth>=4?1:0))*200:0)+vaults.length*60+(secrets.length+ventRooms.length+hatchRooms.length)*250+panels.filter(q=>q.hack).length*150+vendors.length*150+lvl.par*4*0.5+150;
-  lvl.pot=Math.max(300,pot);
+  pot+=(liftState==='idle'||(cond&&cond.obj==='both')?400+(1+(depth>=4?1:0))*200:0)+vaults.length*60+(secrets.length+ventRooms.length+hatchRooms.length)*250+panels.filter(q=>q.hack).length*150+vendors.length*150+lvl.par*4*0.5+150*AREA;
+  lvl.pot=Math.max(300*AREA,pot);
 }
 function liveLevelScore(){if(!lvl)return 0;return lvl.killPts+lvl.ambush*25+lvl.hacks*150+lvl.items*10+lvl.finds*100+lvl.chests*75+lvl.rare*150+lvl.doors*60+lvl.secrets*250;}
 function finishLevel(){
@@ -50,17 +50,17 @@ function drawReport(){
   if(shown>n+2){txt('Run total',px+10,base+35,'#8e978b');txt(''+r.run,px+pw-10,base+35,'#e3e6dc','right');if(r.drawn)txt('waves drawn this run: '+r.drawn+(r.carry?'  (they are following you)':''),px+10,base+45,r.carry?'#ff8a7a':'#6f7a6a');
     if(Math.sin(T*4)>-0.3)txt('Enter or click to ride on',px+pw/2,py+ph-12,'#e8dcb0','center');}
 }
-let powerOff=false,powerPrev=null,cond={light:'normal',haz:null},hazOff=false,hz=new Uint8Array(64*64),fires=[],vents=[],anoms=[],panels=[],hackUI=null,glows=[];
+let powerOff=false,powerPrev=null,cond={light:'normal',haz:null},hazOff=false,hz=new Uint8Array(MW*MH),fires=[],vents=[],anoms=[],panels=[],hackUI=null,glows=[];
 function rollCond(type){if(!['station','flooded','cache'].includes(type))return null;
   const light=wpick([['normal',70],['lit',15],['dark',15]]);
   const haz=wpick([['none',45],['fog',12],['steam',11],['fire',type==='flooded'?0:11],['toxic',11],['anomaly',depth>=3?10:3],['electrical',type==='flooded'?12:9],['volatile',9],['overgrowth',depth>=2?8:3],['sprinklers',6],['chasm',depth>=2?8:2],['molten',depth>=3?7:0]]);
   const obj=wpick([['open',55],['keycard',17],['defend',depth>=2?16:6],['both',depth>=3?5:0],['arena',0]]);
   const ev=obj!=='arena'&&depth>=2&&Math.random()<0.12?'waves':null;
   const haunt=depth>=3&&Math.random()<0.08,lowg=depth>=3&&Math.random()<0.08;
-  return {light,haz:haz==='none'?null:haz,obj,ev,haunt,lowg};}
+  return {light,haz:haz==='none'?null:haz,obj,ev,haunt,lowg,size:wpick(DECK_SIZE_ODDS.normal)};}
 const OBJNAME={arena:'arena',keycard:'lift keycard',defend:'hold the lift',both:'keycard, hold the lift'};
-function condText(c){if(!c)return '';return [COND_LIGHT[c.light],c.haz?COND_HAZ[c.haz]:'',OBJNAME[c.obj]||'',c.ev==='waves'?'incoming waves':'',c.haunt?'haunted':'',c.lowg?'low gravity':''].filter(Boolean).join(', ');}
-let lamps=[],furn=new Uint8Array(64*64),molten=new Uint8Array(64*64),webs=new Uint8Array(64*64),chasm=new Uint8Array(64*64),liq=new Uint8Array(64*64),testMode=false,route=null,routeSel=0,levelMods={},nextMods={},nodeUI=null,nodeSel=0,titleSel=0,levelLabel='',testLabels=[];
+function condText(c){if(!c)return '';return [COND_LIGHT[c.light],c.haz?COND_HAZ[c.haz]:'',OBJNAME[c.obj]||'',c.ev==='waves'?'incoming waves':'',c.haunt?'haunted':'',c.lowg?'low gravity':'',c.size&&c.size!=='m'?DECK_SIZES[c.size].name:''].filter(Boolean).join(', ');}
+let lamps=[],furn=new Uint8Array(MW*MH),molten=new Uint8Array(MW*MH),webs=new Uint8Array(MW*MH),chasm=new Uint8Array(MW*MH),liq=new Uint8Array(MW*MH),testMode=false,route=null,routeSel=0,levelMods={},nextMods={},nodeUI=null,nodeSel=0,titleSel=0,levelLabel='',testLabels=[];
 let map,kind,seen,secretHp,openDoor,rooms,vaults=[],secrets=[],exitT,depth=1,player,S=null,curPal=PAL[0];
 let enemies=[],bullets=[],items=[],parts=[],charges=[],flares=[],texts=[],lights=[],chests=[];
 let flow=new Int16Array(MW*MH),flowT=0,shake=0,state='title',msgs=[],kills=0,menuOpen=false,menuTab=0,mapOpen=false;

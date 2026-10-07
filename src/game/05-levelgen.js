@@ -4,13 +4,31 @@ let CW=2;
 function hline(x0,x1,y){for(let x=Math.min(x0,x1);x<=Math.max(x0,x1)+CW-1;x++)for(let k=0;k<CW;k++)setF(x,y+k);}
 function vline(y0,y1,x){for(let y=Math.min(y0,y1);y<=Math.max(y0,y1)+CW-1;y++)for(let k=0;k<CW;k++)setF(x+k,y);}
 function corridor(a,b){if(Math.random()<.5){hline(a.cx,b.cx,a.cy);vline(a.cy,b.cy,b.cx);}else{vline(a.cy,b.cy,a.cx);hline(a.cx,b.cx,b.cy);}}
+// Walking distance in tiles from (sx,sy) to every open tile; -1 where unreachable.
+let bfsQ=new Int32Array(MW*MH);
 function bfs(sx,sy,out){
   out.fill(-1);if(solid(sx,sy))return out;
-  const q=new Int32Array(MW*MH);let h=0,t=0;const s=sy*MW+sx;out[s]=0;q[t++]=s;
-  while(h<t){const c=q[h++];const cx=c%MW,cy=(c/MW)|0,d=out[c]+1;
-    for(const [dx,dy] of D4){const nx=cx+dx,ny=cy+dy;if(solid(nx,ny))continue;const n=ny*MW+nx;if(out[n]<0){out[n]=d;q[t++]=n;}}}
+  if(bfsQ.length<MW*MH)bfsQ=new Int32Array(MW*MH);const q=bfsQ;let h=0,t=0;const s=sy*MW+sx;out[s]=0;q[t++]=s;
+  while(h<t)t=bfsExpand(q[h++],out,q,t);
   return out;
 }
+// Visit the open neighbours of tile c (same result as checking solid() on each of D4).
+function bfsExpand(c,out,q,t){const cx=c%MW,cy=(c/MW)|0,d=out[c]+1;let n;
+  n=c+1;if(cx<MW-1&&map[n]===0&&out[n]<0){out[n]=d;q[t++]=n;}
+  n=c-1;if(cx>0&&map[n]===0&&out[n]<0){out[n]=d;q[t++]=n;}
+  n=c+MW;if(cy<MH-1&&map[n]===0&&out[n]<0){out[n]=d;q[t++]=n;}
+  n=c-MW;if(cy>0&&map[n]===0&&out[n]<0){out[n]=d;q[t++]=n;}
+  return t;}
+// The creature pathfinding field (`flow`, distance to the player) is rebuilt continuously in slices: each frame
+// searches about an eighth of the deck into flowB, which replaces flow when complete. No frame pays for a
+// whole-deck search, which matters on large decks. Setting flowT=0 (doors opening, walls breaking) restarts it at once.
+let flowB=new Int16Array(MW*MH),flowQ=new Int32Array(MW*MH),flowJob=null;
+function flowTick(){const p=player,N=MW*MH;
+  if(flowT<=0||!flowJob){flowT=1;const sx=Math.floor(p.x/TS),sy=Math.floor(p.y/TS);flowJob=null;if(solid(sx,sy))return;
+    flowB.fill(-1);const s=sy*MW+sx;flowB[s]=0;flowQ[0]=s;flowJob={h:0,t:1};}
+  const J=flowJob,end=J.h+Math.max(256,Math.ceil(N/8));let t=J.t;
+  while(J.h<t&&J.h<end)t=bfsExpand(flowQ[J.h++],flowB,flowQ,t);J.t=t;
+  if(J.h>=J.t){const tmp=flow;flow=flowB;flowB=tmp;flowJob=null;}}
 function attach(tt,W0,H0,KD){
   for(let t=0;t<400;t++){
     const fx=1+rnd(MW-2),fy=1+rnd(MH-2),fi=fy*MW+fx;
@@ -30,7 +48,7 @@ function attach(tt,W0,H0,KD){
   return null;
 }
 let cables=[],cableMap=new Map(),barrels=[],risers=[];
-let slime=new Uint8Array(64*64),slimeK=new Uint8Array(64*64);
+let slime=new Uint8Array(MW*MH),slimeK=new Uint8Array(MW*MH);
 function clearSlimeAround(x,y,rad){const tx=Math.floor(x/TS),ty=Math.floor(y/TS),r=Math.ceil(rad/TS);for(let yy=ty-r;yy<=ty+r;yy++)for(let xx=tx-r;xx<=tx+r;xx++){if(xx<0||yy<0||xx>=MW||yy>=MH)continue;const i=yy*MW+xx;if(slime[i]&&Math.hypot(xx*TS+6-x,yy*TS+6-y)<=rad+6){slime[i]=0;if(Math.random()<.5)parts.push({x:xx*TS+6,y:yy*TS+6,vx:rr(-6,6),vy:rr(-20,-8),t:0.5,m:0.5,c:'#6a6a50',s:2});}}}
 function slimeAnchor(tx,ty){const h=hash(tx*7+3,ty*13+5);return [tx*TS+6+((h%7)-3)*1.1,ty*TS+6+(((h>>>4)%7)-3)*1.1];}
 function drawSlime(tx,ty,sl,k){
@@ -53,11 +71,11 @@ function drawSlime(tx,ty,sl,k){
   ctx.fillStyle=`rgba(255,255,230,${0.1+0.05*sl})`;ctx.fillRect(Math.round(x-1),Math.round(y-1),1,1);
   if(k===2&&Math.random()<0.01)parts.push({x:ax+rr(-2,2),y:ay+rr(-2,2),vx:0,vy:-8,t:0.5,m:0.5,c:'#a0e040',s:1});
 }
-let oil=new Uint8Array(64*64),oilIgnite=[],oilScan=0;
+let oil=new Uint8Array(MW*MH),oilIgnite=[],oilCur=0;
 function oilOK(i){return map[i]===0&&liq[i]===0&&hz[i]!==1&&hz[i]!==2;}
 function spillOil(tx,ty,R,amt){blob(tx,ty,R,(i,x,y,d)=>{if(!oilOK(i))return;const v=Math.max(1,Math.min(3,amt-d));if(v>oil[i])oil[i]=v;});}
 function genOil(start){
-  const n=cond.haz==='volatile'?5+rnd(3):(Math.random()<0.5?1+rnd(2):0);
+  const n=aN(cond.haz==='volatile'?5+rnd(3):(Math.random()<0.5?1+rnd(2):0));
   for(let k=0;k<n;k++){for(let t=0;t<30;t++){const r=randomRoom(),x=r.x+rnd(r.w),y=r.y+rnd(r.h),i=y*MW+x;
     if(!oilOK(i)||Math.abs(x-start.cx)+Math.abs(y-start.cy)<5)continue;let nearFire=false;
     for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const j=(y+dy)*MW+x+dx;if(j>=0&&j<MW*MH&&hz[j]===1)nearFire=true;}if(nearFire)continue;
@@ -74,9 +92,11 @@ function igniteOilAround(x,y,rad){const tx=Math.floor(x/TS),ty=Math.floor(y/TS),
   for(let yy=ty-r;yy<=ty+r;yy++)for(let xx=tx-r;xx<=tx+r;xx++){if(xx<0||yy<0||xx>=MW||yy>=MH)continue;if(oil[yy*MW+xx]&&Math.hypot(xx*TS+6-x,yy*TS+6-y)<=rad+6)igniteOil(xx,yy);}}
 function updateOil(dt){
   for(const o of oilIgnite){o.t-=dt;if(o.t<=0){o.done=true;igniteOil(o.tx,o.ty);}}oilIgnite=oilIgnite.filter(o=>!o.done);
-  oilScan-=dt;if(oilScan<=0){for(let i=0;i<MW*MH;i++){if(!ice[i])continue;const x=i%MW,y=(i/MW)|0;for(const [dx,dy] of D8){const n=(y+dy)*MW+x+dx;if(n>=0&&n<MW*MH&&hz[n]===1&&!hazOff){ice[i]=0;break;}}}}
-  if(oilScan<=0){oilScan=0.25;for(let i=0;i<MW*MH;i++){if(!oil[i])continue;const x=i%MW,y=(i/MW)|0;
-    for(const [dx,dy] of D8){const n=(y+dy)*MW+x+dx;if(n>=0&&n<MW*MH&&hz[n]===1&&!hazOff){oilIgnite.push({tx:x,ty:y,t:rr(0.05,0.3)});break;}}}}
+  // ice next to fire melts and oil next to fire catches. A share of the deck is checked each frame so a full sweep
+  // takes 0.25 s whatever the deck size.
+  if(hazOff)return;const N=MW*MH,n=Math.min(N,Math.ceil(N*dt/0.25));
+  for(let k=0;k<n;k++){const i=oilCur;oilCur=oilCur+1<N?oilCur+1:0;if(!ice[i]&&!oil[i])continue;const x=i%MW,y=(i/MW)|0;
+    for(const [dx,dy] of D8){const j=(y+dy)*MW+x+dx;if(j>=0&&j<N&&hz[j]===1){ice[i]=0;if(oil[i])oilIgnite.push({tx:x,ty:y,t:rr(0.05,0.3)});break;}}}
 }
 function oilAnchor(tx,ty){const h=hash(tx*11+5,ty*3+9);return [tx*TS+6+((h%7)-3)*1.1,ty*TS+6+(((h>>>4)%7)-3)*1.1];}
 function drawOil(tx,ty,amt){
@@ -102,6 +122,14 @@ function cook(c){const P=player;if(cookOk(c))P.rs.cooked=(P.rs.cooked||0)+1;if(!
   P.food[c.out]=(P.food[c.out]||0)+1;if(Math.random()<0.15*U('salv')){const k=Object.keys(c.need)[0];P.raw[k]++;}sfx('craft');say('cooked '+FOOD[c.out].name.toLowerCase());}
 const randFood=()=>wpick([['ration',3],['beans',2],['paste',2],['coffee',2],['greens',1.5],['candy',2],['meat',1]]);
 let modules=[],fixtures=[],modDoors=new Map(),arcadeUI=null;
+// Size the deck ('s', 'm' or 'l', see DECK_SIZES) and reallocate every per-tile array and the pre-drawn tile layer.
+// Called before generating any deck; fixed layouts (test range, arcade, lift landings) use 'm'.
+function setDeckSize(k){if(!DECK_SIZES[k])k='m';deckSize=k;const D=DECK_SIZES[k];MW=D.w;MH=D.h;AREA=MW*MH/4096;const N=MW*MH;
+  if(mcv.width!==MW*TS||mcv.height!==MH*TS){mcv.width=MW*TS;mcv.height=MH*TS;}
+  map=new Uint8Array(N).fill(1);kind=new Uint8Array(N);seen=new Uint8Array(N);secretHp=new Float32Array(N);openDoor=new Uint8Array(N);
+  liq=new Uint8Array(N);hz=new Uint8Array(N);furn=new Uint8Array(N);molten=new Uint8Array(N);webs=new Uint8Array(N);chasm=new Uint8Array(N);
+  ice=new Uint8Array(N);flot=new Uint8Array(N);slime=new Uint8Array(N);slimeK=new Uint8Array(N);oil=new Uint8Array(N);openVent=new Uint8Array(N);
+  flow=new Int16Array(N).fill(-1);flowB=new Int16Array(N);flowQ=new Int32Array(N);flowJob=null;oilCur=0;moltenCur=0;}
 function resetHidden(){furn=new Uint8Array(MW*MH);lamps=[];arrival=null;trips=[];secT=0;molten=new Uint8Array(MW*MH);chasm=new Uint8Array(MW*MH);webs=new Uint8Array(MW*MH);ice=new Uint8Array(MW*MH);fans=[];plants=[];mists=[];sprinkT=0;sprWait=rr(25,45);freightT=null;pendingSkip=0;modules=[];fixtures=[];modDoors=new Map();flot=new Uint8Array(MW*MH);slime=new Uint8Array(MW*MH);oil=new Uint8Array(MW*MH);oilIgnite=[];slimeK=new Uint8Array(MW*MH);ventRooms=[];hatchRooms=[];hatches=[];levers=[];cages=[];openVent=new Uint8Array(MW*MH);cables=[];cableMap=new Map();barrels=[];risers=[];}
 function mkBarrel(tx,ty){return {tx,ty,x:tx*TS+6,y:ty*TS+6,vx:0,vy:0,hp:4,fuse:-1,dead:false,ph:Math.random()*6,roll:0};}
 function pushBarrel(b,dx,dy,f){if(!b||b.dead)return;const l=Math.hypot(dx,dy)||1;b.vx+=dx/l*f;b.vy+=dy/l*f;}
@@ -159,18 +187,18 @@ function addCable(tx,ty){const i=ty*MW+tx;hz[i]=5;const c={tx,ty,x:tx*TS+6,y:ty*
 function extraHazards(start){
   const safe=(x,y)=>Math.abs(x-start.cx)+Math.abs(y-start.cy)>6&&Math.abs(x-exitT.x)+Math.abs(y-exitT.y)>2;
   const spot=()=>{for(let t=0;t<40;t++){const r=randomRoom(),x=r.x+rnd(r.w),y=r.y+rnd(r.h),i=y*MW+x;if(map[i]===0&&!hz[i]&&safe(x,y))return [x,y];}return null;};
-  const nC=cond.haz==='electrical'?8+rnd(5):(Math.random()<0.55?2+rnd(3):0);
+  const nC=aN(cond.haz==='electrical'?8+rnd(5):(Math.random()<0.55?2+rnd(3):0));
   for(let k=0;k<nC;k++){const s=spot();if(s)addCable(s[0],s[1]);}
-  const nB=cond.haz==='volatile'?12+rnd(7):(Math.random()<0.75?3+rnd(6):0);
+  const nB=aN(cond.haz==='volatile'?12+rnd(7):(Math.random()<0.75?3+rnd(6):0));
   for(let k=0;k<nB;){const s=spot();k++;if(!s||liq[s[1]*MW+s[0]]>=2||barrels.some(b=>b.tx===s[0]&&b.ty===s[1]))continue;barrels.push(mkBarrel(s[0],s[1]));
     if(Math.random()<0.45)for(const [dx,dy] of D8){const x=s[0]+dx,y=s[1]+dy,i=y*MW+x;if(map[i]===0&&!hz[i]&&liq[i]<2&&safe(x,y)&&!barrels.some(b=>b.tx===x&&b.ty===y)){barrels.push(mkBarrel(x,y));k++;break;}}}
-  const nR=cond.haz==='steam'?4+rnd(3):(Math.random()<0.35?1+rnd(3):0);
+  const nR=aN(cond.haz==='steam'?4+rnd(3):(Math.random()<0.35?1+rnd(3):0));
   if(nR){const cand=[];for(let y=2;y<MH-2;y++)for(let x=2;x<MW-2;x++){const i=y*MW+x;if(map[i]!==1)continue;
       if(!solid(x,y+1)&&map[i-1]===1&&map[i+1]===1&&safe(x,y+1))cand.push([x,y,[0,1]]);
       else if(!solid(x+1,y)&&solid(x-1,y)&&map[i-MW]===1&&map[i+MW]===1&&safe(x+1,y))cand.push([x,y,[1,0]]);
       else if(!solid(x-1,y)&&solid(x+1,y)&&map[i-MW]===1&&map[i+MW]===1&&safe(x-1,y))cand.push([x,y,[-1,0]]);}
     cand.sort(()=>Math.random()-.5);for(const [x,y,d] of cand){if(risers.length>=nR)break;if(risers.some(r=>Math.abs(r.tx-x)+Math.abs(r.ty-y)<8))continue;risers.push(mkRiser(x,y,d));}}
-  {const nF=Math.random()<0.3?1+rnd(2):0;const cand=[];for(let y=2;y<MH-2;y++)for(let x=2;x<MW-2;x++){const i=y*MW+x;if(map[i]!==1)continue;if(!solid(x,y+1)&&map[i-1]===1&&map[i+1]===1&&safe(x,y+1))cand.push([x,y,[0,1]]);else if(!solid(x+1,y)&&solid(x-1,y)&&map[i-MW]===1&&map[i+MW]===1&&safe(x+1,y))cand.push([x,y,[1,0]]);else if(!solid(x-1,y)&&solid(x+1,y)&&map[i-MW]===1&&map[i+MW]===1&&safe(x-1,y))cand.push([x,y,[-1,0]]);}
+  {const nF=aN(Math.random()<0.3?1+rnd(2):0);const cand=[];for(let y=2;y<MH-2;y++)for(let x=2;x<MW-2;x++){const i=y*MW+x;if(map[i]!==1)continue;if(!solid(x,y+1)&&map[i-1]===1&&map[i+1]===1&&safe(x,y+1))cand.push([x,y,[0,1]]);else if(!solid(x+1,y)&&solid(x-1,y)&&map[i-MW]===1&&map[i+MW]===1&&safe(x+1,y))cand.push([x,y,[1,0]]);else if(!solid(x-1,y)&&solid(x+1,y)&&map[i-MW]===1&&map[i+MW]===1&&safe(x-1,y))cand.push([x,y,[-1,0]]);}
     cand.sort(()=>Math.random()-.5);for(const [x,y,d] of cand){if(fans.length>=nF)break;if(risers.some(r=>Math.abs(r.tx-x)+Math.abs(r.ty-y)<4))continue;fans.push(mkFan(x,y,d));
       if(Math.random()<0.5){const px=d[1],py=d[0];let placed=false;
         if(Math.random()<0.5)for(const s2 of [1,-1,2,-2]){const rx=x+px*s2,ry=y+py*s2,ri=ry*MW+rx;if(map[ri]===1&&!solid(rx+d[0],ry+d[1])&&!fans.some(q=>q.tx===rx&&q.ty===ry)&&!risers.some(q=>q.tx===rx&&q.ty===ry)){risers.push(mkRiser(rx,ry,d));placed=true;break;}}
@@ -231,19 +259,19 @@ function drawRiser(r){const x=r.tx*TS-camX,y=r.ty*TS-camY;if(x<-14||y<-14||x>W+1
 function genArena(){
   resetHidden();const B=BIOME[biomeOverride!=null?biomeOverride:(depth-1)%BIOME.length];CW=B.cw;
   map=new Uint8Array(MW*MH).fill(1);kind=new Uint8Array(MW*MH);secretHp=new Float32Array(MW*MH);openDoor=new Uint8Array(MW*MH);
-  const aw=24+rnd(9),ah=15+rnd(6),ax=(MW-aw)>>1,ay=((MH-ah)>>1)+1,arena={x:ax,y:ay,w:aw,h:ah,cx:ax+(aw>>1),cy:ay+(ah>>1)};
+  const aw=Math.round((24+rnd(9))*MW/64),ah=Math.round((15+rnd(6))*MH/64),ax=(MW-aw)>>1,ay=((MH-ah)>>1)+1,arena={x:ax,y:ay,w:aw,h:ah,cx:ax+(aw>>1),cy:ay+(ah>>1)};
   const start={x:arena.cx-2,y:ay+ah+2,w:5,h:3},exitR={x:arena.cx-2,y:ay-5,w:5,h:3};start.cx=start.x+2;start.cy=start.y+1;exitR.cx=exitR.x+2;exitR.cy=exitR.y+1;
   rooms=[start,arena,exitR];
   for(const r of rooms)for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++){setF(x,y);kind[y*MW+x]=1;}
   for(let x=arena.cx-1;x<=arena.cx+1;x++){for(let y=ay+ah;y<start.y;y++){setF(x,y);kind[y*MW+x]=1;}for(let y=exitR.y+exitR.h;y<ay;y++){setF(x,y);kind[y*MW+x]=1;}}
   // symmetric cover: pillars and low walls, mirrored left to right
-  const nb=4+rnd(4);for(let k=0;k<nb;k++){const bw=1+rnd(3),bh=bw>1?1:1+rnd(3),bx=ax+2+rnd(Math.max(1,(aw>>1)-bw-3)),by=ay+2+rnd(Math.max(1,ah-bh-4));
+  const nb=aN(4+rnd(4));for(let k=0;k<nb;k++){const bw=1+rnd(3),bh=bw>1?1:1+rnd(3),bx=ax+2+rnd(Math.max(1,(aw>>1)-bw-3)),by=ay+2+rnd(Math.max(1,ah-bh-4));
     for(let y=by;y<by+bh;y++)for(let x=bx;x<bx+bw;x++){const mx=ax+aw-1-(x-ax);if(Math.abs(x-arena.cx)<=2||Math.abs(y-arena.cy)<=0&&Math.random()<0.5)continue;map[y*MW+x]=1;map[y*MW+mx]=1;}}
-  {const sides=[];for(let k=0;k<2+rnd(2);k++){const ry=ay+2+rnd(Math.max(1,ah-6)),rh=3+rnd(2),rw=3+rnd(2);sides.push({y:ry,h:rh,w:rw});}
+  {const sides=[],nsd=aN(2+rnd(2));for(let k=0;k<nsd;k++){const ry=ay+2+rnd(Math.max(1,ah-6)),rh=3+rnd(2),rw=3+rnd(2);sides.push({y:ry,h:rh,w:rw});}
     for(const sd of sides)for(const left of [true,false]){const rx=left?ax-sd.w-1:ax+aw+1,room={x:rx,y:sd.y,w:sd.w,h:sd.h};room.cx=rx+(sd.w>>1);room.cy=sd.y+(sd.h>>1);if(rx<2||rx+sd.w>MW-2||sd.y+sd.h>MH-2)continue;
       let ok=true;for(let y=sd.y-1;y<=sd.y+sd.h;y++)for(let x=rx-1;x<=rx+sd.w;x++)if(map[y*MW+x]===0)ok=false;if(!ok)continue;
       for(let y=sd.y;y<sd.y+sd.h;y++)for(let x=rx;x<rx+sd.w;x++){setF(x,y);kind[y*MW+x]=1;}const dyy=sd.y+(sd.h>>1),wx=left?ax-1:ax+aw;setF(wx,dyy);kind[dyy*MW+wx]=1;rooms.push(room);}
-    const nw=1+rnd(3);for(let k=0;k<nw;k++){const len=3+rnd(3),vert=Math.random()<0.5,bx=ax+3+rnd(Math.max(1,(aw>>1)-5)),by=ay+2+rnd(Math.max(1,ah-len-3));
+    const nw=aN(1+rnd(3));for(let k=0;k<nw;k++){const len=3+rnd(3),vert=Math.random()<0.5,bx=ax+3+rnd(Math.max(1,(aw>>1)-5)),by=ay+2+rnd(Math.max(1,ah-len-3));
       for(let q=0;q<len;q++){const x=vert?bx:bx+q,y=vert?by+q:by;if(Math.abs(x-arena.cx)<=2)continue;const mx=ax+aw-1-(x-ax);map[y*MW+x]=1;map[y*MW+mx]=1;}}}
   exitT={x:exitR.cx,y:exitR.cy};vaults=[];secrets=[];
   genLiquid(Math.min(0.3,levelMods.flood!=null?levelMods.flood:B.flood),start);{let w=0,f=0;for(let i=0;i<MW*MH;i++)if(map[i]===0){f++;if(liq[i]>=2)w++;}wetness=f?w/f:0;}
@@ -254,14 +282,15 @@ function genArena(){
 function arenaFoes(){return enemies.filter(e=>!e.dead&&!ET[e.type].dummy&&!ET[e.type].plant&&!ET[e.type].aquatic&&!ET[e.type].ghost&&!e.caged);}
 function chasmPathOk(start,exitR){const q=[start.cy*MW+start.cx],v=new Uint8Array(MW*MH);v[q[0]]=1;const goal=exitR.cy*MW+exitR.cx;
   while(q.length){const i=q.pop();if(i===goal)return true;const x=i%MW,y=(i/MW)|0;for(const [dx,dy] of D4){const j=(y+dy)*MW+x+dx;if(v[j]||chasm[j])continue;const m=map[j];if(m===1||m===3||m===4)continue;v[j]=1;q.push(j);}}return false;}
-function genMolten(start,exitR){let made=0;const cand=rooms.filter(r=>r!==start&&r!==exitR&&r.w>=5&&r.h>=4);
-  for(let t=0;t<40&&made<3+rnd(3);t++){const r=cand.length?cand[rnd(cand.length)]:null;if(!r)break;const cx=r.x+1+rnd(r.w-2),cy=r.y+1+rnd(r.h-2),set=[];const n=4+rnd(9),q=[[cx,cy]];
+function genMolten(start,exitR){let made=0;const cand=rooms.filter(r=>r!==start&&r!==exitR&&r.w>=5&&r.h>=4),want=aN(3+rnd(3));
+  for(let t=0;t<40*AREA&&made<want;t++){const r=cand.length?cand[rnd(cand.length)]:null;if(!r)break;const cx=r.x+1+rnd(r.w-2),cy=r.y+1+rnd(r.h-2),set=[];const n=4+rnd(9),q=[[cx,cy]];
     while(q.length&&set.length<n){const [x,y]=q.splice(rnd(q.length),1)[0],i=y*MW+x;if(x<=r.x||y<=r.y||x>=r.x+r.w-1||y>=r.y+r.h-1||map[i]!==0||molten[i]||liq[i]||chasm[i]||(x===exitT.x&&y===exitT.y))continue;molten[i]=1;set.push(i);for(const [dx,dy] of D4)q.push([x+dx,y+dy]);}
     const saved=chasm.slice();for(const i of set)chasm[i]=1;const ok=chasmPathOk(start,exitR);chasm.set(saved);if(!ok||!set.length){for(const i of set)molten[i]=0;continue;}for(const i of set){hz[i]=0;oil[i]=0;}made++;}}
 function crustTile(i){molten[i]=2;paintTile(i%MW,(i/MW)|0);puff((i%MW)*TS+6,((i/MW)|0)*TS+6,'steam',8);sfx('hiss');}
-let moltenT=0;
-function updateMolten(dt){const p=player;moltenT-=dt;
-  if(moltenT<=0){moltenT=0.3;for(let i=0;i<MW*MH;i++){if(molten[i]!==1)continue;let wet=liq[i]>=1&&!ice[i];if(!wet)for(const d of [1,-1,MW,-MW]){const j=i+d;if(liq[j]>=1&&!ice[j]&&molten[j]!==1){wet=true;break;}}if(wet){crustTile(i);continue;}
+let moltenCur=0;
+// slag next to water crusts over. A share of the deck is checked each frame so a full sweep takes 0.3 s.
+function updateMolten(dt){const p=player;
+  {const N=MW*MH,n=Math.min(N,Math.ceil(N*dt/0.3));for(let k=0;k<n;k++){const i=moltenCur;moltenCur=moltenCur+1<N?moltenCur+1:0;if(molten[i]!==1)continue;let wet=liq[i]>=1&&!ice[i];if(!wet)for(const d of [1,-1,MW,-MW]){const j=i+d;if(liq[j]>=1&&!ice[j]&&molten[j]!==1){wet=true;break;}}if(wet){crustTile(i);continue;}
       if(webs[i])tearWeb(i);if(Math.random()<0.03)puff((i%MW)*TS+6,((i/MW)|0)*TS+6,'smoke',3);}}
   const pi=Math.floor(p.y/TS)*MW+Math.floor(p.x/TS);
   if(molten[pi]===1){p.moltenAcc=(p.moltenAcc||0)+dt;if(p.moltenAcc>=0.25){p.moltenAcc-=0.25;hurtPlayer(2.5*(p.floating?0.5:1)*(p.st.wet>30?0.6:1),true);addStatus('brn',p.floating?10:22);if(Math.random()<0.3)say('the slag sears your boots');}}else p.moltenAcc=0;
@@ -288,16 +317,17 @@ function makeArrivalCab(r){const sides=[[-1,0],[1,0],[0,-1],[0,1]].sort(()=>Math
   return null;}
 function openArrival(f){const i=f.ty*MW+f.tx;map[i]=0;kind[i]=kind[arrival.cy*MW+arrival.cx]||0;paintTile(f.tx,f.ty);arrival.open=true;fixtures=fixtures.filter(q=>q!==f);sfx('lift');shake=Math.max(shake,2);say('the lift doors grind open');
   for(let k=0;k<10;k++)parts.push({x:f.tx*TS+6,y:f.ty*TS+6,vx:rr(-20,20),vy:rr(-20,20),t:0.4,m:0.4,c:'#8e978b',s:1});}
-function genChasms(start,exitR){let made=0;const cand=rooms.filter(r=>r!==start&&r!==exitR&&r.w>=6&&r.h>=5);
-  for(let t=0;t<40&&made<3+rnd(3);t++){const r=cand.length?cand[rnd(cand.length)]:null;if(!r)break;const w=2+rnd(Math.min(4,r.w-3)),h=2+rnd(Math.min(3,r.h-3)),x0=r.x+1+rnd(r.w-w-1),y0=r.y+1+rnd(r.h-h-1),set=[];
+function genChasms(start,exitR){let made=0;const cand=rooms.filter(r=>r!==start&&r!==exitR&&r.w>=6&&r.h>=5),want=aN(3+rnd(3));
+  for(let t=0;t<40*AREA&&made<want;t++){const r=cand.length?cand[rnd(cand.length)]:null;if(!r)break;const w=2+rnd(Math.min(4,r.w-3)),h=2+rnd(Math.min(3,r.h-3)),x0=r.x+1+rnd(r.w-w-1),y0=r.y+1+rnd(r.h-h-1),set=[];
     for(let y=y0;y<y0+h;y++)for(let x=x0;x<x0+w;x++){const i=y*MW+x;if(map[i]!==0||chasm[i]||(x===exitT.x&&y===exitT.y))continue;if((x===x0||x===x0+w-1)&&(y===y0||y===y0+h-1)&&Math.random()<0.5)continue;chasm[i]=1;set.push(i);}
     if(!chasmPathOk(start,exitR)){for(const i of set)chasm[i]=0;continue;}for(const i of set){liq[i]=0;hz[i]=0;}made++;}}
 function genLevel(){
   resetHidden();
   const B=BIOME[biomeOverride!=null?biomeOverride:(depth-1)%BIOME.length];CW=B.cw;
+  const nRooms=Math.max(6,Math.round(B.rooms*AREA));
   for(let attempt=0;attempt<12;attempt++){
     map=new Uint8Array(MW*MH).fill(1);rooms=[];
-    for(let t=0;t<500&&rooms.length<B.rooms;t++){
+    for(let t=0;t<500&&rooms.length<nRooms;t++){
       const w=B.w[0]+rnd(B.w[1]-B.w[0]+1),h=B.h[0]+rnd(B.h[1]-B.h[0]+1),x=2+rnd(MW-w-4),y=2+rnd(MH-h-4);
       if(rooms.some(r=>x<r.x+r.w+2&&x+w+2>r.x&&y<r.y+r.h+2&&y+h+2>r.y))continue;
       rooms.push({x,y,w,h,cx:x+(w>>1),cy:y+(h>>1)});
@@ -309,7 +339,7 @@ function genLevel(){
   const conn=[rooms[0]];
   for(let i=1;i<rooms.length;i++){const r=rooms[i];let best=conn[0],bd=1e9;
     for(const c of conn){const d=Math.abs(c.cx-r.cx)+Math.abs(c.cy-r.cy);if(d<bd){bd=d;best=c;}}corridor(r,best);conn.push(r);}
-  for(let k=0;k<3;k++){const a=rooms[rnd(rooms.length)],b=rooms[rnd(rooms.length)];if(a!==b)corridor(a,b);}
+  for(let k=aN(3);k>0;k--){const a=rooms[rnd(rooms.length)],b=rooms[rnd(rooms.length)];if(a!==b)corridor(a,b);}
   for(const r of rooms)if(r.w>=8&&r.h>=7&&Math.random()<B.pillars)
     for(let yy=r.y+2;yy<r.y+r.h-2;yy+=3)for(let xx=r.x+2;xx<r.x+r.w-2;xx+=3)
       if(Math.random()<.5&&!(Math.abs(xx-r.cx)<=1&&Math.abs(yy-r.cy)<=1))map[yy*MW+xx]=1;
@@ -317,13 +347,13 @@ function genLevel(){
   let exitR=rooms[1],bd=-1;for(const r of rooms){const d=dist[r.cy*MW+r.cx];if(r!==start&&d>bd){bd=d;exitR=r;}}
   exitT={x:exitR.cx,y:exitR.cy};
   vaults=[];secrets=[];
-  const nv=1+(Math.random()<0.35+depth*0.08?1:0)+(levelMods.vaults||0);
+  const nv=aN(1+(Math.random()<0.35+depth*0.08?1:0)+(levelMods.vaults||0));
   for(let k=0;k<nv;k++){const v=attach(2);if(v)vaults.push(v);}
-  const ns=1+(depth>=3&&Math.random()<.5?1:0);
+  const ns=aN(1+(depth>=3&&Math.random()<.5?1:0));
   for(let k=0;k<ns;k++){const s=attach(3);if(s)secrets.push(s);}
-  if(Math.random()<0.5){const v=attach(4);if(v){v.vent=true;ventRooms.push(v);}}
+  for(let k=aN(0.5);k>0;k--){const v=attach(4);if(v){v.vent=true;ventRooms.push(v);}}
   if(Math.random()<0.06){const r=attach(2,4,3,12);if(r)freightT={x:r.cx,y:r.cy};}
-  {const nm=(Math.random()<0.5?1:0)+(Math.random()<0.15?1:0);const types=Object.keys(MODS);
+  {const nm=aN((Math.random()<0.5?1:0)+(Math.random()<0.15?1:0));const types=Object.keys(MODS);
     for(let k=0;k<nm;k++){const ty=types[rnd(types.length)],M=MODS[ty],r=attach(6,M.w,M.h,M.kd);if(!r)continue;
       r.type=ty;r.entered=false;const lk=Math.random()<M.lock;map[r.ey*MW+r.ex]=lk?7:6;modDoors.set(r.ey*MW+r.ex,{style:M.style,mod:r,broken:false});modules.push(r);}}
   let hr=null;if(Math.random()<0.45){hr=carveIsolated(6+rnd(4),5+rnd(3));if(hr)hatchRooms.push(hr);}

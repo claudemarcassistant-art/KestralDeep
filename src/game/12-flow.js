@@ -111,6 +111,7 @@ function vomit(why){const p=player;p.sat=0;p.buffs=[];refreshStats();hurtPlayer(
 function eatFood(id){const p=player,f=FOOD[id];if(!p.food[id])return;const fs=Math.round(f.sat*(1-0.1*U('cook')));if(p.sat+fs>100){say('too full to eat that');sfx('click');return;}
   p.food[id]--;p.sat+=fs;if(id==='ginsu'){const n=cureInjury(true);setTimeout(()=>say(n?'warmth floods through you. '+n+' injur'+(n>1?'ies':'y')+' mended':'it tastes of nothing much'),60);}p.rs.eaten=(p.rs.eaten||0)+1;p.buffs.push({id,lv:f.lv+(U('cook')>=2?1:0)});gainFoodXp(Math.round(f.sat*(COOK.some(c=>c.out===id)?1.5:1)));refreshStats();sfx('pick');say('ate '+f.name.toLowerCase()+'. '+f.desc.toLowerCase());}
 function enterLevel(){
+  setDeckSize(cond&&cond.size||'m');
   wells=[];orbiters=[];mines=[];soaks=[];senseT=0;if(player)player.astral=null;clouds=[];nades=[];emitters=[];flames=[];webs=new Uint8Array(MW*MH);if(player)player.blastDrill=false;if(player){player.windUsed=false;player.o2=100;}
   alertLock=false;choiceUI=null;diceUI=null;
   if(alertCarry){alertCarry=false;alertM=40;alertRumble=false;setTimeout(()=>say('they followed you down. the disturbance carries over'),50);}else{alertM=0;alertWaves=0;alertRumble=false;}
@@ -119,6 +120,6 @@ function enterLevel(){
   const arenaLvl=cond&&cond.obj==='arena';const {start,exitR,arena}=arenaLvl?genArena():genLevel();
   player.x=start.cx*TS+TS/2;player.y=start.cy*TS+TS/2;arrival=makeArrivalCab(start);if(arrival){player.x=arrival.cx*TS+6;player.y=arrival.cy*TS+6;}
   if(perk('cartog'))for(let y=exitR.y-1;y<=exitR.y+exitR.h;y++)for(let x=exitR.x-1;x<=exitR.x+exitR.w;x++)if(x>=0&&y>=0&&x<MW&&y<MH)seen[y*MW+x]=1;
-  resetLevelState();populate(start,exitR);if(!arrival)enemies=enemies.filter(e=>ET[e.type].plant||Math.hypot(e.x-player.x,e.y-player.y)>130);if(arenaLvl){const mini=depth>=3&&!bossPending&&Math.random()<0.5;const n=(mini?1:3)+Math.floor(depth/2)+rnd(3);for(let k=0;k<n;k++){const q=spotIn(arena);if(q)enemies.push(mkEnemy(pickType(),q.x,q.y));}
+  resetLevelState();populate(start,exitR);if(!arrival)enemies=enemies.filter(e=>ET[e.type].plant||Math.hypot(e.x-player.x,e.y-player.y)>130);if(arenaLvl){const mini=depth>=3&&!bossPending&&Math.random()<0.5;const n=Math.max(1,aN((mini?1:3)+Math.floor(depth/2)+rnd(3)));for(let k=0;k<n;k++){const q=spotIn(arena);if(q)enemies.push(mkEnemy(pickType(),q.x,q.y));}
     if(mini){const t=freeTile(arena);if(t){const bi=(biomeOverride!=null?biomeOverride:(depth-1))%6,e=mkEnemy('warden',t.tx*TS+6,t.ty*TS+6);e.boss=bi;e.hp=e.mhp=36+depth*4;e.mini=true;enemies.push(e);bossRef=e;setTimeout(()=>{bannerBoss=3;say('a '+BOSSES[bi].name.toLowerCase()+' holds this arena');},60);}}}bfs(start.cx,start.cy,flow);ensureLayers();setupObjective(start,exitR);startLevelScore();
 }

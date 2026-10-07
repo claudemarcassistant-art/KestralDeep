@@ -132,7 +132,7 @@ function updatePlay(dt){
     if(liftState==='open'||liftState==='ready'){finishLevel();return;}
     if(liftMsgT<=0){liftMsgT=3;say(liftState==='arena'?'the lift is sealed until every creature here is dead ('+arenaFoes().length+' left)':liftState==='locked'?'the lift is locked out. find the lift keycard':liftState==='idle'?'R to call the lift. it will take a while, and it is loud':'the lift is still on its way');}}
 
-  flowT-=dt;if(flowT<=0){flowT=0.25;bfs(Math.floor(p.x/TS),Math.floor(p.y/TS),flow);}
+  flowTick();
 
   for(const e of enemies){
     const b=ET[e.type];e.flash=Math.max(0,e.flash-dt);e.cd-=dt;e.ph+=dt*6;

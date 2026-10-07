@@ -11,7 +11,7 @@ function raiseAlarm(x,y,n,why){secT=Math.max(secT,6);secBeep=0;shake=Math.max(sh
   const P=player,cand=[];for(let k=0;k<200&&cand.length<n;k++){const r=randomRoom();if(!r)break;const t=freeTile(r);if(!t)continue;const wx=t.tx*TS+6,wy=t.ty*TS+6,dd=Math.hypot(wx-P.x,wy-P.y);if(dd<90||dd>260)continue;cand.push([wx,wy]);}
   for(let k=0;k<600&&cand.length<n;k++){const tx=rnd(MW),ty=rnd(MH),i=ty*MW+tx;if(map[i]!==0||chasm[i]||molten[i]===1||liq[i]>=3)continue;const wx=tx*TS+6,wy=ty*TS+6,dd=Math.hypot(wx-P.x,wy-P.y);if(dd<90||dd>260)continue;cand.push([wx,wy]);}
   for(const [wx,wy] of cand){const e=mkEnemy('guard',wx,wy);e.alert=true;e.called=true;enemies.push(e);for(let k=0;k<8;k++)parts.push({x:wx,y:wy,vx:rr(-30,30),vy:rr(-30,30),t:0.4,m:0.4,c:'#5a8ac0',s:1});}}
-function genTrips(){trips=[];if(depth<2||Math.random()>0.35)return;const n=1+(Math.random()<0.4?1:0);
+function genTrips(){trips=[];if(depth<2||Math.random()>0.35)return;const n=Math.max(1,aN(1+(Math.random()<0.4?1:0)));
   for(let t=0;t<200&&trips.length<n;t++){const x=2+rnd(MW-4),y=2+rnd(MH-4),i=y*MW+x;if(map[i]!==0||chasm[i]||molten[i])continue;
     for(const [ax,ay] of [[1,0],[0,1]]){let a=0,b=0;while(a<5&&!solid(x-ax*(a+1),y-ay*(a+1)))a++;while(b<5&&!solid(x+ax*(b+1),y+ay*(b+1)))b++;const L=a+b+1;if(L>4||a>=5||b>=5)continue;
       if(!solid(x-ay,y-ax)&&!solid(x+ay,y+ax)&&!solid(x-ay*2,y-ax*2)&&!solid(x+ay*2,y+ax*2)){if(Math.hypot((x-rooms[0].cx),(y-rooms[0].cy))<6||trips.some(q=>Math.abs(q.cx-x)+Math.abs(q.cy-y)<10))continue;

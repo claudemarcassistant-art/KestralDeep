@@ -15,8 +15,10 @@ function genSector(sec){
     for(const n of N)n.links.sort((a,b)=>N[a].y-N[b].y);
     {const cand=N.map((n,i)=>i).filter(i=>i>0&&i!==ex&&(N[i].type==='station'||N[i].type==='flooded')&&dist[i]>=1);for(const n of N)if(n.cond&&n.cond.obj==='arena')n.cond.obj='open';
       const want=Math.min(cand.length,(depth>=2||sec>=1?1:0)+(Math.random()<0.55?1:0));for(let k=0;k<want;k++){const i=cand.splice(rnd(cand.length),1)[0];N[i].cond.obj='arena';}}
+    // the exit deck and arena decks lean large
+    for(const n of N)if(n.cond&&(n.exit||n.cond.obj==='arena'))n.cond.size=wpick(DECK_SIZE_ODDS.big);
     return {nodes:N,exit:ex};}
-  const N=[{x:0.04,y:0.5,type:'station',known:true,links:[1],cond:{light:'normal',haz:null}}];for(let k=1;k<=3;k++)N.push({x:0.04+k*0.3,y:0.5,type:'station',known:k===3,exit:k===3,links:[k-1].concat(k<3?[k+1]:[]),cond:rollCond('station')});return {nodes:N,exit:3};}
+  const N=[{x:0.04,y:0.5,type:'station',known:true,links:[1],cond:{light:'normal',haz:null}}];for(let k=1;k<=3;k++)N.push({x:0.04+k*0.3,y:0.5,type:'station',known:k===3,exit:k===3,links:[k-1].concat(k<3?[k+1]:[]),cond:rollCond('station')});N[3].cond.size=wpick(DECK_SIZE_ODDS.big);return {nodes:N,exit:3};}
 function newSector(sec){const g=genSector(sec);route.sector=sec;route.nodes=g.nodes;route.exit=g.exit;route.cur=0;route.chaser=null;route.lk=new Set();learnLinks(0);biomeOverride=testMode?biomeOverride:sec%6;
   if(sec>=1||runAlertWaves>=3){const far=route.nodes.map((n,i)=>i).filter(i=>i>0&&i!==route.exit&&route.nodes[i].x>0.45);if(far.length&&Math.random()<Math.min(0.9,0.45+sec*0.15+runAlertWaves*0.05))route.chaser={at:far[rnd(far.length)],boss:sec%6,hp:null};}
   ensureLayers();}

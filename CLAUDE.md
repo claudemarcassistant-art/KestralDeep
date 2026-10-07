@@ -2,7 +2,7 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v0.78**. The game was built iteratively in claude.ai chats up to this point and moved to this repository at v0.78.
+Current version: **v0.79**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
@@ -35,7 +35,8 @@ Current version: **v0.78**. The game was built iteratively in claude.ai chats up
 
 1. ~~Enable GitHub Pages~~ Done: deployed from `main`, link above.
 2. ~~Split the code into files with a build step~~ Done, by section (see above), and the data tables gathered into `src/data/`. Play-tested after each step: title screen, new run, saving and continuing, route map to the next deck or stop, test range, arcade, Codex, Version history, pack menu; no errors.
-3. **Balance pass** (the owner will play test runs and report findings). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
+3. **Batch 1** (`docs/specs/batch-1.md`): four sessions, done one at a time; the owner playtests and says "continue" between them. Session 1 (deck sizes, v0.79) is done. Next: Session 2 (run seeds), then 3 (pressure plate traps and trap panels), then 4 (weight plates, crates, spacebar styles).
+4. **Balance pass** (the owner will play test runs and report findings). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
 
 ## Working conventions
 
@@ -44,17 +45,25 @@ Current version: **v0.78**. The game was built iteratively in claude.ai chats up
 - **Update the version history** (both places) for every user-facing change, in plain player-facing language.
 - **Update the Codex** when adding content: the title-screen Codex is built from the data tables, and the `Systems` category has hand-written entries explaining mechanics. New mechanics need a Systems entry; new creatures need a `BEASTINFO` entry with `move`, `attack` and `lore`.
 - **New creatures** also need: an `ET` entry, a place in `BEASTS` (bestiary order), `KILLPTS`, a `THREAT` cost (used by the per-deck threat budget), a spawn weight in `pickType()`, an AI branch in the enemy update loop and a draw branch in the enemy renderer.
+- **Deck size is per deck.** `MW`/`MH` change for every deck (see "Deck sizes" below). Never hard-code 64 or a tile count: use `MW`, `MH` and `MW*MH`. A new per-tile array must also be reallocated in `setDeckSize()`. A new generated feature whose count should grow with the deck (rooms, loot, hazards, traps...) takes its count through `aN(n)`.
+- **No whole-deck work in one frame on a timer.** Large decks are ~1.9x Medium. A timed scan over every tile must be spread over frames with a cursor (see `updateOil()` / `updateMolten()`), and creature pathfinding goes through `flowTick()` (see below).
+- **Specs live in `docs/specs/`.** Work through a batch one session at a time, as its "How to work through this batch" section says.
 - **Keep the save format working.** Runs are saved between decks to `localStorage`; adding fields to the player is fine, but anything holding object references (enemies, sets) must be cleared or converted in `saveRun()`.
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v0.78)
+## Architecture overview (as of v0.79)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
 **Main loop:** `frame()` runs `updatePlay(dt)` when in play and not paused, then renders. Rendering draws the cached tile layer, items, enemies and the player, then a raycast light polygon and fog, then `drawActWorld()` overlays (clouds, flashlight cones, webs, mines, lamps, effects) and the HUD.
 
-**World:** a 64x64 tile grid, 12 px tiles. Parallel typed arrays per tile: `map` (0 floor, 1 wall, others for doors and vents), `kind` (floor style), `liq` (water depth), `hz` (fire, toxic and other hazards), `oil`, `slime`, `ice`, `chasm`, `molten`, `webs`, `furn` (solid furniture), `seen`. `resetHidden()` resets per-deck arrays; `genLevel()` and `genArena()` build decks; `populate()` places creatures and loot.
+**World:** a tile grid of `MW` x `MH` tiles (48x48, 64x64 or 96x80, see Deck sizes), 12 px tiles. Parallel typed arrays per tile: `map` (0 floor, 1 wall, others for doors and vents), `kind` (floor style), `liq` (water depth), `hz` (fire, toxic and other hazards), `oil`, `slime`, `ice`, `chasm`, `molten`, `webs`, `furn` (solid furniture), `seen`. `resetHidden()` resets per-deck arrays; `genLevel()` and `genArena()` build decks; `populate()` places creatures and loot.
+
+**Deck sizes (v0.79):** each junction's `cond.size` is `'s'`, `'m'` or `'l'` (`DECK_SIZES`, odds in `DECK_SIZE_ODDS`, both in `src/data/world.js`): 25/60/15 on ordinary junctions, 15/35/50 on the sector's exit deck and arena decks. Rolled in `rollCond()`, adjusted in `genSector()`, saved with the route; a missing size (older saves) means medium. `enterLevel()` calls `setDeckSize(cond.size)` first, which sets `MW`, `MH`, `deckSize` and `AREA` (area relative to 64x64: 0.56 / 1 / 1.875), reallocates every per-tile array and the pre-drawn tile canvas `mcv`. The test range, arcade and lift landings call `setDeckSize('m')` and keep their fixed layouts.
+- **Scaling with area:** `aN(n)` scales a count by `AREA` and rounds randomly so the average is exact. It is used for rooms, extra corridors, vaults, secrets, crawlspaces, modules, arena size and cover, slag, chasms, cables, barrels, risers, fans, oil, hazard spots, hack panels, vending machines, freezers, trip scanners, NPC chances, chests, overgrowth plants, haunting ghosts and arena creatures. The threat budget is multiplied by `AREA`. Exploration disturbance (`newSeen` in `updateAlert()`) is divided by `AREA`. Par time and potential score scale too (`startLevelScore()`).
+- **Pathfinding:** `flow` holds each tile's walking distance to the player. `flowTick()` rebuilds it continuously in slices (about an eighth of the deck per frame) into `flowB` and swaps when done; set `flowT=0` to restart it at once after the map changes (doors, broken walls). `bfs()` is still used for one-off full searches (generation, level start).
+- **Measured (headless Chromium):** a busy Large deck (hunter, alarm, gas grenades, ~30 creatures) holds 60 fps like a busy v0.78 Medium deck.
 
 **Run structure:** each biome is a sector map of 12-15 junctions (`route.nodes`) with the exit 3-4 jumps away. Shafts are hidden until ridden or revealed by intel (`route.lk`). A biome hunter boss can roam the sector (`route.chaser`). Each sector has 1-2 arena decks. The player arrives on each deck sealed in a lift cab and opens the doors with R.
 
@@ -66,7 +75,7 @@ Current version: **v0.78**. The game was built iteratively in claude.ai chats up
 
 **Persistence (`localStorage`):** `kd_opts` (options), `kd_meta` (meta-progression: deepest sector reached, achievements earned, hunters killed, creatures seen, run setup), `kd_save` (the run in progress, written on the route map and cleared on death or a new game), plus the best score.
 
-**Special areas:** the test range (title screen) has every crew file, NPC, a creature console and a deck builder for testing; the arcade has six original mini-games (`ARC`).
+**Special areas:** the test range (title screen) has every crew file, NPC, a creature console and a deck builder (the test lift, with a Size option) for testing; the arcade has six original mini-games (`ARC`).
 
 ## Where things live
 
@@ -84,7 +93,7 @@ Current version: **v0.78**. The game was built iteratively in claude.ai chats up
 | `progress.js` | `GRADES`, `MODS_RUN`, `LVLSTAT`, `ACH`, `AP_TRADES` |
 | `versions.js` | `VERSIONS`, `GAME_VERSION` |
 | `weapons.js` | `WORDER`, `ARM`, `FIST`, `IMPLEMENTS`, `WPN`, `WCRIT`, `MAGS`, `CHARGE`, `COMBO_T` |
-| `world.js` | `SECTORS`, `BNAMES`, `PAL`, `COND_LIGHT`, `COND_HAZ`, `MODS`, `ROOMNAMES`, `HAZDESC`, `LIQ`/`LIQNAME`, `BIOME`, `NODE`, `HIDDEN_TYPES` |
+| `world.js` | `SECTORS`, `BNAMES`, `PAL`, `COND_LIGHT`, `COND_HAZ`, `MODS`, `ROOMNAMES`, `HAZDESC`, `LIQ`/`LIQNAME`, `BIOME`, `NODE`, `HIDDEN_TYPES`, `DECK_SIZES`, `DECK_SIZE_ODDS` |
 
 **Code (`src/game/`):**
 
@@ -92,7 +101,8 @@ Current version: **v0.78**. The game was built iteratively in claude.ai chats up
 |---|---|
 | equipping armaments, quick items, flasks, tank, tools, sling, psychic powers, `drawActWorld()` | `03-equipment.js` |
 | scoring, deck conditions, collision | `04-state.js` |
-| `genLevel()`, `genArena()`, `resetHidden()`, cooking | `05-levelgen.js` |
+| `MW`, `MH`, `AREA`, `deckSize`, `aN()` | `01-core.js` |
+| `setDeckSize()`, `genLevel()`, `genArena()`, `resetHidden()`, `bfs()`, `flowTick()`, cooking | `05-levelgen.js` |
 | `ARC` (arcade games) | `06-arcade.js` |
 | `pickType()` (spawn weights), `populate()` | `09-population.js` |
 | injuries, cores and substats logic | `10-player.js` |
@@ -126,6 +136,8 @@ To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "con
 - `hurtPlayer(d, quiet, src)`: `quiet` is used for hazard ticks and self-inflicted costs; non-quiet hits break combos and astral projection.
 - The pack menu runs live by default, so player input must be ignored while it is open (movement and mouse attacks are already gated on `menuOpen`).
 - Large single-line functions are common; when editing, anchor changes on exact unique strings and re-test.
+- A plain floor flood-fill from the start room does not always reach the exit: locked doors, module doors, weak walls and vents count as walls to `bfs()`. Treat any tile other than wall (`map` 1) as passable when checking that a deck is connected.
+- The test deck builder's `DECKOPT` is indexed by position in one place (`DECKOPT[1]` is Biome), so add new options after it.
 
 ## Ideas on the list (not yet started)
 

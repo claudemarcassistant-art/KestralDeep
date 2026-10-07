@@ -31,13 +31,13 @@ src/
     progress.js             deck grades, run stats, achievements, point trades, challenge modifiers
     versions.js             in-game version history
     weapons.js              armaments, gun stats, magazines, crits, charge and combo timing
-    world.js                sectors, biome layouts, palettes, route nodes, water depths, room modules, deck conditions, hazard text
+    world.js                sectors, biome layouts, palettes, route nodes, water depths, room modules, deck conditions, hazard text, deck sizes
   game/           the game, split by system
-    01-core.js              canvas, view sizes, shared helpers
+    01-core.js              canvas, view sizes, deck size variables, shared helpers
     02-audio.js             sound synthesis
     03-equipment.js         equipping armaments, quick items, flasks, liquid tank, tools, sling, psychic powers
     04-state.js             run and world state, scoring, deck conditions, movement and collision
-    05-levelgen.js          deck generation, slime, oil, cooking, barrels, gas clouds, cables
+    05-levelgen.js          deck sizing, deck generation, pathfinding, slime, oil, cooking, barrels, gas clouds, cables
     06-arcade.js            arcade cabinet games, ice
     07-world-fx.js          sprinklers, fans, plants, hazards, vending machines, panels, liquids
     08-tile-art.js          tile, fire and decoration painting
@@ -63,6 +63,7 @@ src/
     28-render-world.js      world rendering, lighting, fog
     29-loop.js              main loop
 scripts/build.mjs  the build
+docs/specs/        change request batches
 ```
 
 The source files are **not** ES modules. The build joins `src/data/*.js` and then

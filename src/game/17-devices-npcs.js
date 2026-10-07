@@ -5,17 +5,18 @@ const DECKOPT=[
   {k:'depth',label:'Depth',vals:[1,2,3,4,5,6,7,8,9,10]},
   {k:'biome',label:'Biome',vals:['auto','Intake','Pump Hall','Sorting Floor','Cold Store','Brine Works','Relay Core']},
   {k:'type',label:'Deck type',vals:['station','flooded','cache']},
+  {k:'size',label:'Size',vals:['random','small','medium','large']},
   {k:'light',label:'Lighting',vals:['random','normal','lit','dark']},
   {k:'haz',label:'Hazard',vals:['random','none','fog','steam','fire','toxic','anomaly','electrical','volatile','overgrowth','sprinklers','chasm','molten']},
   {k:'obj',label:'Lift',vals:['random','open','keycard','defend','both','arena']},
   {k:'waves',label:'Incoming waves',vals:['off','on']},
   {k:'haunt',label:'Haunted',vals:['off','on']},
   {k:'lowg',label:'Low gravity',vals:['off','on']}];
-const deckCfg={depth:1,biome:'auto',type:'station',light:'random',haz:'random',obj:'random',waves:'off',haunt:'off',lowg:'off'};
+const deckCfg={depth:1,biome:'auto',type:'station',size:'random',light:'random',haz:'random',obj:'random',waves:'off',haunt:'off',lowg:'off'};
 const deckRows=()=>[...DECKOPT.map(o=>({opt:o})),{act:'go',label:'Go to this deck'},{act:'rand',label:'Go to a random deck'},{act:'stay',label:'Stay here'}];
 function cycleDeck(o,d){const v=o.vals,i=v.indexOf(deckCfg[o.k]);deckCfg[o.k]=v[(i+d+v.length)%v.length];sfx('click');}
 function launchTestDeck(rand){const c=deckCfg,type=rand?wpick([['station',6],['flooded',2],['cache',2]]):c.type;depth=rand?1+rnd(8):c.depth;const rc=rollCond(type);
-  cond={light:rand||c.light==='random'?rc.light:c.light,haz:rand||c.haz==='random'?rc.haz:(c.haz==='none'?null:c.haz),obj:rand||c.obj==='random'?rc.obj:c.obj,ev:rand?rc.ev:(c.waves==='on'?'waves':null),haunt:rand?rc.haunt:c.haunt==='on',lowg:rand?rc.lowg:c.lowg==='on'};
+  cond={light:rand||c.light==='random'?rc.light:c.light,haz:rand||c.haz==='random'?rc.haz:(c.haz==='none'?null:c.haz),obj:rand||c.obj==='random'?rc.obj:c.obj,ev:rand?rc.ev:(c.waves==='on'?'waves':null),haunt:rand?rc.haunt:c.haunt==='on',lowg:rand?rc.lowg:c.lowg==='on',size:rand||c.size==='random'?rc.size:c.size[0]};
   biomeOverride=rand||c.biome==='auto'?null:DECKOPT[1].vals.indexOf(c.biome)-1;
   levelMods=type==='flooded'?{flood:0.85}:type==='cache'?{vaults:2,chests:2,enemyMul:1.35}:{};
   testDeck=true;deckUI=null;hazOff=false;levelLabel='TEST DECK';enterLevel();state='play';say('test deck. reach the lift to come back');}
@@ -57,7 +58,7 @@ function drawGrindUI(){const R=grindRows(),pw=270,rh=11,ph=44+R.length*rh+14,px=
 function wallSpot(){const c=[];for(let y=2;y<MH-2;y++)for(let x=2;x<MW-2;x++){const i=y*MW+x;if(map[i]===1&&!solid(x,y+1)&&map[i-1]===1&&map[i+1]===1&&kind[(y+1)*MW+x]===1&&Math.abs(x-exitT.x)+Math.abs(y+1-exitT.y)>2
     &&!panels.some(q=>Math.abs(q.tx-x)+Math.abs(q.ty-y)<3)&&!vendors.some(v=>Math.abs(v.tx-x)+Math.abs(v.ty-y)<3)&&!risers.some(r=>Math.abs(r.tx-x)+Math.abs(r.ty-y)<2)&&!fans.some(f=>Math.abs(f.tx-x)+Math.abs(f.ty-y)<2)&&!fixtures.some(f=>Math.abs(f.tx-x)+Math.abs(f.ty-y)<3))c.push([x,y]);}
   return c.length?c[rnd(c.length)]:null;}
-function genFreezers(){const bi=biomeOverride!=null?biomeOverride:(depth-1)%BIOME.length,n=bi===3?3+rnd(2):(Math.random()<0.2?1:0);
+function genFreezers(){const bi=biomeOverride!=null?biomeOverride:(depth-1)%BIOME.length,n=aN(bi===3?3+rnd(2):(Math.random()<0.2?1:0));
   for(let k=0;k<n;k++){const w=wallSpot();if(w)fixtures.push({tx:w[0],ty:w[1],kind:'freezer',wall:true,used:false});}}
 function genCameras(){if(depth<2||Math.random()>0.25)return;const w=wallSpot();if(w)fixtures.push({tx:w[0],ty:w[1],kind:'camera',wall:true});}
 function openCamera(f){if(!f.tr){f.tr=rollTransit();if(f.tr.type==='passive'||f.tr.type==='none')f.tr={type:'none'};}const tr=nextTransit||f.tr;
@@ -71,7 +72,9 @@ function setPower(on){if(on){powerOff=false;if(powerPrev)cond.light=powerPrev;fo
   else{powerOff=true;powerPrev=cond.light;cond.light='dark';for(const t of trips){t.wasOn=t.on;t.on=false;}for(const c of cables)c.st='idle';say('a deep clunk, then darkness. the cables go dead');sfx('thud');shake=Math.max(shake,4);}}
 function genStasis(){if(Math.random()>0.12)return;for(let t=0;t<30;t++){const r=randomRoom(),q=freeTile(r);if(q&&r!==rooms[0]){fixtures.push({tx:q.tx,ty:q.ty,kind:'stasis',ph:0});return;}}}
 const MODNPC={medbay:['subject','android'],lab:['subject','android','bomber'],arcade:null,cafeteria:['cook','scrapper'],breakroom:['cook','detective','scrapper'],lockers:['quarter','locksmith'],greenhouse:['cook'],custodial:['locksmith','bomber'],court:['pilot','scrapper'],bathhouse:['detective','subject']};
-function genNpcs(){if(depth<2||Math.random()>0.35)return;
+// one chance of an NPC per Medium deck's worth of area
+function genNpcs(){for(let k=aN(1);k>0;k--)genNpc();}
+function genNpc(){if(depth<2||Math.random()>0.35)return;
   const mods=(modules||[]).filter(m=>m.type in MODNPC).sort(()=>Math.random()-0.5);if(mods.length&&Math.random()<0.6){const m=mods[0],L0=MODNPC[m.type]||NPC_IDS;for(let k=0;k<20;k++){const t=freeTile(m);if(t&&!fixtures.some(f=>Math.abs(f.tx-t.tx)+Math.abs(f.ty-t.ty)<2)){fixtures.push({tx:t.tx,ty:t.ty,kind:'npc',npc:L0[rnd(L0.length)],ph:Math.random()*6});return;}}}
   const L=rooms.filter((r,i)=>i>0&&r.w>=3&&r.h>=3&&!(modules||[]).includes(r)).sort(()=>Math.random()-0.5);
   for(const r of L){const c=carveCloset(r);if(c){fixtures.push({tx:c.cx,ty:c.cy,kind:'npc',npc:NPC_IDS[rnd(NPC_IDS.length)],ph:Math.random()*6});return;}}}

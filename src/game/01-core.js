@@ -1,4 +1,8 @@
-let W=384,H=216;const TS=12,MW=64,MH=64;
+let W=384,H=216;const TS=12;
+// deck size in tiles, set per deck by setDeckSize(); AREA is the deck's area relative to a 64x64 Medium deck
+let MW=64,MH=64,AREA=1,deckSize='m';
+// scale a generation count by deck area, rounding randomly so the average stays exact
+function aN(n){const v=n*AREA,f=Math.floor(v);return f+(Math.random()<v-f?1:0);}
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 cv.width=W;cv.height=H;ctx.imageSmoothingEnabled=false;
 const fcv=document.createElement('canvas');fcv.width=W;fcv.height=H;const fctx=fcv.getContext('2d');

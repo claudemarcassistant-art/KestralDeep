@@ -53,11 +53,11 @@ function genHazards(start){
   hz=new Uint8Array(MW*MH);fires=[];vents=[];anoms=[];
   const safe=(x,y)=>Math.abs(x-start.cx)+Math.abs(y-start.cy)>6&&Math.abs(x-exitT.x)+Math.abs(y-exitT.y)>1;
   const spot=()=>{for(let t=0;t<40;t++){const r=randomRoom(),x=r.x+rnd(r.w),y=r.y+rnd(r.h);if(!solid(x,y)&&safe(x,y))return [x,y];}return null;};
-  if(cond.haz==='fire'){const n=5+rnd(4);for(let k=0;k<n;k++){const s=spot();if(!s)continue;
+  if(cond.haz==='fire'){const n=aN(5+rnd(4));for(let k=0;k<n;k++){const s=spot();if(!s)continue;
     blob(s[0],s[1],1+rnd(2),(i,x,y)=>{if(liq[i]<=1&&safe(x,y)){hz[i]=1;liq[i]=0;}});fires.push({x:s[0]*TS+6,y:s[1]*TS+6,ph:Math.random()*6});}}
-  if(cond.haz==='toxic'){const n=4+rnd(3);for(let k=0;k<n;k++){const s=spot();if(!s)continue;blob(s[0],s[1],2+rnd(2),(i,x,y)=>{if(safe(x,y)){hz[i]=2;liq[i]=0;}});}}
-  if(cond.haz==='steam'){const n=7+rnd(4);for(let k=0;k<n;k++){const s=spot();if(!s)continue;hz[s[1]*MW+s[0]]=3;vents.push({tx:s[0],ty:s[1],x:s[0]*TS+6,y:s[1]*TS+6,t:rr(0,4),phase:'idle',cold:Math.random()<0.25});}}
-  if(cond.haz==='anomaly'){const n=2+(depth>=5?1:0);for(let k=0;k<n;k++){const s=spot();if(!s)continue;anoms.push({x:s[0]*TS+6,y:s[1]*TS+6,vx:rr(-14,14),vy:rr(-14,14),ph:Math.random()*6});}}
+  if(cond.haz==='toxic'){const n=aN(4+rnd(3));for(let k=0;k<n;k++){const s=spot();if(!s)continue;blob(s[0],s[1],2+rnd(2),(i,x,y)=>{if(safe(x,y)){hz[i]=2;liq[i]=0;}});}}
+  if(cond.haz==='steam'){const n=aN(7+rnd(4));for(let k=0;k<n;k++){const s=spot();if(!s)continue;hz[s[1]*MW+s[0]]=3;vents.push({tx:s[0],ty:s[1],x:s[0]*TS+6,y:s[1]*TS+6,t:rr(0,4),phase:'idle',cold:Math.random()<0.25});}}
+  if(cond.haz==='anomaly'){const n=aN(2+(depth>=5?1:0));for(let k=0;k<n;k++){const s=spot();if(!s)continue;anoms.push({x:s[0]*TS+6,y:s[1]*TS+6,vx:rr(-14,14),vy:rr(-14,14),ph:Math.random()*6});}}
 }
 const HACKR={
   coolant:{label:'coolant override',ok:()=>vents.length+risers.length>0,act:()=>{for(const v of vents){v.cold=true;freezeAround(v.x,v.y,18);}for(const r of risers){r.cold=true;freezeAround(r.x+Math.cos(r.ang)*20,r.y+Math.sin(r.ang)*20,20);}return 'coolant rerouted. every vent on the deck runs freezing';}},
@@ -80,7 +80,7 @@ function mkVendor(tx,ty){const st=rnd(3),stock=[],pool=VEND_POOL.slice();
   for(let k=0;k<4&&pool.length;k++){const o=wpick(pool.map(q=>[q,q.w]));pool.splice(pool.indexOf(o),1);stock.push(Object.assign({sold:false},o));}
   stock.sort((a,b)=>a.cost-b.cost);return {tx,ty,style:st,name:VSTYLE[st].name,stock,state:'idle',kicks:0,ph:Math.random()*6,reward:'vend',hack:true};}
 function genVending(){
-  vendors=[];let n=(Math.random()<0.6?1:0)+(Math.random()<0.25?1:0);if(!n)return;
+  vendors=[];let n=aN((Math.random()<0.6?1:0)+(Math.random()<0.25?1:0));if(!n)return;
   const c=[];for(let y=2;y<MH-2;y++)for(let x=2;x<MW-2;x++){const i=y*MW+x;
     if(map[i]===1&&!solid(x,y+1)&&map[y*MW+x-1]===1&&map[y*MW+x+1]===1&&Math.abs(x-exitT.x)+Math.abs(y+1-exitT.y)>2&&kind[(y+1)*MW+x]===1&&!panels.some(p=>Math.abs(p.tx-x)+Math.abs(p.ty-y)<3)&&!risers.some(r=>Math.abs(r.tx-x)+Math.abs(r.ty-y)<2))c.push([x,y]);}
   c.sort(()=>Math.random()-.5);
@@ -148,7 +148,7 @@ function drawVend(){
 function genPanels(test){
   panels=[];if(test)return;
   const c=[];for(let y=1;y<MH-2;y++)for(let x=1;x<MW-1;x++){const i=y*MW+x;if(map[i]===1&&!solid(x,y+1)&&map[(y)*MW+x-1]===1&&map[y*MW+x+1]===1&&!(x===exitT.x&&y+1===exitT.y))c.push([x,y]);}
-  c.sort(()=>Math.random()-.5);const nh=2+rnd(2),nd=8+rnd(6);let placed=0;
+  c.sort(()=>Math.random()-.5);const nh=aN(2+rnd(2)),nd=aN(8+rnd(6));let placed=0;
   for(const [x,y] of c){if(placed>=nh+nd)break;if(panels.some(p=>Math.abs(p.tx-x)+Math.abs(p.ty-y)<4)||risers.some(r=>Math.abs(r.tx-x)+Math.abs(r.ty-y)<2))continue;
     const hack=placed<nh;placed++;let reward=null;
     if(hack){const opts=['map','supplies','supplies'];if(HACKR.coolant.ok())opts.push('coolant');if(fires.length)opts.push('sprinklers','sprinklers');if(HACKR.doors.ok())opts.push('doors','doors');if(HACKR.power.ok())opts.push('power','power');if(HACKR.purge.ok())opts.push('purge','purge');reward=opts[rnd(opts.length)];}

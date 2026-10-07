@@ -1,6 +1,6 @@
 // ---- test range
 let arcadeMode=false;
-function newArcadeHall(){testMode=true;arcadeMode=true;cond={light:'lit',haz:null,obj:'open'};hazOff=false;initPlayer();levelLabel='ARCADE';resetHidden();
+function newArcadeHall(){testMode=true;arcadeMode=true;cond={light:'lit',haz:null,obj:'open'};hazOff=false;initPlayer();levelLabel='ARCADE';setDeckSize('m');resetHidden();
   map=new Uint8Array(MW*MH).fill(1);kind=new Uint8Array(MW*MH);secretHp=new Float32Array(MW*MH);openDoor=new Uint8Array(MW*MH);liq=new Uint8Array(MW*MH);hz=new Uint8Array(MW*MH);
   const carve=(x0,y0,w,h,k)=>{for(let y=y0;y<y0+h;y++)for(let x=x0;x<x0+w;x++){map[y*MW+x]=0;kind[y*MW+x]=k;}};
   const room={x:20,y:20,w:14,h:10,cx:27,cy:25};rooms=[room];carve(20,20,14,10,11);
@@ -25,7 +25,7 @@ function newArcadeHall(){testMode=true;arcadeMode=true;cond={light:'lit',haz:nul
 function placeTestNpcs(){NPC_IDS.forEach(k=>{for(let tries=0;tries<40;tries++){const t=freeTile(rooms[0]);if(t&&!fixtures.some(f=>Math.abs(f.tx-t.tx)+Math.abs(f.ty-t.ty)<2)&&Math.hypot(t.tx*TS+6-player.x,t.ty*TS+6-player.y)>20){fixtures.push({tx:t.tx,ty:t.ty,kind:'npc',npc:k,ph:Math.random()*6});break;}}});}
 function newTest(){arcadeMode=false;testDeck=false;biomeOverride=null;testMode=true;cond={light:'normal',haz:null};hazOff=false;initPlayer();player.clear=60;Object.assign(player.inv,{molotov:5,gasnade:5,smokenade:5});player.tools={glowstick:true,sledge:true,scanner:true};player.found=FILES.map(f=>f.id);levelLabel='TEST RANGE';genTest();placeTestNpcs();state='play';say('test range. everything here is free to take');}
 function genTest(){
-  resetHidden();
+  setDeckSize('m');resetHidden();
   map=new Uint8Array(MW*MH).fill(1);kind=new Uint8Array(MW*MH);secretHp=new Float32Array(MW*MH);openDoor=new Uint8Array(MW*MH);liq=new Uint8Array(MW*MH);
   const main={x:4,y:4,w:40,h:22,cx:24,cy:15};rooms=[main];
   const carve=(r,k)=>{for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++){map[y*MW+x]=0;kind[y*MW+x]=k;}};
