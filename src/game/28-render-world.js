@@ -41,11 +41,12 @@ function render(){
     if(slime[ty*MW+tx])drawSlime(tx,ty,slime[ty*MW+tx],slimeK[ty*MW+tx]);
     const l=ice[ty*MW+tx]?0:liq[ty*MW+tx];if(l>=2){const ph=T*1.6+tx*0.9+ty*1.7;ctx.fillStyle=`rgba(170,220,225,${l===3?0.22:0.3})`;
       ctx.fillRect(tx*TS-camX+((Math.sin(ph)*3+5)|0),ty*TS-camY+((Math.cos(ph*0.8)*3+5)|0),2,1);}}
+  drawTraps();
   for(const pn of panels){if(!seen[pn.ty*MW+pn.tx])continue;const x=pn.tx*TS-camX+2,y=pn.ty*TS-camY+3;
     if(x<-12||y<-12||x>W||y>H)continue;
-    const base=pn.state==='dead'?'#141414':pn.state==='done'?'#16402a':pn.hack?'#10302c':'#141c2a';
+    const base=pn.state==='dead'?'#141414':pn.state==='done'?'#16402a':pn.reward==='traps'?'#381812':pn.hack?'#10302c':'#141c2a';
     F('#070908',x-1,y-1,10,7);F(base,x,y,8,5);
-    if(pn.state!=='dead'){for(let k=0;k<5;k++){const a=Math.random()*0.6;ctx.fillStyle=pn.state==='done'?`rgba(120,230,150,${a})`:pn.hack?`rgba(120,230,210,${a})`:`rgba(140,170,230,${a})`;ctx.fillRect(x+rnd(8),y+rnd(5),1,1);}
+    if(pn.state!=='dead'){for(let k=0;k<5;k++){const a=Math.random()*0.6;ctx.fillStyle=pn.state==='done'?`rgba(120,230,150,${a})`:pn.reward==='traps'?`rgba(240,120,90,${a})`:pn.hack?`rgba(120,230,210,${a})`:`rgba(140,170,230,${a})`;ctx.fillRect(x+rnd(8),y+rnd(5),1,1);}
       if(Math.random()<0.06){ctx.fillStyle='rgba(200,240,240,0.5)';ctx.fillRect(x,y+rnd(5),8,1);}}
     else if(Math.random()<0.02)parts.push({x:pn.tx*TS+6,y:pn.ty*TS+8,vx:rr(-30,30),vy:rr(-10,30),t:0.3,m:0.3,c:'#ffe7a0',s:1});
     if(pn.hack&&pn.state==='idle'&&Math.sin(T*5+pn.ph)>0)F(AMBER,x+7,y+6,1,1);}

@@ -15,7 +15,8 @@ function updateFlames(dt){for(const f of flames){f.t-=dt;const nx=f.x+f.vx*dt,ny
     if(solidAt(nx,ny)){f.t=0;}else{f.x=nx;f.y=ny;}f.vx*=Math.pow(0.25,dt);f.vy*=Math.pow(0.25,dt);
     if(liq[i]>=2&&!ice[i]){f.t=Math.min(f.t,0.05);if(Math.random()<0.2)parts.push({x:f.x,y:f.y,vx:rr(-10,10),vy:rr(-25,-5),t:0.4,m:0.4,c:'rgba(220,220,220,0.5)',s:1});continue;}
     if(oil[i])igniteOil(tx,ty);if(webs[i])tearWeb(i);if(slime[i]){slime[i]=0;paintTile(tx,ty);}
-    for(const e of enemies){if(e.dead||f.hit.has(e)||ET[e.type].ghost)continue;if(Math.hypot(e.x-f.x,e.y-f.y)<e.r+3){f.hit.add(e);const fw=fireWeak(e);damageEnemy(e,0.35*(fw?3:1),f.vx,f.vy,6,true);e.burnT=Math.max(e.burnT||0,fw?5:3);}}
+    for(const e of enemies){if(e.dead||f.hit.has(e)||ET[e.type].ghost)continue;if(Math.hypot(e.x-f.x,e.y-f.y)<e.r+3){f.hit.add(e);const fw=fireWeak(e);damageEnemy(e,(f.trap?TRAP_TYPES.flame.perFlame:0.35)*(fw?3:1),f.vx,f.vy,6,true);e.burnT=Math.max(e.burnT||0,fw?5:3);}}
+    if(f.trap&&f.jet.pHit<=0&&player&&Math.hypot(player.x-f.x,player.y-f.y)<player.r+3){const F0=TRAP_TYPES.flame;f.jet.pHit=F0.hitEvery;hurtPlayer(F0.burnHurt,false);addStatus('brn',F0.burn);}
     for(const b of barrels)if(!b.dead&&Math.hypot(b.x-f.x,b.y-f.y)<6)b.heat=(b.heat||0)+0.06;
     for(const pl of plants)if(!pl.burst&&Math.hypot(pl.x-f.x,pl.y-f.y)<6)burnPlant(pl);
     if(slime[i]){slime[i]=0;paintTile(tx,ty);}
@@ -239,7 +240,7 @@ function hackTry(){const h=hackUI;if(!h)return;
     sfx('hackok');newHackWindow();}
   else{h.misses++;h.flash=0.35;sfx('zap');alertAdd(perk('ductrat')?6:12);shake=Math.max(shake,5);hurtPlayer(9,true);addStatus('shk',30);
     if(!hackUI)return;
-    if(h.misses>=2){h.pn.state='dead';hackUI=null;say('the panel shorts out in a shower of sparks');}}}
+    if(h.misses>=2){h.pn.state='dead';hackUI=null;if(h.pn.reward==='traps')trapsSetOff(h.pn);else say('the panel shorts out in a shower of sparks');}}}
 function updateHack(dt){const h=hackUI;h.pos+=h.dir*h.speed*dt;if(h.pos>h.barW){h.pos=h.barW;h.dir=-1;}if(h.pos<0){h.pos=0;h.dir=1;}h.flash-=dt;h.ok-=dt;}
 function drawHack(){
   const h=hackUI,px=(W-240)/2|0,py=(H-96)/2|0;
@@ -300,7 +301,7 @@ function useSkill(slot){
   if(SKILLS[id].mode){const P=player;P.actMode=P.actMode===id?false:id;if(P.actMode){setHot(2);say((id==='sling'?'sling':'psych')+': your actions are on 3 and up. Q goes back to items');}sfx('sonar');return;}
   if((player.skillCd[id]||0)>0){say(SKILLS[id].name.toLowerCase()+' is recharging');sfx('click');return;}
   player.skillCd[id]=SKILLS[id].cd*mindCd();
-  if(id==='sonar'){sonarT=4;sonarRing=0;sfx('sonar');const f=markSecretsNear(player.x,player.y,200);if(f)say('the pulse finds a hollow wall');}
+  if(id==='sonar'){sonarT=4;sonarRing=0;sfx('sonar');const f=markSecretsNear(player.x,player.y,200),tp=revealTraps(player.x,player.y,TRAP_CFG.sonarR);if(f)say('the pulse finds a hollow wall');else if(tp)say('the pulse picks out '+(tp>1?tp+' pressure plates':'a pressure plate'));}
   else if(id==='adren'){player.adrenT=5;sfx('adren');}
   else if(id==='cloak'){player.cloakT=6;sfx('cloak');for(const e of enemies)if(!ET[e.type].dummy)e.alert=false;
     for(let k=0;k<16;k++){const a=k/16*6.283;parts.push({x:player.x,y:player.y,vx:Math.cos(a)*50,vy:Math.sin(a)*50,t:0.35,m:0.35,c:'#9fc3ff',s:1});}}

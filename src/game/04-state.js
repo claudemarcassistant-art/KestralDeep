@@ -77,6 +77,6 @@ function blockAt(x,y,pl,e){const tx=Math.floor(x/TS),ty=Math.floor(y/TS);if(tx<0
   if(chasm[ty*MW+tx]){if(pl){if(!player.floating)return true;}else if(e&&e.type){const b=ET[e.type];if(!b.fly&&!b.ghost)return true;}}
   if(e&&!pl&&e.type){const b=ET[e.type],lq=liq[ty*MW+tx];if(b.aquatic){if(lq<3||ice[ty*MW+tx])return true;}else if(lq===4&&!b.swim&&!b.fly&&!flot[ty*MW+tx]&&!ice[ty*MW+tx])return true;}if(cages.length&&cageAt(tx,ty))return true;return false;}
 function blocked(x,y,r,pl,e){return blockAt(x-r,y-r,pl,e)||blockAt(x+r,y-r,pl,e)||blockAt(x-r,y+r,pl,e)||blockAt(x+r,y+r,pl,e);}
-function move(e,dx,dy){const pl=e===player;if(!blocked(e.x+dx,e.y,e.r,pl,e))e.x+=dx;if(!blocked(e.x,e.y+dy,e.r,pl,e))e.y+=dy;}
+function move(e,dx,dy){const pl=e===player;if(!pl&&rubble[Math.floor(e.y/TS)*MW+Math.floor(e.x/TS)]&&e.type&&!ET[e.type].fly){dx*=TRAP_CFG.rubbleSlow;dy*=TRAP_CFG.rubbleSlow;}if(!blocked(e.x+dx,e.y,e.r,pl,e))e.x+=dx;if(!blocked(e.x,e.y+dy,e.r,pl,e))e.y+=dy;}
 function hash(x,y){let h=(Math.imul(x,374761393)+Math.imul(y,668265263)+seed)|0;h=Math.imul(h^(h>>>13),1274126177);return (h^(h>>>16))>>>0;}
 

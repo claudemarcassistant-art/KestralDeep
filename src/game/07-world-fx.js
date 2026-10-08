@@ -69,6 +69,7 @@ const HACKR={
   map:{label:'deck schematic',ok:()=>true,act:()=>{revealSchematic();revealNextRoutes();return 'schematic and lift routes downloaded';}},
   supplies:{label:'supply locker',ok:()=>true,act:()=>{const p=player;for(let k=0;k<3;k++){const t=lootRoll('common');const it={x:p.x+rr(-8,8),y:p.y+rr(4,10),type:t,ph:0,pop:0.35};if(t==='gear')it.gear=randomGear();if(!blocked(it.x,it.y,2))items.push(it);}p.inv.key++;return 'a wall locker pops open. +1 key';}},
   power:{label:'power relay',ok:()=>cond.light==='dark'||cond.haz==='steam',act:()=>{if(cond.light==='dark')cond.light='lit';if(cond.haz==='steam')hazOff=true;return 'deck power rerouted';}},
+  traps:{label:'trap control',ok:()=>false,act:pn=>trapsLockDown(pn)},
   purge:{label:'hazard purge',ok:()=>['fire','toxic','steam','fog','electrical','test'].includes(cond.haz)&&!hazOff,act:()=>{purgeHazards();return 'purge cycle complete';}}
 };
 function purgeHazards(){hazOff=true;fires=[];for(let i=0;i<MW*MH;i++)if(hz[i]===1||hz[i]===2){hz[i]=0;paintTile(i%MW,(i/MW)|0);}}

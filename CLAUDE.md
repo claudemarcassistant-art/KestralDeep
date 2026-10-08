@@ -2,14 +2,14 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v0.80**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v0.81**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
 - **Source lives in `src/`** and is built into **one self-contained HTML file**, `dist/index.html` (about 640 KB). No dependencies, no external assets. All art is drawn procedurally on a canvas; all sound is synthesised with the Web Audio API. The only network request is the optional Silkscreen font from Google Fonts in `src/boot.js` (the game falls back to a built-in font if it fails).
   - `src/index.html` is the page template; the build fills in `{{styles}}` (`src/styles.css`), `{{boot}}` (`src/boot.js`: font loader and the red error overlay) and `{{game}}`.
   - `src/data/*.js` are the content and tuning tables (creatures, weapons, items, recipes, food, crew files, achievements, NPCs, world, events, versions). Balance changes usually only touch these.
-  - `src/game/NN-name.js` are 29 game files, split by system. `README.md` lists what each file holds.
+  - `src/game/NN-name.js` are 30 game files, split by system. `README.md` lists what each file holds.
   - `scripts/build.mjs` is the build (plain Node 20+, no npm install needed).
 - **Play or test:** `npm run dev` serves http://localhost:5173 and rebuilds on every save (refresh the page). `npm run build` writes `dist/index.html`, which can also be opened straight from disk in Chrome or Edge.
 - **Playable link:** https://claudemarcassistant-art.github.io/KestralDeep/ . Every push to `main` is built and deployed by `.github/workflows/pages.yml`; other branches and pull requests are built only, which catches syntax errors.
@@ -35,7 +35,7 @@ Current version: **v0.80**. The game was built iteratively in claude.ai chats up
 
 1. ~~Enable GitHub Pages~~ Done: deployed from `main`, link above.
 2. ~~Split the code into files with a build step~~ Done, by section (see above), and the data tables gathered into `src/data/`. Play-tested after each step: title screen, new run, saving and continuing, route map to the next deck or stop, test range, arcade, Codex, Version history, pack menu; no errors.
-3. **Batch 1** (`docs/specs/batch-1.md`): four sessions, done one at a time; the owner playtests and says "continue" between them. Session 1 (deck sizes, v0.79) and Session 2 (run seeds, v0.80) are done. Next: Session 3 (pressure plate traps and trap panels), then 4 (weight plates, crates, spacebar styles).
+3. **Batch 1** (`docs/specs/batch-1.md`): four sessions, done one at a time; the owner playtests and says "continue" between them. Sessions 1 (deck sizes, v0.79), 2 (run seeds, v0.80) and 3 (traps and trap panels, v0.81) are done. Next: Session 4 (weight plates, plate doors, crates, spacebar styles).
 4. **Balance pass** (the owner will play test runs and report findings). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
 
 ## Working conventions
@@ -53,7 +53,7 @@ Current version: **v0.80**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v0.79)
+## Architecture overview (as of v0.81)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -72,6 +72,14 @@ Current version: **v0.80**. The game was built iteratively in claude.ai chats up
 - **What still changes a deck on the same seed:** its depth (decks ridden so far, so the route taken), run setup modifiers, lift-event choices that set up the next deck (`nextMods`), and player-dependent loot (files already found, gear owned). Combat and moment-to-moment randomness are not seeded, by design.
 - **Shown:** Run stats, death screen (with a "seeded run" marker), the station map header, and the title's best score (`bestSeed`, `kd_best_seed`). The test lift's Seed field (`deckCfg.seed`, `testSeed`) seeds `launchTestDeck()`; a blank seed gets a random code, shown on arrival so the deck can be rebuilt.
 - **Verified:** same seed gives identical sector maps, deck fingerprints (tiles, fixtures, creatures, items, chests), chest loot, lift events and landings, across different play on every deck and across save, reload and Continue.
+
+**Traps (v0.81):** code in `src/game/30-traps.js`, numbers in `src/data/traps.js` (`TRAP_TYPES`, `TRAP_WEIGHTS`, `TRAP_CFG`, `TRAP_PANEL_DESC`).
+- **Generation:** `genTraps(start, exitR)` runs at the end of `genLevel()` and `genArena()`, inside the deck's seeded scope: `aN(2-5)` plates from depth 2 (`levelMods.traps` from the test lift: `'off'`, or `'on'` for any depth with every type and a panel), about 75% in corridors (floor outside every room rect), never in or near the start room, near the exit, or in vaults, secrets, crawlspaces, below-deck rooms or modules. A trap is `{tx,ty,type,state,t,found,off,panel,dir,area}`; flame and dart traps need a wall beside the plate (`dir`), debris covers a 2x2 `area`.
+- **Running:** `updateTraps(dt)` (called in `updatePlay()`): a plate in state `armed` with `weightAt(tx,ty) >= TRAP_CFG.weight` goes `click` (0.4 s), then `fireTrap()` and `cool` (6 s re-arm). `weightAt()` counts the player (3, not when floating) and walking creatures (3; `walker()` excludes flying, ghosts, plants, dummies, caged). **Session 4 adds item and crate weight inside `weightAt()`.** `trapLive()` is false when a panel locked the trap (`off`) or it is powered (flame, dart) and `powerOff`.
+- **Effects:** spikes hit whatever is on the plate; flame traps spray the flamethrower's own `flames` particles (marked `trap`, with a `jet` that limits player hits to one per 0.3 s in `updateFlames()`); darts (`darts`) hit the player and creatures; debris (`falls`) lands after 0.8 s and leaves `rubble` (a per-tile array, slows the player in `updatePlay()` and creatures in `move()`; timers in `rubbleL`).
+- **Spotting:** plates are drawn as a faint lighter tile with rivets (`drawTraps()`, called in `render()` before the panels, so under the fog); `found` plates get an outline and show on the station map. Perception >= 3 within 30 px, the sonar pulse and the signal scanner (`revealTraps()`) set `found`.
+- **Trap control panels:** an ordinary hack panel `{reward:'traps', traps:[...]}` pushed into `panels` (`wireTrap()`), within 6 tiles with line of sight to its plates, up to 3 plates each. `HACKR.traps` locks them down (`trapsLockDown()`); a failed hack (2 misses in `hackTry()`) calls `trapsSetOff()`. The dashed floor line shows once the panel is seen or the plate found.
+- **Test range:** the arena room south of the main hall has all four traps, three wired to a panel on its north wall.
 
 **Run structure:** each biome is a sector map of 12-15 junctions (`route.nodes`) with the exit 3-4 jumps away. Shafts are hidden until ridden or revealed by intel (`route.lk`). A biome hunter boss can roam the sector (`route.chaser`). Each sector has 1-2 arena decks. The player arrives on each deck sealed in a lift cab and opens the doors with R.
 
@@ -101,6 +109,7 @@ Current version: **v0.80**. The game was built iteratively in claude.ai chats up
 | `progress.js` | `GRADES`, `MODS_RUN`, `LVLSTAT`, `ACH`, `AP_TRADES` |
 | `versions.js` | `VERSIONS`, `GAME_VERSION` |
 | `weapons.js` | `WORDER`, `ARM`, `FIST`, `IMPLEMENTS`, `WPN`, `WCRIT`, `MAGS`, `CHARGE`, `COMBO_T` |
+| `traps.js` | `TRAP_TYPES`, `TRAP_WEIGHTS`, `TRAP_CFG`, `TRAP_PANEL_DESC` |
 | `world.js` | `SECTORS`, `BNAMES`, `PAL`, `COND_LIGHT`, `COND_HAZ`, `MODS`, `ROOMNAMES`, `HAZDESC`, `LIQ`/`LIQNAME`, `BIOME`, `NODE`, `HIDDEN_TYPES`, `DECK_SIZES`, `DECK_SIZE_ODDS` |
 
 **Code (`src/game/`):**
@@ -128,6 +137,7 @@ Current version: **v0.80**. The game was built iteratively in claude.ai chats up
 | Codex (incl. `Systems` entries), title and pack menus | `27-menus.js` |
 | `render()` | `28-render-world.js` |
 | `frame()` | `29-loop.js` |
+| traps: `genTraps()`, `updateTraps()`, `fireTrap()`, `weightAt()`, `drawTraps()`, trap panels | `30-traps.js` |
 
 To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "const NAME=" src/data/*.js`.
 
@@ -150,6 +160,10 @@ To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "con
 - Several arcade cabinets in one place take their games from `arcPicks(n)` (distinct games), not independent random picks.
 - Any new chest needs a loot seed `ls:(Math.random()*4294967296)>>>0` where it is created (inside generation), or its contents will not repeat on the same seed. `addChest()` does this for you.
 - When checking that generation repeats, take the fingerprint in the same instant the deck is built: the game loop keeps running between test steps, and creatures move and fires spread.
+- `30-traps.js` loads after `29-loop.js`. That is fine because nothing in it runs at load time, but `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
+- `newTest()`, `newGame()` and `loadRun()` replace the `player` object (`initPlayer()`), so tests must re-read `player` after calling them.
+- Before v0.81, `genArena()` did not reset `panels` or `vendors`, so arena decks kept the previous deck's hack panels and vending machines at stale positions. Every generator that builds a full deck must reset every per-deck list (`resetHidden()` covers most; panels and vendors are reset by `genPanels()`/`genVending()` or by hand).
+- `player.floating` is recalculated every frame from the movement keys, so setting it in a test does nothing; test `weightAt()` directly.
 
 ## Ideas on the list (not yet started)
 

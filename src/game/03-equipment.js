@@ -75,7 +75,7 @@ function useTool(id){const P=player;
     return;}
   if(id==='scanner'){if((P.scanCd||0)>0){say('the scanner is still charging');sfx('click');return;}P.scanCd=6;scanT=3.5;scanBins=new Array(8).fill(0);
     for(const e of enemies){if(e.dead||ET[e.type].dummy||ET[e.type].plant)continue;const dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy);if(d>480)continue;const b=((Math.round(Math.atan2(dy,dx)/(Math.PI/4))%8)+8)%8;scanBins[b]+=d<160?1.5:1;}
-    sfx('sonar');const tot=scanBins.reduce((a,b)=>a+b,0);say(tot?'the scanner crackles. contacts nearby':'the scanner hums. nothing close');return;}}
+    sfx('sonar');const tot=scanBins.reduce((a,b)=>a+b,0),tp=revealTraps(P.x,P.y,TRAP_CFG.scanR);say((tot?'the scanner crackles. contacts nearby':'the scanner hums. nothing close')+(tp?'. it marks '+(tp>1?tp+' pressure plates':'a pressure plate'):''));return;}}
 function throwGlow(){const P=player;if(!P.tools.glowstick)return;P.tools.glowstick=false;P.glowOn=false;
   flares.push({x:P.x,y:P.y,vx:Math.cos(P.ang)*150*(1+0.2*U('throw')),vy:Math.sin(P.ang)*150*(1+0.2*U('throw')),t:1e6,ph:Math.random()*6,pts:null,r:FLARE_R*0.8,glow:true,age:0});sfx('whoosh');}
 function giveTool(id){const P=player;if(P.tools[id]){P.inv.scrap+=2;say('you already have a '+TOOLS[id].name.toLowerCase()+'. stripped it for 2 scrap');return;}P.tools[id]=true;

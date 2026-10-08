@@ -29,6 +29,7 @@ src/
     items.js                gear, quick items, tools, pickups, flasks, liquid tank, vending stock, resource text
     npcs.js                 NPCs
     progress.js             deck grades, run stats, achievements, point trades, challenge modifiers
+    traps.js                trap types, trap tuning, trap control panel text
     versions.js             in-game version history
     weapons.js              armaments, gun stats, magazines, crits, charge and combo timing
     world.js                sectors, biome layouts, palettes, route nodes, water depths, room modules, deck conditions, hazard text, deck sizes
@@ -62,6 +63,7 @@ src/
     27-menus.js             pack, workbench, perks, files, map, codex and title menus
     28-render-world.js      world rendering, lighting, fog
     29-loop.js              main loop
+    30-traps.js             pressure plate traps and trap control panels
 scripts/build.mjs  the build
 docs/specs/        change request batches
 ```

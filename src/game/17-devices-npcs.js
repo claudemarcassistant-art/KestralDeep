@@ -6,13 +6,14 @@ const DECKOPT=[
   {k:'biome',label:'Biome',vals:['auto','Intake','Pump Hall','Sorting Floor','Cold Store','Brine Works','Relay Core']},
   {k:'type',label:'Deck type',vals:['station','flooded','cache']},
   {k:'size',label:'Size',vals:['random','small','medium','large']},
+  {k:'traps',label:'Traps',vals:['normal','off','on']},
   {k:'light',label:'Lighting',vals:['random','normal','lit','dark']},
   {k:'haz',label:'Hazard',vals:['random','none','fog','steam','fire','toxic','anomaly','electrical','volatile','overgrowth','sprinklers','chasm','molten']},
   {k:'obj',label:'Lift',vals:['random','open','keycard','defend','both','arena']},
   {k:'waves',label:'Incoming waves',vals:['off','on']},
   {k:'haunt',label:'Haunted',vals:['off','on']},
   {k:'lowg',label:'Low gravity',vals:['off','on']}];
-const deckCfg={seed:'',depth:1,biome:'auto',type:'station',size:'random',light:'random',haz:'random',obj:'random',waves:'off',haunt:'off',lowg:'off'};
+const deckCfg={seed:'',depth:1,biome:'auto',type:'station',size:'random',traps:'normal',light:'random',haz:'random',obj:'random',waves:'off',haunt:'off',lowg:'off'};
 const deckRows=()=>[...DECKOPT.map(o=>({opt:o})),{seedRow:true},{act:'go',label:'Go to this deck'},{act:'rand',label:'Go to a random deck'},{act:'stay',label:'Stay here'}];
 function cycleDeck(o,d){const v=o.vals,i=v.indexOf(deckCfg[o.k]);deckCfg[o.k]=v[(i+d+v.length)%v.length];sfx('click');}
 // the seed of the test deck in play, so a deck can be rebuilt: blank seed = a new random one each time
@@ -23,6 +24,8 @@ function launchTestDeck0(rand){const c=deckCfg,type=rand?wpick([['station',6],['
   cond={light:rand||c.light==='random'?rc.light:c.light,haz:rand||c.haz==='random'?rc.haz:(c.haz==='none'?null:c.haz),obj:rand||c.obj==='random'?rc.obj:c.obj,ev:rand?rc.ev:(c.waves==='on'?'waves':null),haunt:rand?rc.haunt:c.haunt==='on',lowg:rand?rc.lowg:c.lowg==='on',size:rand||c.size==='random'?rc.size:c.size[0]};
   biomeOverride=rand||c.biome==='auto'?null:DECKOPT[1].vals.indexOf(c.biome)-1;
   levelMods=type==='flooded'?{flood:0.85}:type==='cache'?{vaults:2,chests:2,enemyMul:1.35}:{};
+  // traps: normal = as in a run (from depth 2), off = none, on = at any depth with at least one of each type and a panel
+  if(!rand&&c.traps!=='normal')levelMods.traps=c.traps;
   testDeck=true;deckUI=null;hazOff=false;levelLabel='TEST DECK';enterLevel();}
 function returnToTest(){testDeck=false;biomeOverride=null;levelMods={};cond={light:'normal',haz:null};hazOff=false;levelLabel='TEST RANGE';genTest();placeTestNpcs();player.liftCfgLock=true;say('back in the test range');}
 function deckChoose(i,d){const r=deckRows()[i];if(!r)return;if(r.seedRow){editText(deckCfg.seed,20,v=>{deckCfg.seed=v;});return;}if(r.opt)return cycleDeck(r.opt,d||1);if(r.act==='go')launchTestDeck(false);else if(r.act==='rand')launchTestDeck(true);else deckUI=null;}
