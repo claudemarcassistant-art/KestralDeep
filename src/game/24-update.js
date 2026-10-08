@@ -79,7 +79,7 @@ function updatePlay(dt){
   if(S.regen){p.regenAcc+=S.regen*dt;while(p.regenAcc>=1){p.regenAcc--;if(p.hp<maxHp())p.hp=Math.min(maxHp(),p.hp+1);}}
   if(S.pinger&&markSecretsNear(p.x,p.y,70))say('your pinger clicks. a hollow wall nearby');
   sonarT-=dt;sonarRing+=dt;
-  updateHazards(dt);updateHazards2(dt);updateObjective(dt);updateWaves(dt);updateAlert(dt);updateActs(dt);updateBarrels(dt);updateMines(dt);updateReload(dt);updateSoaks(dt);if(p.slCd>0)p.slCd-=dt;if(p.actMode!=='sling'&&p.slChg>0){p.slChg=0;p.slFull=false;}updateMolten(dt);updateTraps(dt);updatePlateDoors(dt);updateLoose(dt);updateSpace(dt);updateAlarm(dt);checkAch(dt);updateFlames(dt);updateNades(dt);updateClouds(dt);if(p.jabT>0)p.jabT-=dt;if(p.combo>0){p.comboIdle=(p.comboIdle||0)+dt;if(p.comboIdle>1.8){p.combo=Math.max(0,p.combo-dt*(perk('secondnature')?0.85:1.7));if(p.combo<=0)p.comboShield=false;}}if(p.lashT>0)p.lashT-=dt;if(p.sledgeCd>0)p.sledgeCd-=dt;if(p.blinkCd>0)p.blinkCd-=dt;if(p.scanCd>0)p.scanCd-=dt;if(scanT>0)scanT-=dt;updateStatus(dt);
+  updateHazards(dt);updateHazards2(dt);updateObjective(dt);updateWaves(dt);updateAlert(dt);updateActs(dt);updateBarrels(dt);updateMines(dt);updateReload(dt);updateSoaks(dt);if(p.slCd>0)p.slCd-=dt;if(p.actMode!=='sling'&&p.slChg>0){p.slChg=0;p.slFull=false;}updateMolten(dt);updateTraps(dt);updatePlateDoors(dt);updateLoose(dt);updateSpace(dt);updateEnemyCold(dt);updateAlarm(dt);checkAch(dt);updateFlames(dt);updateNades(dt);updateClouds(dt);if(p.jabT>0)p.jabT-=dt;if(p.combo>0){p.comboIdle=(p.comboIdle||0)+dt;if(p.comboIdle>1.8){p.combo=Math.max(0,p.combo-dt*(perk('secondnature')?0.85:1.7));if(p.combo<=0)p.comboShield=false;}}if(p.lashT>0)p.lashT-=dt;if(p.sledgeCd>0)p.sledgeCd-=dt;if(p.blinkCd>0)p.blinkCd-=dt;if(p.scanCd>0)p.scanCd-=dt;if(scanT>0)scanT-=dt;updateStatus(dt);
   if(p.weapon==='ray'){if(p.aiming&&mouse.l&&!(p.dazeT>0)){if(p.reloadT>0){}else if(!p.charge&&magLeft('ray')<=0){useMag('ray');}else p.charge=Math.min(1.2,(p.charge||0)+dt);}
     else if(p.aiming&&(p.charge||0)>0.08){fireRay(p.charge);p.charge=0;}else p.charge=0;}
   else if(p.weapon&&p.aiming&&mouse.l&&p.cd<=0&&!(p.dazeT>0))fire();
@@ -137,6 +137,7 @@ function updatePlay(dt){
   for(const e of enemies){
     const b=ET[e.type];e.flash=Math.max(0,e.flash-dt);e.cd-=dt;e.ph+=dt*6;
     if(e.caged&&!e.caged.open)continue;
+    if(enemyFrozen(e,dt))continue;
     if(!b.ghost&&!b.plant&&!b.aquatic&&!b.dummy&&!e.boss&&!e.caged&&!e.seg){if(blocked(e.x,e.y,Math.max(1,e.r-1),false,e)){e.stuckT=(e.stuckT||0)+dt;if(e.stuckT>0.25){e.stuckT=0;freeEnemy(e);}}else e.stuckT=0;}
     if(e.stun>0){e.stun-=dt;continue;}
     if(e.holdT>0){e.holdT-=dt;move(e,e.vx*dt,e.vy*dt);const hf=Math.pow(kbFr(),dt);e.vx*=hf;e.vy*=hf;continue;}
@@ -178,7 +179,8 @@ function updatePlay(dt){
           if(d<70){hurtPlayer(10,false,e);player.vx+=dx/d*260;player.vy+=dy/d*260;player.kbT=0.5;}for(const o of enemies)if(o!==e&&!o.dead&&Math.hypot(o.x-e.x,o.y-e.y)<70)damageEnemy(o,8,o.x-e.x,o.y-e.y,300);}
         else if(B.move==='throw'){for(const o of [-0.3,0,0.3]){const a=Math.atan2(dy,dx)+o;bullets.push({x:e.x,y:e.y,vx:Math.cos(a)*150,vy:Math.sin(a)*150,life:1.6,dmg:8,p:false,src:e,slug:true,big:true});}}
         else if(B.move==='breath'){for(let k=0;k<30;k++){const a=Math.atan2(dy,dx)+rr(-0.5,0.5),v=rr(60,140);parts.push({x:e.x,y:e.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,t:0.6,m:0.6,c:'#cfe8ff',s:2});}
-          let da=Math.atan2(dy,dx)-Math.atan2(dy,dx);if(d<95){addStatus('frz',45);hurtPlayer(6,false,e);}}
+          let da=Math.atan2(dy,dx)-Math.atan2(dy,dx);if(d<95){addStatus('frz',45);hurtPlayer(6,false,e);}
+          for(const o of enemies)if(o!==e&&!o.dead&&Math.hypot(o.x-e.x,o.y-e.y)<95&&Math.abs(angDiff(Math.atan2(o.y-e.y,o.x-e.x),Math.atan2(dy,dx)))<0.6)chillEnemy(o,FREEZE_CFG.chill.breath);}
         else if(B.move==='grab'){if(d<90){e.pull=1.2;hurtPlayer(6,false,e);say('a tentacle wraps around you');}puff(e.x,e.y,'smoke',24);}
         else if(B.move==='pulse'){for(let k=0;k<20;k++){const a=k/20*6.283;parts.push({x:e.x+Math.cos(a)*30,y:e.y+Math.sin(a)*30,vx:Math.cos(a)*90,vy:Math.sin(a)*90,t:0.4,m:0.4,c:'#9fe0ff',s:1});}
           if(d<80){addStatus('shk',45);hurtPlayer(6,false,e);}for(const o of enemies)if(o!==e&&!o.dead&&Math.hypot(o.x-e.x,o.y-e.y)<80)damageEnemy(o,6,0,0,0,true);}}
@@ -324,7 +326,7 @@ function updatePlay(dt){
     if(d<mn&&d>0){const push=(mn-d)/2;move(a,-dx/d*push,-dy/d*push);move(c,dx/d*push,dy/d*push);}}
   for(const e of enemies){if(e.dead)continue;e.kbT=(e.kbT||0)-dt;e.impT=(e.impT||0)-dt;if(!(e.kbT>0)||e.impT>0||ET[e.type].fly||ET[e.type].ghost)continue;
     const sp=Math.hypot(e.vx,e.vy);if(sp<110)continue;const ux=e.vx/sp,uy=e.vy/sp;
-    if(blocked(e.x+ux*2.5,e.y+uy*2.5,e.r,false,e)){const dmg=Math.min(8,(sp-90)/35);e.impT=0.35;e.kbT=0;e.vx*=-0.2;e.vy*=-0.2;e.stun=Math.max(e.stun||0,0.35);
+    if(blocked(e.x+ux*2.5,e.y+uy*2.5,e.r,false,e)){const dmg=Math.min(8,(sp-90)/35)*(e.frozenT>0?FREEZE_CFG.creature.wallMul:1);e.impT=0.35;e.kbT=0;e.vx*=-0.2;e.vy*=-0.2;e.stun=Math.max(e.stun||0,0.35);
       damageEnemy(e,dmg,0,0,0,true);if(!e.dead)float(e.x,e.y-6,'slam','#e8dcb0');sfx('thud');shake=Math.max(shake,Math.hypot(e.x-p.x,e.y-p.y)<120?2:0);
       for(let k=0;k<6;k++)parts.push({x:e.x+ux*e.r,y:e.y+uy*e.r,vx:rr(-40,40)-ux*30,vy:rr(-40,40)-uy*30,t:0.35,m:0.35,c:'#8e978b',s:1});}}
   enemies=enemies.filter(e=>!e.dead);
@@ -378,7 +380,7 @@ function updateHazards(dt){
     else if(v.phase==='warn'&&v.t<=0){v.phase='burst';v.t=1.4;if(near)sfx('steam');if(v.cold)freezeAround(v.x,v.y,18);}
     else if(v.phase==='burst'){if(!v.cold)puff(v.x,v.y-6,'steam',14*dt,v);if(Math.random()<0.6)parts.push({x:v.x+rr(-4,4),y:v.y,vx:rr(-15,15),vy:rr(-60,-25),t:0.7,m:0.7,c:v.cold?'#cfe8ff':'#dfe4e2',s:2});
       if(Math.hypot(v.x-p.x,v.y-p.y)<20){p.steam=(p.steam||0)+dt;if(p.steam>=0.25){p.steam-=0.25;if(v.cold){addStatus('frz',15);hurtPlayer(0.5,true);}else hurtPlayer(2.5,true);}}
-      for(const e of enemies)if(!e.dead&&Math.hypot(v.x-e.x,v.y-e.y)<20){e.burn=(e.burn||0)+dt;if(e.burn>=0.3){e.burn-=0.3;damageEnemy(e,2.5,0,0,0,true);}}
+      for(const e of enemies)if(!e.dead&&Math.hypot(v.x-e.x,v.y-e.y)<20){e.burn=(e.burn||0)+dt;if(e.burn>=0.3){e.burn-=0.3;if(v.cold){damageEnemy(e,1,0,0,0,true);chillEnemy(e,FREEZE_CFG.chill.vent);}else damageEnemy(e,2.5,0,0,0,true);}}
       if(v.t<=0){v.phase='idle';v.t=rr(2.5,5);}}}
   for(const a of anoms){
     if(!a.fixed){const nx=a.x+a.vx*dt,ny=a.y+a.vy*dt;if(solidAt(nx,a.y))a.vx*=-1;else a.x=nx;if(solidAt(a.x,ny))a.vy*=-1;else a.y=ny;}

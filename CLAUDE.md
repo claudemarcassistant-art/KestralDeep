@@ -2,14 +2,14 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v0.82**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v0.83**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
 - **Source lives in `src/`** and is built into **one self-contained HTML file**, `dist/index.html` (about 640 KB). No dependencies, no external assets. All art is drawn procedurally on a canvas; all sound is synthesised with the Web Audio API. The only network request is the optional Silkscreen font from Google Fonts in `src/boot.js` (the game falls back to a built-in font if it fails).
   - `src/index.html` is the page template; the build fills in `{{styles}}` (`src/styles.css`), `{{boot}}` (`src/boot.js`: font loader and the red error overlay) and `{{game}}`.
   - `src/data/*.js` are the content and tuning tables (creatures, weapons, items, recipes, food, crew files, achievements, NPCs, world, events, versions). Balance changes usually only touch these.
-  - `src/game/NN-name.js` are 32 game files, split by system. `README.md` lists what each file holds.
+  - `src/game/NN-name.js` are 33 game files, split by system. `README.md` lists what each file holds.
   - `scripts/build.mjs` is the build (plain Node 20+, no npm install needed).
 - **Play or test:** `npm run dev` serves http://localhost:5173 and rebuilds on every save (refresh the page). `npm run build` writes `dist/index.html`, which can also be opened straight from disk in Chrome or Edge.
 - **Playable link:** https://claudemarcassistant-art.github.io/KestralDeep/ . Every push to `main` is built and deployed by `.github/workflows/pages.yml`; other branches and pull requests are built only, which catches syntax errors.
@@ -36,7 +36,8 @@ Current version: **v0.82**. The game was built iteratively in claude.ai chats up
 1. ~~Enable GitHub Pages~~ Done: deployed from `main`, link above.
 2. ~~Split the code into files with a build step~~ Done, by section (see above), and the data tables gathered into `src/data/`. Play-tested after each step: title screen, new run, saving and continuing, route map to the next deck or stop, test range, arcade, Codex, Version history, pack menu; no errors.
 3. **Batch 1** (`docs/specs/batch-1.md`): four sessions, done one at a time; the owner playtests and says "continue" between them. All four sessions are done: 1 (deck sizes, v0.79), 2 (run seeds, v0.80), 3 (traps and trap panels, v0.81), 4 (plate doors, crates, item weight, spacebar styles, v0.82).
-4. **Balance pass** (the owner will play test runs and report findings). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
+4. **Batch 2** (`docs/specs/batch-2.md`): four sessions, same workflow. Session 1 (frozen status, cryo grenade, active reload, v0.83) is done. Next: Session 2 (herbs and herbalism).
+5. **Balance pass** (the owner will play test runs and report findings). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
 
 ## Working conventions
 
@@ -53,7 +54,7 @@ Current version: **v0.82**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v0.82)
+## Architecture overview (as of v0.83)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -92,6 +93,16 @@ Current version: **v0.82**. The game was built iteratively in claude.ai chats up
 - `kick()`: 0.5 rad half-arc, reach 26, 3 damage plus melee bonuses, 2x shove knockback, 12 stamina, 1.2x shove recovery; ambush, combo damage, crits (`WCRIT.kick`), `comboAdd(1)`; sprinting makes a flying kick (`tackleT`, boost). Hits barrels, crates, plants, cores and weak walls.
 - `repulse()`: radius 40 burst, 1 damage, 0.7x telekinetic push on creatures, barrels and crates, throws items and gas clouds, 15 stamina (half the shortfall from health), 4 s recharge (`player.repulseCd`, times `actCdMul()` for Focus).
 
+**Frozen status (v0.83):** code in `src/game/33-cold.js`, numbers in `FREEZE_CFG` (`src/data/status.js`).
+- **Player:** `addStatus('frz')` calls `freezePlayer()` when the meter reaches 100 (unless `frzImm`). `player.frozenT` (1.5 s) holds `dazeT` up every frame in `updatePlayerCold()` (called from `updateStatus()`), which is what blocks movement, attacks, items, dash and shove; `onPress()` also refuses E, F, SPACE and R and turns new movement presses into `frozenMash()` (0.1 s each, 0.4 s max). The first fire hit (`addStatus('brn')`) cracks 0.4 s off (`frozenFireHit()`); burn at 100 thaws at once. `thawPlayer()` sets cold to 60 and `frzImm` 3 s. `hurtPlayer()` multiplies by `frozenMeleeMul(src)`: x1.6 when `src` is a creature within reach (its radius + player radius + 12 px).
+- **Creatures:** `e.frz` meter, filled only through `chillEnemy(e,a)` (cold risers and vents, `freezeAround()`, the Frost Matron's breath, cryo clouds; amounts in `FREEZE_CFG.chill`). At 100 `freezeEnemy()`: `e.frozenT` 2 s (wardens 1 s), then `thawEnemy()` (cold 60, `frzImm` 3 s, wardens 8 s). `enemyFrozen()` runs first in the enemy loop and `continue`s, so frozen creatures skip all AI and only slide from knockback. Ghosts, drones and closed cages never freeze; burning creatures lose burn instead of gaining cold. The wall-slam loop doubles impact damage on frozen creatures.
+- **Melee bonus:** `damageEnemy()` multiplies by `frozenEnemyMul(e)`, x1.6 only while `meleeHit` is true. `primaryAttack()`, `shove()` and `kick()` are wrappers that run `primaryAttack0()`, `shove0()` and `kick0()` inside `asMelee()`, which sets `meleeHit`. New melee attacks should go through `asMelee()` too.
+- **Cryo grenade** (`cryonade`, Workbench battery + pipe + cloth): lands as an emitter of kind `'cryo'` for 3 s, feeding a `'cryo'` cloud (`CLOUD.cryo`). `updateClouds()` adds cold to the player inside and calls `cryoCloudTick()` for creatures; the emitter runs `freezeAround()` every 0.75 s so water under it turns to ice.
+- Drawn with `drawIceShell()` over the player and creatures; the HUD shows FROZEN.
+- **Test range:** a cold riser on the west wall of the main hall (label COLD RISER) and 5 cryo grenades.
+
+**Active reload (v0.83):** `startReload()` (22-actions.js) sets a marker `player.arPos` (random 0.40-0.75 of the bar) and width `arW` (12% + 1% per Dexterity point, max 20%; `ACTIVE_RELOAD` in `src/data/status.js`). In `onPress()`, R first calls `activeReloadPress()`: if a reload with a marker is running, the press is used (inside the marker: `finishReload()`, "quick reload"; outside: the remaining time x1.5, marker removed). Otherwise R goes to `interact()` as before, so the press that starts a reload never counts. Only guns with `MAGS` reload, so bows, knives and the sling never show a marker. The HUD reload bar (bottom right) is 4 px tall and draws the marker.
+
 **Run structure:** each biome is a sector map of 12-15 junctions (`route.nodes`) with the exit 3-4 jumps away. Shafts are hidden until ridden or revealed by intel (`route.lk`). A biome hunter boss can roam the sector (`route.chaser`). Each sector has 1-2 arena decks. The player arrives on each deck sealed in a lift cab and opens the doors with R.
 
 **Player systems:** health with injuries (lost max health shown greyed out) and ghost health from food levels; stamina; status meters (`player.st`); armament sets (`player.arms`, main and off hand, two-handed weapons fill both); hotbar of quick items; crew files and clearance training substats and the Body/Spirit/Mind cores; abilities on E and F; switchable movement skills; skill sets (Psychic and Sling) that swap the item slots for an action bar; melee combos; crits; charged attacks with a perfect-release window; gun magazines and reloads.
@@ -120,6 +131,7 @@ Current version: **v0.82**. The game was built iteratively in claude.ai chats up
 | `progress.js` | `GRADES`, `MODS_RUN`, `LVLSTAT`, `ACH`, `AP_TRADES` |
 | `versions.js` | `VERSIONS`, `GAME_VERSION` |
 | `weapons.js` | `WORDER`, `ARM`, `FIST`, `IMPLEMENTS`, `WPN`, `WCRIT`, `MAGS`, `CHARGE`, `COMBO_T` |
+| `status.js` | `FREEZE_CFG`, `ACTIVE_RELOAD` |
 | `traps.js` | `TRAP_TYPES`, `TRAP_WEIGHTS`, `TRAP_CFG`, `TRAP_PANEL_DESC`, `PLATE_DOOR_CFG`, `CRATE_CFG`, `ITEM_WEIGHT`, `PLATE_DOOR_DESC` |
 | `world.js` | `SECTORS`, `BNAMES`, `PAL`, `COND_LIGHT`, `COND_HAZ`, `MODS`, `ROOMNAMES`, `HAZDESC`, `LIQ`/`LIQNAME`, `BIOME`, `NODE`, `HIDDEN_TYPES`, `DECK_SIZES`, `DECK_SIZE_ODDS` |
 
@@ -151,6 +163,8 @@ Current version: **v0.82**. The game was built iteratively in claude.ai chats up
 | traps: `genTraps()`, `updateTraps()`, `fireTrap()`, `weightAt()`, `drawTraps()`, trap panels | `30-traps.js` |
 | plate doors and crates: `genPlateDoors()`, `fillPlateRooms()`, `updatePlateDoors()`, `mkCrate()`, `breakCrate()`, `itemWeight()` | `31-plate-doors.js` |
 | spacebar styles: `spaceAct()`, `activeSpace()`, `kick()`, `repulse()` (`shove()` stays in `22-actions.js`) | `32-spacebar.js` |
+| cold and frozen: `freezePlayer()`, `chillEnemy()`, `freezeEnemy()`, `enemyFrozen()`, `asMelee()`, `drawIceShell()`, cryo cloud ticks | `33-cold.js` |
+| reloads: `startReload()`, `updateReload()`, `finishReload()`, `activeReloadPress()` | `22-actions.js` |
 
 To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "const NAME=" src/data/*.js`.
 
@@ -173,7 +187,7 @@ To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "con
 - Several arcade cabinets in one place take their games from `arcPicks(n)` (distinct games), not independent random picks.
 - Any new chest needs a loot seed `ls:(Math.random()*4294967296)>>>0` where it is created (inside generation), or its contents will not repeat on the same seed. `addChest()` does this for you.
 - When checking that generation repeats, take the fingerprint in the same instant the deck is built: the game loop keeps running between test steps, and creatures move and fires spread.
-- `30-traps.js`, `31-plate-doors.js` and `32-spacebar.js` load after `29-loop.js`. That is fine because nothing in it runs at load time, but `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
+- `30-traps.js` to `33-cold.js` load after `29-loop.js`. That is fine because nothing in it runs at load time, but `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
 - `newTest()`, `newGame()` and `loadRun()` replace the `player` object (`initPlayer()`), so tests must re-read `player` after calling them.
 - Before v0.81, `genArena()` did not reset `panels` or `vendors`, so arena decks kept the previous deck's hack panels and vending machines at stale positions. Every generator that builds a full deck must reset every per-deck list (`resetHidden()` covers most; panels and vendors are reset by `genPanels()`/`genVending()` or by hand).
 - `populate()` starts with `items=[]`, so items placed earlier in `genLevel()` are lost; anything generation wants on the floor goes in during or after `populate()` (see `fillPlateRooms()`).

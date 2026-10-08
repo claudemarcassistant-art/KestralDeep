@@ -31,7 +31,7 @@ function drawItem(it){
     case 'herb':F('#1a300e',x-3,y-2,7,5);F('#4a9a3a',x-2,y-2,2,3);F('#6ac04a',x,y-3,2,4);F('#4a9a3a',x+2,y-1,2,2);break;
     case 'cells':F('#0a1a10',x-3,y-2,6,4);F('#8fffa8',x-2,y-1,1,2);F('#8fffa8',x,y-1,1,2);F('#8fffa8',x+2,y-1,1,2);break;
     case 'trauma':case 'regen':case 'mine':case 'surgery':qIcon(it.type,x,y);break;
-    case 'flask':case 'charge':case 'flare':case 'stim':case 'antitox':case 'molotov':case 'gasnade':case 'smokenade':qIcon(it.type,x,y);break;
+    case 'flask':case 'charge':case 'flare':case 'stim':case 'antitox':case 'molotov':case 'gasnade':case 'smokenade':case 'cryonade':qIcon(it.type,x,y);break;
     case 'medpatch':F('#d8dcd4',x-3,y-2,6,4);F('#c04040',x-1,y-1,2,2);break;
     case 'tonic':{const c=CORES[SUBS[it.sub].core].col;F('#15110a',x-2,y-4,5,9);F(c,x-1,y-1,3,4);F('#d8dcd4',x-1,y-3,3,1);F('rgba(255,255,255,0.5)',x-1,y-1,1,2);break;}
     case 'sigil':{const c=CORES[it.core].col,g=0.5+0.5*Math.sin(T*4);ctx.globalAlpha=0.35*g;ctx.fillStyle=c;circ(x,y,6);ctx.globalAlpha=1;F(c,x-1,y-4,2,8);F(c,x-4,y-1,8,2);F('#fff',x,y,1,1);break;}

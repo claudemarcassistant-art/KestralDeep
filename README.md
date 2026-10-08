@@ -29,6 +29,7 @@ src/
     items.js                gear, quick items, tools, pickups, flasks, liquid tank, vending stock, resource text
     npcs.js                 NPCs
     progress.js             deck grades, run stats, achievements, point trades, challenge modifiers
+    status.js               frozen status and cryo grenade tuning, active reload
     traps.js                trap types, trap tuning, trap control panel text, plate doors, crates, item weight
     versions.js             in-game version history
     weapons.js              armaments, gun stats, magazines, crits, charge and combo timing
@@ -66,6 +67,7 @@ src/
     30-traps.js             pressure plate traps and trap control panels
     31-plate-doors.js       plate doors, crates, item weight
     32-spacebar.js          spacebar styles: kick and repulse
+    33-cold.js              creature cold meters, frozen player and creatures, cryo clouds
 scripts/build.mjs  the build
 docs/specs/        change request batches
 ```

@@ -165,7 +165,7 @@ function freezeAround(x,y,rad){const tx=Math.floor(x/TS),ty=Math.floor(y/TS),r=M
   for(let h=0;h<q.length;h++){const [i,d]=q[h];ice[i]=1;if(d>=4)continue;const X=i%MW,Y=(i/MW)|0;for(const [dx,dy] of D4){const n=(Y+dy)*MW+X+dx;if(n<0||n>=MW*MH||seenF.has(n)||liq[n]<1||map[n]!==0)continue;seenF.add(n);q.push([n,d+1]);}}
   if(!q.length)return;sfx('crackle');
   for(const e of enemies){if(e.dead||ET[e.type].fly||ET[e.type].ghost)continue;const i=Math.floor(e.y/TS)*MW+Math.floor(e.x/TS);if(!seenF.has(i))continue;
-    if(ET[e.type].aquatic||ET[e.type].snake&&liq[i]>=3){damageEnemy(e,999,0,0,0,true);float(e.x,e.y,'frozen','#cfe8ff');}else{e.stun=Math.max(e.stun||0,1.5);damageEnemy(e,3,0,0,0,true);}}
+    if(ET[e.type].aquatic||ET[e.type].snake&&liq[i]>=3){damageEnemy(e,999,0,0,0,true);float(e.x,e.y,'frozen','#cfe8ff');}else{e.stun=Math.max(e.stun||0,1.5);damageEnemy(e,3,0,0,0,true);chillEnemy(e,FREEZE_CFG.chill.freeze);}}
   const pi=Math.floor(player.y/TS)*MW+Math.floor(player.x/TS);if(seenF.has(pi))addStatus('frz',40);}
 function drawIce(tx,ty){const x=tx*TS-camX,y=ty*TS-camY,h=hash(tx*2+7,ty*5+3);F('rgba(200,230,245,0.55)',x,y,TS,TS);ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=1;ctx.beginPath();
   ctx.moveTo(x+1+(h%5),y+1);ctx.lineTo(x+4+(h%4),y+6);ctx.lineTo(x+10,y+4+(h%5));ctx.moveTo(x+4+(h%4),y+6);ctx.lineTo(x+3,y+11);ctx.stroke();F('#ffffff',x+2+(h%7),y+2+((h>>>3)%7),1,1);}

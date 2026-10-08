@@ -10,7 +10,8 @@ function spaceAct(){const k=activeSpace();if(k==='kick')kick();else if(k==='repu
 function updateSpace(dt){const P=player;if(P.repulseCd>0)P.repulseCd-=dt;}
 
 // a narrow, longer, harder hit than a shove that counts as melee for combos and crits; sprint into it for a flying kick
-function kick(){const P=player;if(state!=='play'||paused()||P.shoveCd>0||P.dazeT>0)return;const K0=SPACE_STYLES.kick;
+function kick(){return asMelee(kick0);}
+function kick0(){const P=player;if(state!=='play'||paused()||P.shoveCd>0||P.dazeT>0)return;const K0=SPACE_STYLES.kick;
   if(P.stam<K0.stam){say('too tired to kick');sfx('click');P.shoveCd=0.2;return;}P.stam-=K0.stam;
   const m0=melee(),fly=P.sprinting,cloaked=P.cloakT>0,range=K0.range+(fly?K0.flyRange:0),arc=K0.arc,kb=m0.kb*K0.kbMul*(fly?1.3:1),dmg=K0.dmg+(m0.dmg-1);
   P.shoveCd=m0.cd*K0.cdMul*(fly?1.3:1);P.shoveMax=P.shoveCd;P.shoveT=fly?0.26:0.14;sfx('shove');

@@ -158,7 +158,7 @@ function updateBarrels(dt){const R=4.5;
     const ux=dx/d,uy=dy/d;a.x-=ux*ov/2;a.y-=uy*ov/2;c.x+=ux*ov/2;c.y+=uy*ov/2;const rv=(c.vx-a.vx)*ux+(c.vy-a.vy)*uy;if(rv<0){a.vx+=ux*rv*0.9;a.vy+=uy*rv*0.9;c.vx-=ux*rv*0.9;c.vy-=uy*rv*0.9;if(-rv>160){hitBarrel(a,1);hitBarrel(c,1);}}}}}
 function mkRiser(tx,ty,dir,cold){const R0=mkRiser0(tx,ty,dir);R0.cold=cold==null?Math.random()<0.25:cold;if(!R0.cold)R0.toxic=typeof cond!=='undefined'&&cond&&cond.haz==='toxic'?Math.random()<0.6:Math.random()<0.1;return R0;}
 let clouds=[];
-const CLOUD={steam:{col:'230,236,234',a:0.3},toxic:{col:'150,195,60',a:0.32},smoke:{col:'34,34,38',a:0.5}};
+const CLOUD={steam:{col:'230,236,234',a:0.3},toxic:{col:'150,195,60',a:0.32},smoke:{col:'34,34,38',a:0.5},cryo:{col:'205,232,255',a:0.34}};
 function puff(x,y,kind,amt,src){let c=src?clouds.find(q=>q.src===src):null;if(c&&c.kind!==kind)c=null;
   if(!c)c=clouds.find(q=>q.kind===kind&&!q.src&&Math.hypot(q.x-x,q.y-y)<q.r*0.6);
   if(c){c.r=Math.min(c.rmax,c.r+amt);c.dens=Math.min(1,c.dens+amt*0.04);c.fed=true;if(src)c.src=src;return c;}
@@ -170,7 +170,8 @@ function updateClouds(dt){const p=player;let smoke=0,shroud=0;
     const nx=c.x+c.vx*dt,ny=c.y+c.vy*dt;if(solidAt(nx,c.y))c.vx*=-1;else c.x=nx;if(solidAt(c.x,ny))c.vy*=-1;else c.y=ny;c.vx*=Math.pow(0.5,dt);c.vy*=Math.pow(0.5,dt);
     for(const b of c.blobs){b.ox=Math.max(-0.9,Math.min(0.9,b.ox+b.dx*dt));b.oy=Math.max(-0.9,Math.min(0.9,b.oy+b.dy*dt));if(Math.random()<dt*0.3){b.dx=rr(-0.06,0.06);b.dy=rr(-0.06,0.06);}}
     let k=0;for(const b of c.blobs){const [bx,by,br]=blobPos(c,b),d=Math.hypot(p.x-bx,p.y-by);if(d<br*0.9)k=Math.max(k,c.dens*(1-d/br*0.5));}if(k>0){shroud=Math.max(shroud,k*(c.kind==='smoke'?0.75:c.kind==='toxic'?0.45:0.5));
-      if(c.kind==='steam')addStatus('wet',22*dt*k);else if(c.kind==='toxic'){if(!p.floating||true)addStatus('psn',9*dt*k);}else smoke+=k;}
+      if(c.kind==='steam')addStatus('wet',22*dt*k);else if(c.kind==='toxic'){if(!p.floating||true)addStatus('psn',9*dt*k);}else if(c.kind==='cryo')addStatus('frz',FREEZE_CFG.cryo.player*dt*k);else smoke+=k;}
+    if(c.kind==='cryo')cryoCloudTick(c,dt);
     if(c.kind==='toxic')for(const e of enemies){if(e.dead||ET[e.type].dummy||ET[e.type].plant)continue;if(c.blobs.some(b=>{const [bx,by,br]=blobPos(c,b);return Math.hypot(e.x-bx,e.y-by)<br*0.85;})){e.tox=(e.tox||0)+dt*c.dens;if(e.tox>=1){e.tox-=1;damageEnemy(e,1,0,0,0,true);}}}}
   clouds=clouds.filter(c=>c.dens>0.03);p.shroud=(p.shroud||0)+(Math.min(0.8,shroud)-(p.shroud||0))*Math.min(1,dt*4);
   // air: smoke and deep water use it up
@@ -242,7 +243,7 @@ function updateHazards2(dt){
       if(!r.cold)puff(r.x+Math.cos(r.ang)*30,r.y+Math.sin(r.ang)*30,r.toxic?'toxic':'steam',16*dt,r);
       const inCone=(x,y)=>{const dx=x-r.x,dy=y-r.y,d=Math.hypot(dx,dy);return d<46&&Math.abs(angDiff(Math.atan2(dy,dx),r.ang))<0.42&&hasLOS(r.x+Math.cos(r.ang)*2,r.y+Math.sin(r.ang)*2,x,y);};
       if(inCone(p.x,p.y)){p.rsteam=(p.rsteam||0)+dt;if(p.rsteam>=0.2){p.rsteam-=0.2;if(r.cold){addStatus('frz',14);hurtPlayer(0.5,true);}else if(r.toxic){addStatus('psn',30);hurtPlayer(0.6,true);}else hurtPlayer(2.2,true);}move(p,Math.cos(r.ang)*45*dt,Math.sin(r.ang)*45*dt);}
-      for(const e of enemies){if(e.dead||ET[e.type].dummy)continue;if(inCone(e.x,e.y)){e.burn=(e.burn||0)+dt;if(e.burn>=0.3){e.burn-=0.3;damageEnemy(e,r.cold?1:2.5,0,0,0,true);if(r.cold)e.chillT=2;}move(e,Math.cos(r.ang)*45*dt,Math.sin(r.ang)*45*dt);}}
+      for(const e of enemies){if(e.dead||ET[e.type].dummy)continue;if(inCone(e.x,e.y)){e.burn=(e.burn||0)+dt;if(e.burn>=0.3){e.burn-=0.3;damageEnemy(e,r.cold?1:2.5,0,0,0,true);if(r.cold){e.chillT=2;chillEnemy(e,FREEZE_CFG.chill.riser);}}move(e,Math.cos(r.ang)*45*dt,Math.sin(r.ang)*45*dt);}}
       if(r.t<=0){r.phase='idle';r.t=rr(2.5,5);}}}
 }
 function drawBarrel(b){const x=Math.round(b.x-camX),y=Math.round(b.y-camY);if(x<-10||y<-10||x>W+10||y>H+10)return;

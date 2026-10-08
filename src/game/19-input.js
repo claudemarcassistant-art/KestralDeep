@@ -76,9 +76,11 @@ function onPress(code){
   else if(n>=3&&n<=9){if(n-3<qCap())setHot(n-1);else{say('slot '+n+' is locked');sfx('click');}}
   else if(code==='KeyQ'&&player.actMode){player.actMode=false;setHot(2);say('back to your items');}
   else if(code==='KeyQ'){const qs=selQuick();setHot(2+((qs<0?-1:qs)+1)%qCap());}
+  else if(player.frozenT>0&&['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(code))frozenMash();
+  else if(player.frozenT>0&&['KeyF','KeyE','Space','KeyR'].includes(code)){sfx('click');}
   else if(code==='KeyF')useSkill(2);
   else if(code==='Space')spaceAct();
-  else if(code==='KeyR')interact();
+  else if(code==='KeyR'){if(!activeReloadPress())interact();}
   else if(code==='KeyE')useSkill(1);
   else if((code==='ShiftLeft'||code==='ShiftRight')&&hasMove('blink'))blink();
   else if((code==='ShiftLeft'||code==='ShiftRight')&&hasMove('dash'))dash();

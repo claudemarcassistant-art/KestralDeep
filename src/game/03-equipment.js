@@ -98,6 +98,7 @@ function qIcon(id,x,y){if(!id)return;
   if(id==='surgery'){F('#15110a',x-4,y-3,9,7);F('#e8e8e8',x-3,y-2,7,5);F('#4a8ac0',x-3,y-2,7,1);F('#c04040',x,y,1,2);return;}
   if(id==='molotov'){F('#15110a',x-2,y-4,5,9);F('#6a8a4a',x-1,y-2,3,6);F('#c8b890',x-1,y-5,2,3);F('#ff9a4a',x,y-6,1,1);return;}
   if(id==='gasnade'){F('#15110a',x-3,y-3,7,8);F('#6a8a30',x-2,y-2,5,6);F('#c0d060',x-2,y-2,5,1);F('#3a403c',x-1,y-4,3,2);return;}
+  if(id==='cryonade'){F('#15110a',x-3,y-3,7,8);F('#8ab8d8',x-2,y-2,5,6);F('#e8f6ff',x-2,y-2,5,1);F('#3a403c',x-1,y-4,3,2);return;}
   if(id==='smokenade'){F('#15110a',x-3,y-3,7,8);F('#6a6e72',x-2,y-2,5,6);F('#a8acb0',x-2,y-2,5,1);F('#3a403c',x-1,y-4,3,2);return;}
   if(id==='medkit'){F('#15110a',x-4,y-3,8,7);F('#d8dcd4',x-3,y-2,6,5);F('#c04040',x-1,y-1,2,3);F('#c04040',x-2,y,4,1);return;}
   if(id==='trauma'){F('#15110a',x-4,y-4,9,8);F('#d8dcd4',x-3,y-3,7,6);F('#c04040',x-1,y-2,2,4);F('#c04040',x-2,y-1,4,2);F('#7fd08e',x-3,y-3,7,1);return;}
@@ -108,7 +109,7 @@ let orbiters=[],senseT=0,senseX=0,senseY=0,senseR=0;
 function slingCount(a){const P=player,d=SLING[a];if(a==='debris')return 'inf';if(d.ammo)return ''+(P.inv[d.ammo]||0);if(a==='charge')return ''+(P.inv.charge||0);if(a==='flask')return P.flask.has?'1':'0';return ''+((P.inv.molotov||0)+(P.inv.gasnade||0)+(P.inv.smokenade||0));}
 function fireSling(id,c){const P=player;if(!id){say('empty slot. set up the sling bar in Files > Skills');sfx('deny');return;}const d=SLING[id];if(P.liq===4){say('you cannot sling while swimming');return;}
   if(d.thrown){if(id==='charge'){if(!(P.inv.charge>0)){sfx('deny');say('no pipe charges');return;}throwCharge();}else if(id==='flask'){if(!P.flask.has){sfx('deny');say('no flask');return;}throwFlask();}
-    else{const k=['molotov','gasnade','smokenade'].find(q=>P.inv[q]>0);if(!k){sfx('deny');say('no grenades');return;}throwNade(k);}P.slCd=0.6;return;}
+    else{const k=['molotov','gasnade','smokenade','cryonade'].find(q=>P.inv[q]>0);if(!k){sfx('deny');say('no grenades');return;}throwNade(k);}P.slCd=0.6;return;}
   if(d.ammo&&!(P.inv[d.ammo]>0)){sfx('deny');say('out of '+d.ammo);P.slCd=0.3;return;}if(d.ammo)P.inv[d.ammo]--;breakCloak();
   const mult=1+1.5*c,spread=(P.actAim?0.03:0.12)*(1-0.7*c),sp=240+220*c,n=d.pel||1;
   for(let k=0;k<n;k++){const a=P.ang+rr(-spread,spread)+(n>1?(k-(n-1)/2)*0.09:0),base=d.dmg<0?rr(1,5.5):d.dmg;
@@ -181,7 +182,7 @@ function drawActWorld(){const P=player;
     for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const i=y*MW+x;if(!webs[i]||!seen[i])continue;const cx=x*TS+6-camX,cy=y*TS+6-camY;for(let k=0;k<4;k++){const a=k*Math.PI/4+((x*7+y*3)%3)*0.2;ctx.moveTo(cx-Math.cos(a)*6,cy-Math.sin(a)*6);ctx.lineTo(cx+Math.cos(a)*6,cy+Math.sin(a)*6);}
       ctx.moveTo(cx+3,cy);ctx.arc(cx,cy,3,0,6.283);ctx.moveTo(cx+5.5,cy);ctx.arc(cx,cy,5.5,0,6.283);}ctx.stroke();}
   for(const f of flames){const k=f.t/f.m,x=f.x-camX,y=f.y-camY,r=2+(1-k)*4;ctx.globalAlpha=0.35+0.5*k;ctx.fillStyle=k>0.6?'#fff0a0':k>0.3?'#ffa040':'#c04020';circ(x,y,r);}ctx.globalAlpha=1;
-  for(const n of nades){const x=Math.round(n.x-camX),y=Math.round(n.y-camY);if(n.kind==='molotov'){F('#6a8a4a',x-1,y-2,3,4);F('#ff9a4a',x+Math.round(Math.cos(n.spin)*2),y+Math.round(Math.sin(n.spin)*2)-2,1,1);}else{F(n.kind==='gasnade'?'#6a8a30':'#6a6e72',x-2,y-2,4,4);F('#15110a',x-1,y-3,2,1);}}
+  for(const n of nades){const x=Math.round(n.x-camX),y=Math.round(n.y-camY);if(n.kind==='molotov'){F('#6a8a4a',x-1,y-2,3,4);F('#ff9a4a',x+Math.round(Math.cos(n.spin)*2),y+Math.round(Math.sin(n.spin)*2)-2,1,1);}else{F(n.kind==='gasnade'?'#6a8a30':n.kind==='cryonade'?'#9fd0f0':'#6a6e72',x-2,y-2,4,4);F('#15110a',x-1,y-3,2,1);}}
   drawClouds();
   for(const o of orbiters){if(o.x==null)continue;const x=Math.round(o.x-camX),y=Math.round(o.y-camY);ctx.globalAlpha=0.35;ctx.fillStyle='#a88af0';circ(x,y,4);ctx.globalAlpha=1;F('#15110a',x-2,y-2,4,4);F('#8e978b',x-1,y-2,3,3);F('#c8c0b0',x-1,y-2,1,1);}
   for(const e of enemies)if(e.stunB>2&&!e.dead){const x=Math.round(e.x-camX),y=Math.round(e.y-camY);F('#141817',x-5,y-e.r-5,10,1);F('#e8dcb0',x-5,y-e.r-5,Math.round(10*Math.min(1,e.stunB/100)),1);}

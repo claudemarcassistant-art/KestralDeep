@@ -26,8 +26,8 @@ function hud(){
     if((p.o2==null?100:p.o2)<99.5){const o=p.o2/100;txt('air',6,ry-2,o<0.25?'#ff8a7a':'#6f7a6a');F('#141817',40,ry,54,2);F(o<0.25?(Math.sin(T*10)>0?'#ff8a7a':'#a04040'):'#9fd8ff',40,ry,Math.round(54*o),2);ry-=8;}
     if(p.guard<(p.guardMax||40)-0.5){txt('guard',6,ry-2,'#6f7a6a');F('#101820',40,ry,54,2);F('#bfe4ff',40,ry,Math.round(54*p.guard/(p.guardMax||40)),2);ry-=8;}
     for(const [k,n,c] of [['frz','cold','#9fd8ff'],['brn','burn','#ff8a3a'],['slk','slick','#b09060'],['rad','rads','#c9a8ff'],['stk','sticky','#c8d070'],['psn','poison','#8fcf40'],['shk','shock','#8fc3ff'],['stn','stun','#e8dcb0'],['wet','wet','#4a9ad0']]){const v=p.st[k];if(v<1)continue;
-    txt(n,6,ry-2,c);F('#141817',40,ry,54,3);F(c,40,ry,Math.round(54*v/100),3);ry-=9;}}
-  if(p.dazeT>0)txt('DAZED',W/2+20,H-54,'#e8dcb0','center');
+    txt(k==='frz'&&p.frozenT>0?'frozen':n,6,ry-2,c);F('#141817',40,ry,54,3);F(c,40,ry,Math.round(54*v/100),3);ry-=9;}}
+  if(p.frozenT>0)txt('FROZEN',W/2+20,H-54,'#cfe8ff','center');else if(p.dazeT>0)txt('DAZED',W/2+20,H-54,'#e8dcb0','center');
   if(p.cloakT>0){txt('CLOAKED '+Math.ceil(p.cloakT)+'s',W/2+20,H-64,'#9fc3ff','center');const a=0.05+0.03*Math.sin(T*4);F(`rgba(120,170,255,${a})`,0,0,W,3);F(`rgba(120,170,255,${a})`,0,H-3,W,3);}
   if(p.stimT>0)txt('stim '+Math.ceil(p.stimT)+'s',102,H-56,'#9fe0b0');
   if(p.liq===4)txt('no weapons, shove only',W/2+20,H-54,'#8fc3cf','center');
@@ -46,7 +46,9 @@ function hud(){
     const w=p.weapon?WPN[p.weapon]:null;
     if(qsHud&&p.actMode)txt('RMB aim',W-6,H-21,'#e3e6dc','right');else if(qsHud)txt('RMB '+(qid==='flask'?'throw':qq?'drop':'-'),W-6,H-21,'#e3e6dc','right');else txt('RMB '+(two?'Block':set.off?ARM[set.off].name:'Block'),W-6,H-21,'#e3e6dc','right');
     if(w&&MAGS[p.weapon]){const m=magLeft(p.weapon),cap=magCap(p.weapon);txt(m+'/'+cap+'  '+p.inv[w.ammo]+' '+w.ammo,W-6,H-12,m>0?AMBER:'#b84a3e','right');
-      if(p.reloadT>0){const k=1-p.reloadT/p.reloadMax;F('#141817',W-60,H-3,54,2);F('#d9a441',W-60,H-3,Math.round(54*k),2);}else if(m===0&&p.inv[w.ammo]>0&&Math.sin(T*6)>0)txt('R reload',W-6,H-39,'#ff8a7a','right');}
+      if(p.reloadT>0||p.arFlash>0){const k=p.reloadT>0?1-p.reloadT/p.reloadMax:1,bx=W-60,by=H-5,bw=54;F('#141817',bx,by,bw,4);F(p.arFail>0?'#a07050':'#d9a441',bx,by,Math.round(bw*k),4);
+        if(p.arPos!=null&&p.reloadT>0){const mx=bx+Math.round(bw*p.arPos),mw=Math.max(2,Math.round(bw*p.arW));F('rgba(255,240,180,0.35)',mx,by-1,mw,6);F('#fff4c8',mx,by-1,1,6);F('#fff4c8',mx+mw-1,by-1,1,6);}
+        if(p.arFlash>0)F(`rgba(255,250,220,${p.arFlash/ACTIVE_RELOAD.flash*0.9})`,bx-1,by-2,bw+2,8);}else if(m===0&&p.inv[w.ammo]>0&&Math.sin(T*6)>0)txt('R reload',W-6,H-39,'#ff8a7a','right');}
     else if(w)txt(p.inv[w.ammo]+' '+w.ammo,W-6,H-12,p.inv[w.ammo]>0?AMBER:'#b84a3e','right');
     else if(set.off==='tank'){const T0=p.tank||{n:0};txt('tank: '+(T0.kind||'empty')+' '+T0.n+'/'+TANKMAX,W-6,H-12,T0.n?(FLASKCOL[T0.kind]==='#3a3020'?'#b8a070':FLASKCOL[T0.kind]||AMBER):'#5d655f','right');}
     else txt('guard '+Math.round(p.guard)+'/'+Math.round(p.guardMax||40),W-6,H-12,'#bfe4ff','right');}
