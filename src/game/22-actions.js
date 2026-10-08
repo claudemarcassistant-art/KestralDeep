@@ -264,10 +264,11 @@ function lootRoll(tier){
 }
 function openChest(c){
   c.opened=true;sfx('chest');if(lvl){if(c.tier==='rare')lvl.rare++;else lvl.chests++;}
-  const n=(c.tier==='rare'?3:2)+rnd(2)+S.chestBonus;
+  // contents come from the chest's own loot seed, set when the deck was generated
+  withSeed(c.ls!=null?c.ls:(realRandom()*4294967296)>>>0,()=>{const n=(c.tier==='rare'?3:2)+rnd(2)+S.chestBonus;
   for(let i=0;i<n;i++){const t=lootRoll(c.tier);let x=c.x,y=c.y;
     for(let k=0;k<8;k++){const a=Math.random()*6.283,d=rr(8,15),nx=c.x+Math.cos(a)*d,ny=c.y+Math.sin(a)*d;if(!blocked(nx,ny,2)){x=nx;y=ny;break;}}
-    const it={x,y,type:t,ph:0,pop:0.35};if(t==='gear'){const im=IMPLEMENTS.filter(k=>!player.has[k]);if(Math.random()<0.25&&im.length){it.type='weapon';it.w=im[rnd(im.length)];}else it.gear=randomGear();}if(t==='food')it.food=randFood();items.push(it);}
+    const it={x,y,type:t,ph:0,pop:0.35};if(t==='gear'){const im=IMPLEMENTS.filter(k=>!player.has[k]);if(Math.random()<0.25&&im.length){it.type='weapon';it.w=im[rnd(im.length)];}else it.gear=randomGear();}if(t==='food')it.food=randFood();items.push(it);}});
   for(let i=0;i<12;i++)parts.push({x:c.x,y:c.y-3,vx:rr(-40,40),vy:rr(-70,-10),t:0.5,m:0.5,c:c.tier==='rare'?'#c9a8ff':'#ffd98a',s:1});
   lights.push({x:c.x,y:c.y,r:40,t:0.4,m:0.4,c:c.tier==='rare'?'190,150,255':'255,200,110'});
 }

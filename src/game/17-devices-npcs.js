@@ -12,24 +12,29 @@ const DECKOPT=[
   {k:'waves',label:'Incoming waves',vals:['off','on']},
   {k:'haunt',label:'Haunted',vals:['off','on']},
   {k:'lowg',label:'Low gravity',vals:['off','on']}];
-const deckCfg={depth:1,biome:'auto',type:'station',size:'random',light:'random',haz:'random',obj:'random',waves:'off',haunt:'off',lowg:'off'};
-const deckRows=()=>[...DECKOPT.map(o=>({opt:o})),{act:'go',label:'Go to this deck'},{act:'rand',label:'Go to a random deck'},{act:'stay',label:'Stay here'}];
+const deckCfg={seed:'',depth:1,biome:'auto',type:'station',size:'random',light:'random',haz:'random',obj:'random',waves:'off',haunt:'off',lowg:'off'};
+const deckRows=()=>[...DECKOPT.map(o=>({opt:o})),{seedRow:true},{act:'go',label:'Go to this deck'},{act:'rand',label:'Go to a random deck'},{act:'stay',label:'Stay here'}];
 function cycleDeck(o,d){const v=o.vals,i=v.indexOf(deckCfg[o.k]);deckCfg[o.k]=v[(i+d+v.length)%v.length];sfx('click');}
-function launchTestDeck(rand){const c=deckCfg,type=rand?wpick([['station',6],['flooded',2],['cache',2]]):c.type;depth=rand?1+rnd(8):c.depth;const rc=rollCond(type);
+// the seed of the test deck in play, so a deck can be rebuilt: blank seed = a new random one each time
+let testSeed=null;
+function launchTestDeck(rand){const code=seedKey(deckCfg.seed||'')?deckCfg.seed:randomSeedCode();testSeed=code;
+  withSeed(seedHash(seedKey(code)+'|test'),()=>launchTestDeck0(rand));state='play';say('test deck, seed '+code.toLowerCase()+'. reach the lift to come back');}
+function launchTestDeck0(rand){const c=deckCfg,type=rand?wpick([['station',6],['flooded',2],['cache',2]]):c.type;depth=rand?1+rnd(8):c.depth;const rc=rollCond(type);
   cond={light:rand||c.light==='random'?rc.light:c.light,haz:rand||c.haz==='random'?rc.haz:(c.haz==='none'?null:c.haz),obj:rand||c.obj==='random'?rc.obj:c.obj,ev:rand?rc.ev:(c.waves==='on'?'waves':null),haunt:rand?rc.haunt:c.haunt==='on',lowg:rand?rc.lowg:c.lowg==='on',size:rand||c.size==='random'?rc.size:c.size[0]};
   biomeOverride=rand||c.biome==='auto'?null:DECKOPT[1].vals.indexOf(c.biome)-1;
   levelMods=type==='flooded'?{flood:0.85}:type==='cache'?{vaults:2,chests:2,enemyMul:1.35}:{};
-  testDeck=true;deckUI=null;hazOff=false;levelLabel='TEST DECK';enterLevel();state='play';say('test deck. reach the lift to come back');}
+  testDeck=true;deckUI=null;hazOff=false;levelLabel='TEST DECK';enterLevel();}
 function returnToTest(){testDeck=false;biomeOverride=null;levelMods={};cond={light:'normal',haz:null};hazOff=false;levelLabel='TEST RANGE';genTest();placeTestNpcs();player.liftCfgLock=true;say('back in the test range');}
-function deckChoose(i,d){const r=deckRows()[i];if(!r)return;if(r.opt)return cycleDeck(r.opt,d||1);if(r.act==='go')launchTestDeck(false);else if(r.act==='rand')launchTestDeck(true);else deckUI=null;}
+function deckChoose(i,d){const r=deckRows()[i];if(!r)return;if(r.seedRow){editText(deckCfg.seed,20,v=>{deckCfg.seed=v;});return;}if(r.opt)return cycleDeck(r.opt,d||1);if(r.act==='go')launchTestDeck(false);else if(r.act==='rand')launchTestDeck(true);else deckUI=null;}
 function drawDeckUI(){const R=deckRows(),pw=250,rh=11,ph=34+R.length*rh+18,px=(W-pw)>>1,py=Math.max(4,(H-ph)>>1);
   F('rgba(4,5,6,0.6)',0,0,W,H);box(px,py,pw,ph,'#0a0c0b','#2a2f2d');F(AMBER,px,py,pw,2);txt('Test lift',px+10,py+7,AMBER);txt('build a deck to visit',px+pw-10,py+7,'#5d655f','right');
   deckUI.sel=Math.max(0,Math.min(deckUI.sel,R.length-1));
   R.forEach((r,i)=>{const yy=py+22+i*rh+(r.act?4:0),sel=i===deckUI.sel;const hov=ui(px+6,yy-2,pw-12,rh,{click:()=>{deckUI.sel=i;deckChoose(i,1);}});if(hov&&mouse.moved)deckUI.sel=i;
     if(sel){F('#141917',px+6,yy-2,pw-12,rh);F(AMBER,px+6,yy-2,2,rh);}
     if(r.opt){txt(r.opt.label,px+14,yy,sel?'#e3e6dc':'#b9c0b3');txt('< '+deckCfg[r.opt.k]+' >',px+pw-12,yy,AMBER,'right');}
+    else if(r.seedRow){const ed=textEdit&&sel;txt('Seed',px+14,yy,sel?'#e3e6dc':'#b9c0b3');txt(ed?textEdit.val+(Math.sin(T*8)>0?'_':' '):deckCfg.seed||'random',px+pw-12,yy,ed?'#e3e6dc':AMBER,'right');}
     else txt(r.label,px+14,yy,r.act==='stay'?'#6f7a6a':'#9fe0b0');});
-  txt('W S select   A D or click to change   Enter to go',px+pw/2,py+ph-12,'#4f5a55','center');}
+  txt(textEdit?'type a seed   Enter to keep   ESC to cancel':'W S select   A D or click to change   Enter to go',px+pw/2,py+ph-12,'#4f5a55','center');}
 let grindUI=null;
 const yieldTxt=y=>Object.entries(y).map(([k,v])=>v+' '+k).join(', ');
 function grindRows(){const P=player,R=[];

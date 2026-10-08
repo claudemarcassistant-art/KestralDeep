@@ -386,7 +386,7 @@ function fillHidden(r,type){
   else if(type==='merchant'){const v=mkVendor(r.cx,r.cy);v.npc=true;v.style=3;v.name='Hermit trader';vendors.push(v);addItem(r,pickItem());}
   else if(type==='cage'&&r.w>=5&&r.h>=4){const c={tx:r.x+r.w-3,ty:r.y+1,w:3,h:2,open:false};cages.push(c);
     const e=mkEnemy(depth>=3?'brute':wpick([['husk',1],['spitter',1]]),(c.tx+2)*TS,(c.ty+1)*TS);e.caged=c;enemies.push(e);
-    chests.push({tx:c.tx,ty:c.ty+1,x:c.tx*TS+6,y:(c.ty+1)*TS+6,tier:'rare',opened:false,caged:c});
+    chests.push({tx:c.tx,ty:c.ty+1,x:c.tx*TS+6,y:(c.ty+1)*TS+6,tier:'rare',opened:false,caged:c,ls:(Math.random()*4294967296)>>>0});
     levers.push({tx:r.x,ty:r.y+r.h-1,effect:'release',cage:c,used:false});addItem(r,pickItem());}
   else{r.type='control';levers.push({tx:r.cx,ty:r.cy,effect:wpick([['flood',3],['anomaly',depth>=2?2:1],['timer',2],['horde',2]]),reward:wpick([['doors',1],['loot',2],['map',1]]),used:false});addItem(r,pickItem());}
 }

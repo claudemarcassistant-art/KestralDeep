@@ -1,6 +1,6 @@
 // ---------- state ----------
 let vendors=[],vendUI=null,ventRooms=[],hatchRooms=[],hatches=[],levers=[],cages=[],openVent=new Uint8Array(MW*MH),levelTimer=0,purgeGas=false;
-let lvl=null,runScore=0,report=null,bestScore=0;try{bestScore=+(localStorage.getItem('kd_best')||0);}catch(e){}
+let lvl=null,runScore=0,report=null,bestScore=0,bestSeed=null;try{bestScore=+(localStorage.getItem('kd_best')||0);bestSeed=JSON.parse(localStorage.getItem('kd_best_seed')||'null');}catch(e){}
 function startLevelScore(){
   if(lvl&&player&&player.rs)for(const k of LVLSTAT)player.rs[k]=(player.rs[k]||0)+(lvl[k]||0);
   lvl={t:0,killPts:0,kills:0,ambush:0,hacks:0,items:0,finds:0,chests:0,rare:0,doors:0,secrets:0,dmg:0,par:Math.round(60*AREA)+rooms.length*8};
@@ -36,7 +36,7 @@ function finishLevel(){
 }
 function fmtT(t){t=Math.round(t);return Math.floor(t/60)+':'+String(t%60).padStart(2,'0');}
 function reportAdvance(){const shown=(T-report.start)/0.18;if(shown<report.lines.length+3){report.start=T-99;return;}report=null;if(pendingSkip>1){for(let k=0;k<pendingSkip-1;k++){if(route.cur===route.exit)break;const d=nodeDist(route.exit);let best=route.cur;for(const j of curNode().links)if(d[j]<d[best])best=j;route.cur=best;route.nodes[best].known=true;route.nodes[best].visited=true;depth++;}}pendingSkip=0;openRoute();}
-function saveBest(){if(testMode)return;const tot=runScore+liveLevelScore();if(tot>bestScore){bestScore=tot;try{localStorage.setItem('kd_best',''+bestScore);}catch(e){}}}
+function saveBest(){if(testMode)return;const tot=runScore+liveLevelScore();if(tot>bestScore){bestScore=tot;bestSeed=runSeed&&runSeed.kind!=='random'?runSeed:null;try{localStorage.setItem('kd_best',''+bestScore);localStorage.setItem('kd_best_seed',JSON.stringify(bestSeed));}catch(e){}}}
 function drawReport(){
   const r=report,pw=300,ph=206,px=(W-pw)>>1,py=(H-ph)>>1,shown=Math.floor((T-r.start)/0.18);
   F('#050607',0,0,W,H);box(px,py,pw,ph,'#0a0d0c','#1f2524');F(AMBER,px,py,pw,2);

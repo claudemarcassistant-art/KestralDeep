@@ -190,7 +190,8 @@ function render(){
     txt('SIGNAL LOST',W/2,H/2-34,'#b84a3e','center',16);
     txt('reached depth '+depth+', '+sector(depth).toLowerCase(),W/2,H/2-8,'#c9cfc2','center');
     txt(kills+' of them put down',W/2,H/2+3,'#c9cfc2','center');if(runAlertWaves)txt(runAlertWaves+' waves drawn by your noise',W/2,H/2+25,'#8e978b','center');txt('score '+(runScore+liveLevelScore())+(testMode?'':'   best '+bestScore),W/2,H/2+14,AMBER,'center');
-    if(deadT>1&&Math.sin(T*4)>-0.3)txt('Click to return to the title',W/2,H/2+28,'#e8dcb0','center');
+    if(runSeed)txt('seed '+runSeed.code+(runSeed.kind!=='random'?'   seeded run ('+runSeed.kind+')':''),W/2,H/2+38,runSeed.kind!=='random'?'#d9a441':'#6f7a6a','center');
+    if(deadT>1&&Math.sin(T*4)>-0.3)txt('Click to return to the title',W/2,H/2+(runSeed?50:28),'#e8dcb0','center');
   }
   if(!mapOpen)crosshair();
 }

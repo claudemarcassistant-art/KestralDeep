@@ -1,4 +1,4 @@
-// World: sectors, biome layouts and palettes, route node types, water depths, room modules and names, hidden room weights, deck conditions, hazard text, deck sizes.
+// World: sectors, biome layouts and palettes, route node types, water depths, room modules and names, hidden room weights, deck conditions, hazard text, deck sizes, seed words.
 // ---------- data ----------
 const SECTORS=['INTAKE','PUMP HALL','SORTING FLOOR','COLD STORE','BRINE WORKS','RELAY CORE','THE DRY WELL'];
 const BNAMES=['Intake','Pump Hall','Sorting Floor','Cold Store','Brine Works','Relay Core'];
@@ -51,3 +51,5 @@ const HIDDEN_TYPES=[['stash',3],['secops',2],['merchant',1.5],['control',2]];
 const DECK_SIZES={s:{w:48,h:48,name:'small deck'},m:{w:64,h:64,name:'medium deck'},l:{w:96,h:80,name:'large deck'}};
 // Size odds on ordinary junctions, and on a sector's exit deck and arena decks (which lean large)
 const DECK_SIZE_ODDS={normal:[['s',25],['m',60],['l',15]],big:[['s',15],['m',35],['l',50]]};
+// Words for readable random run seeds ("KESTREL-4471")
+const SEED_WORDS=['KESTREL','BRINE','RELAY','INTAKE','SORTER','FROST','SLAG','BALLAST','ANCHOR','SIGNAL','HULL','VALVE','CABLE','SONAR','PUMP','LANTERN','HATCH','GANTRY','SILT','CINDER','DRIFT','TIDE','RIVET','BEACON'];

@@ -15,22 +15,25 @@ let META={maxSector:0,ach:{},hunters:0,seen:{},setup:{start:0,mods:[]}};try{Obje
 function saveMeta(){try{localStorage.setItem('kd_meta',JSON.stringify(META));}catch(e){}}
 let runMods={};
 function scoreMul(){return 1+0.25*Object.keys(runMods).filter(k=>runMods[k]).length;}
-function newGame(){arcadeMode=false;testMode=false;testDeck=false;biomeOverride=null;cond={light:'normal',haz:null};hazOff=false;clearSave();
+function newGame(){arcadeMode=false;testMode=false;testDeck=false;biomeOverride=null;cond={light:'normal',haz:null};hazOff=false;clearSave();runSeed=pickRunSeed();
   runMods={};for(const id of META.setup.mods||[]){const m=MODS_RUN.find(q=>q.id===id);if(m&&m.ok())runMods[id]=true;}
   initPlayer();testLabels=[];levelLabel='';
-  const st=Math.max(0,Math.min(META.setup.start||0,META.maxSector||0));if(st>0){newSector(st);depth=1+st*4;player.clear+=2*st;player.inv.scrap+=10*st;player.inv.medkit=(player.inv.medkit||0)+st;for(let k=0;k<st;k++)gainGear(randomGear());}
-  if(runMods.hunted&&!route.chaser){const far=route.nodes.map((n,i)=>i).filter(i=>i>0&&i!==route.exit&&route.nodes[i].x>0.45);if(far.length)route.chaser={at:far[rnd(far.length)],boss:route.sector%BOSSES.length};}
-  refreshStats();player.hp=maxHp();enterLevel();state='play';}
+  const st=Math.max(0,Math.min(META.setup.start||0,META.maxSector||0));if(st>0){newSector(st);depth=1+st*4;player.clear+=2*st;player.inv.scrap+=10*st;player.inv.medkit=(player.inv.medkit||0)+st;seeded(['kit'],()=>{for(let k=0;k<st;k++)gainGear(randomGear());});}
+  if(runMods.hunted&&!route.chaser)seeded(['hunted',route.sector],()=>{const far=route.nodes.map((n,i)=>i).filter(i=>i>0&&i!==route.exit&&route.nodes[i].x>0.45);if(far.length)route.chaser={at:far[rnd(far.length)],boss:route.sector%BOSSES.length};});
+  refreshStats();player.hp=maxHp();seeded(['deck',route.sector,route.cur],enterLevel);state='play';if(runSeed.kind!=='random')say('seeded run: '+runSeed.code.toLowerCase());}
+// the seed for a new run, from run setup: random (still recorded), today's daily seed, or a typed one
+function pickRunSeed(){const S0=META.setup||{};if(S0.seedMode==='daily')return {code:dailySeedCode(),kind:'daily'};
+  if(S0.seedMode==='typed'&&seedKey(S0.seedText||''))return {code:String(S0.seedText).trim().toUpperCase(),kind:'typed'};return {code:randomSeedCode(),kind:'random'};}
 function saveRun(){if(testMode||arcadeMode||!player||player.hp<=0)return;try{
   const pl=Object.assign({},player,{grabbedBy:null,tripped:null,astral:null,foeC:null});
-  const data={v:1,player:pl,route:Object.assign({},route,{lk:[...(route.lk||[])]}),depth,runScore,runAlertWaves,alertCarry,runStops,nextMods,bestiary,runMods,nextTransit};
+  const data={v:1,seed:runSeed,player:pl,route:Object.assign({},route,{lk:[...(route.lk||[])]}),depth,runScore,runAlertWaves,alertCarry,runStops,nextMods,bestiary,runMods,nextTransit};
   localStorage.setItem('kd_save',JSON.stringify(data,(k,v)=>v instanceof Set?[...v]:v instanceof Map?undefined:v));
   for(const k in bestiary.seen)META.seen[k]=1;if(route.sector>META.maxSector)META.maxSector=route.sector;saveMeta();}catch(e){console.warn('save failed',e);}}
 function hasSave(){try{return !!localStorage.getItem('kd_save');}catch(e){return false;}}
 setTimeout(()=>{if(state==='title'&&!hasSave())titleSel=1;},0);
 function clearSave(){try{localStorage.removeItem('kd_save');}catch(e){}}
 function loadRun(){let d;try{d=JSON.parse(localStorage.getItem('kd_save'));}catch(e){d=null;}if(!d){say('no saved run');sfx('deny');return;}
-  arcadeMode=false;testMode=false;testDeck=false;cond={light:'normal',haz:null};hazOff=false;initPlayer();Object.assign(player,d.player);
+  arcadeMode=false;testMode=false;testDeck=false;cond={light:'normal',haz:null};hazOff=false;runSeed=d.seed||{code:randomSeedCode(),kind:'random'};initPlayer();Object.assign(player,d.player);
   route=d.route;route.lk=new Set(route.lk||[]);depth=d.depth;runScore=d.runScore||0;runAlertWaves=d.runAlertWaves||0;alertCarry=!!d.alertCarry;runStops=d.runStops||0;nextMods=d.nextMods||{};bestiary=d.bestiary||{seen:{},kills:{}};runMods=d.runMods||{};nextTransit=d.nextTransit||null;
   biomeOverride=route.sector%6;testLabels=[];levelLabel='';refreshStats();ensureLayers();state='route';routeSel=0;menuOpen=false;mapOpen=false;sfx('map');say('run resumed at depth '+depth);}
 let liftState='open',liftCard=false,alarmT=0,alarmMax=0,cores=[],spawnQ=[],liftMsgT=0,alarmBeep=0,liftDefended=false,coresKilled=0;

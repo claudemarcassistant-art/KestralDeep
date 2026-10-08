@@ -67,7 +67,14 @@ function drawSpawnUI(){
     txt(l,px+(o.kind==='spawn'?24:14),yy,sel?'#e3e6dc':'#b9c0b3');if(r)txt(r,px+pw-12,yy,rc,'right');});
   txt(u.note||'W S or click   Enter to choose   ESC to close',px+10,py+ph-12,u.note?'#9fcf9a':'#4f5a55');
 }
+// one text field at a time (seed entry): while textEdit is open, typed keys go to it instead of the game
+let textEdit=null;
+function editText(val,max,done){textEdit={val:val||'',max,done};}
+function textKey(e){const T=textEdit;
+  if(e.key==='Enter'){textEdit=null;T.done(T.val.trim());sfx('click');}else if(e.key==='Escape'){textEdit=null;sfx('click');}
+  else if(e.key==='Backspace')T.val=T.val.slice(0,-1);else if(e.key.length===1&&/[A-Za-z0-9 -]/.test(e.key)&&T.val.length<T.max)T.val+=e.key.toUpperCase();}
 addEventListener('keydown',e=>{
+  if(textEdit){e.preventDefault();textKey(e);return;}
   if(['Space','Tab','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
   if(!K[e.code])onPress(e.code);K[e.code]=true;
 });

@@ -33,7 +33,7 @@ src/
     weapons.js              armaments, gun stats, magazines, crits, charge and combo timing
     world.js                sectors, biome layouts, palettes, route nodes, water depths, room modules, deck conditions, hazard text, deck sizes
   game/           the game, split by system
-    01-core.js              canvas, view sizes, deck size variables, shared helpers
+    01-core.js              canvas, view sizes, deck size variables, run seeds, shared helpers
     02-audio.js             sound synthesis
     03-equipment.js         equipping armaments, quick items, flasks, liquid tank, tools, sling, psychic powers
     04-state.js             run and world state, scoring, deck conditions, movement and collision

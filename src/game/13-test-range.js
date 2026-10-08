@@ -1,6 +1,6 @@
 // ---- test range
 let arcadeMode=false;
-function newArcadeHall(){testMode=true;arcadeMode=true;cond={light:'lit',haz:null,obj:'open'};hazOff=false;initPlayer();levelLabel='ARCADE';setDeckSize('m');resetHidden();
+function newArcadeHall(){runSeed=null;testMode=true;arcadeMode=true;cond={light:'lit',haz:null,obj:'open'};hazOff=false;initPlayer();levelLabel='ARCADE';setDeckSize('m');resetHidden();
   map=new Uint8Array(MW*MH).fill(1);kind=new Uint8Array(MW*MH);secretHp=new Float32Array(MW*MH);openDoor=new Uint8Array(MW*MH);liq=new Uint8Array(MW*MH);hz=new Uint8Array(MW*MH);
   const carve=(x0,y0,w,h,k)=>{for(let y=y0;y<y0+h;y++)for(let x=x0;x<x0+w;x++){map[y*MW+x]=0;kind[y*MW+x]=k;}};
   const room={x:20,y:20,w:14,h:10,cx:27,cy:25};rooms=[room];carve(20,20,14,10,11);
@@ -23,7 +23,7 @@ function newArcadeHall(){testMode=true;arcadeMode=true;cond={light:'lit',haz:nul
   testLabels=ARC_IDS.map((g,i)=>{const [x,y]=spots[i%spots.length];return {x:x+0.5,y:y+1.4,s:ARC[g].name.split(' ')[0].toUpperCase(),c:true,sz:5};});testLabels.push({x:33.5,y:20.4,s:'COINS',c:true,sz:5},{x:37.5,y:25.3,s:'EXIT',c:true,sz:6});
   player.x=27*TS+6;player.y=26*TS+6;player.inv.scrap=10;resetLevelState();bfs(27,26,flow);ensureLayers();setupObjective(null,null,'open');startLevelScore();state='play';say('the arcade. the coin dispenser is broken in your favour');}
 function placeTestNpcs(){NPC_IDS.forEach(k=>{for(let tries=0;tries<40;tries++){const t=freeTile(rooms[0]);if(t&&!fixtures.some(f=>Math.abs(f.tx-t.tx)+Math.abs(f.ty-t.ty)<2)&&Math.hypot(t.tx*TS+6-player.x,t.ty*TS+6-player.y)>20){fixtures.push({tx:t.tx,ty:t.ty,kind:'npc',npc:k,ph:Math.random()*6});break;}}});}
-function newTest(){arcadeMode=false;testDeck=false;biomeOverride=null;testMode=true;cond={light:'normal',haz:null};hazOff=false;initPlayer();player.clear=60;Object.assign(player.inv,{molotov:5,gasnade:5,smokenade:5});player.tools={glowstick:true,sledge:true,scanner:true};player.found=FILES.map(f=>f.id);levelLabel='TEST RANGE';genTest();placeTestNpcs();state='play';say('test range. everything here is free to take');}
+function newTest(){runSeed=null;arcadeMode=false;testDeck=false;biomeOverride=null;testMode=true;cond={light:'normal',haz:null};hazOff=false;initPlayer();player.clear=60;Object.assign(player.inv,{molotov:5,gasnade:5,smokenade:5});player.tools={glowstick:true,sledge:true,scanner:true};player.found=FILES.map(f=>f.id);levelLabel='TEST RANGE';genTest();placeTestNpcs();state='play';say('test range. everything here is free to take');}
 function genTest(){
   setDeckSize('m');resetHidden();
   map=new Uint8Array(MW*MH).fill(1);kind=new Uint8Array(MW*MH);secretHp=new Float32Array(MW*MH);openDoor=new Uint8Array(MW*MH);liq=new Uint8Array(MW*MH);

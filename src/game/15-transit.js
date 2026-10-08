@@ -19,7 +19,8 @@ function startTransit(tr,n){pendingNode=n;runStops++;
     nodeUI={title:'An unmarked landing',col:'#d9a441',transit:true,body:'The lift slows and stops at '+ROOMDESC[tr.room]+'. The doors stay open, waiting.',
       options:[{label:'Step out',ok:()=>true,act:()=>{startStop(tr.room);return null;}},{label:'Ride on',leave:true,ok:()=>true}]};state='node';nodeSel=0;return;}
   enterNode(n);}
-function startStop(sk){stopMode=true;stopAmbush=sk==='ambush';nodeUI=null;setDeckSize('m');resetHidden();levelLabel=sk==='ambush'?'LIFT CAB':'LANDING';cond={light:sk==='ambush'?'normal':'lit',haz:null,obj:'open'};hazOff=false;
+function startStop(sk){seeded((liftKey||['lift']).concat('stop'),()=>buildStop(sk));}
+function buildStop(sk){stopMode=true;stopAmbush=sk==='ambush';nodeUI=null;setDeckSize('m');resetHidden();levelLabel=sk==='ambush'?'LIFT CAB':'LANDING';cond={light:sk==='ambush'?'normal':'lit',haz:null,obj:'open'};hazOff=false;
   map=new Uint8Array(MW*MH).fill(1);kind=new Uint8Array(MW*MH);secretHp=new Float32Array(MW*MH);openDoor=new Uint8Array(MW*MH);liq=new Uint8Array(MW*MH);hz=new Uint8Array(MW*MH);oil=new Uint8Array(MW*MH);slime=new Uint8Array(MW*MH);
   const cab={x:28,y:30,w:5,h:4,cx:30,cy:31};rooms=[cab];const carve=(r,k)=>{for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++){map[y*MW+x]=0;kind[y*MW+x]=k;}};carve(cab,1);
   vaults=[];secrets=[];ventRooms=[];hatchRooms=[];fires=[];vents=[];anoms=[];panels=[];vendors=[];chests=[];items=[];enemies=[];barrels=[];risers=[];testLabels=[];
@@ -29,7 +30,7 @@ function startStop(sk){stopMode=true;stopAmbush=sk==='ambush';nodeUI=null;setDec
     if(sk==='merchant'){vendors.push(mkVendor(28,21),mkVendor(32,21));items.push({x:27*TS+6,y:26*TS+6,type:'raw',raw:randRaw(),ph:0});}
     else if(sk==='gambler'){fixtures.push({tx:30,ty:24,kind:'psychic',ph:0});items.push({x:33*TS+6,y:26*TS+6,type:'scrap',ph:0});}
     else if(sk==='quarters'){fixtures.push({tx:27,ty:21,kind:'locker',used:false,wall:true},{tx:29,ty:21,kind:'locker',used:false,wall:true},{tx:31,ty:21,kind:'locker',used:false,wall:true});
-      chests.push({tx:33,ty:23,x:33*TS+6,y:23*TS+6,tier:'common',opened:false});items.push({x:27*TS+6,y:26*TS+6,type:'food',food:randFood(),ph:0},{x:28*TS+6,y:25*TS+6,type:'cloth',ph:0});
+      chests.push({tx:33,ty:23,x:33*TS+6,y:23*TS+6,tier:'common',opened:false,ls:(Math.random()*4294967296)>>>0});items.push({x:27*TS+6,y:26*TS+6,type:'food',food:randFood(),ph:0},{x:28*TS+6,y:25*TS+6,type:'cloth',ph:0});
       if(Math.random()<0.4){const e=mkEnemy('husk',32*TS+6,25*TS+6);e.alert=false;enemies.push(e);}}
     else if(sk==='camp'){fixtures.push({tx:30,ty:23,kind:'npc',npc:NPC_IDS[rnd(NPC_IDS.length)],ph:Math.random()*6});items.push({x:27*TS+6,y:26*TS+6,type:'food',food:randFood(),ph:0});}
     else if(sk==='arcade'){arcPicks(3).forEach((g,k)=>fixtures.push({tx:27+k*3,ty:21,kind:'arcade',wall:true,won:false,game:g}));items.push({x:30*TS+6,y:26*TS+6,type:'scrap',ph:0});}}
@@ -40,7 +41,9 @@ function startStop(sk){stopMode=true;stopAmbush=sk==='ambush';nodeUI=null;setDec
     queueSpawn({tx:30,ty:24});say('they are waiting on the landing, and more are coming down from above');sfx('alarm');}
   else say('step back onto the lift when you are ready to ride on');}
 function endStop(){stopMode=false;stopAmbush=false;const n=pendingNode;pendingNode=null;if(n)enterNode(n);else openRoute();}
-function enterNode(n){bossPending=!!(route&&route.chaser&&route.chaser.at===route.cur&&!testMode);
+// each junction's deck (or stop) is generated from the run seed plus its sector and junction
+function enterNode(n){seeded(['deck',route.sector,route.cur],()=>enterNode0(n));}
+function enterNode0(n){bossPending=!!(route&&route.chaser&&route.chaser.at===route.cur&&!testMode);
   levelMods=Object.assign({},nextMods);nextMods={};levelLabel='';cond=n.cond||{light:'normal',haz:null};hazOff=false;powerOff=false;
   if(n.type==='flooded'){levelMods.flood=0.85;levelLabel='FLOODED DECK';}
   if(n.type==='cache'){levelMods.vaults=(levelMods.vaults||0)+2;levelMods.chests=2;levelMods.enemyMul=(levelMods.enemyMul||1)*1.35;levelLabel='SUPPLY CACHE';}

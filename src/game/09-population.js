@@ -14,7 +14,7 @@ function areaName(){const P=player,tx=Math.floor(P.x/TS),ty=Math.floor(P.y/TS),i
     if(cond&&cond.obj==='arena'&&r.w>=20)return 'arena';const bi=biomeOverride!=null?biomeOverride:(depth-1)%BIOME.length,L=ROOMNAMES[bi%ROOMNAMES.length];return L[(r.x*7+r.y*13)%L.length]+(r.dark?' (no lights)':'');}
   return 'corridor';}
 function addItem(r,type,extra){if(runMods.lean&&!testMode&&Math.random()<0.45)return;if(type==='food'&&!extra)extra={food:randFood()};if(type==='tool'&&!extra)extra={tool:Object.keys(TOOLS)[rnd(3)]};if(type==='raw'&&!extra)extra={raw:randRaw()};const p=spotIn(r);if(p)items.push(Object.assign({x:p.x,y:p.y,type,ph:Math.random()*6},extra||{}));}
-function addChest(r,tier){const t=freeTile(r);if(t)chests.push({tx:t.tx,ty:t.ty,x:t.tx*TS+TS/2,y:t.ty*TS+TS/2,tier,opened:false});}
+function addChest(r,tier){const t=freeTile(r);if(t)chests.push({tx:t.tx,ty:t.ty,x:t.tx*TS+TS/2,y:t.ty*TS+TS/2,tier,opened:false,ls:(Math.random()*4294967296)>>>0});}
 function randomRoom(){return rooms[1+rnd(rooms.length-1)];}
 let wetness=0;
 function pickType(){return wpick([['husk',5],['crawler',depth>=2?3:1],['spitter',depth>=2?2:0],['snake',(depth>=2?1.5:0.4)+wetness*25],['arcsnake',depth>=3?0.3+depth*0.08+wetness*15:0],['charger',depth>=2?0.4+depth*0.12:0],['drone',depth>=2?1:0.2],['slug',1.2],['toxslug',depth>=2?1:0],['snail',depth>=2?0.9:0.2],['wasp',0.25+(cond&&cond.haz==='overgrowth'?2.5:0)],['guard',depth>=4?0.3+(depth-4)*0.12:0],['spider',(depth>=2?0.9:0.2)+(cond&&cond.haz==='overgrowth'?1.5:0)+(cond&&cond.light==='dark'?1:0)],['frog',(depth>=2?0.9:0.2)+wetness*12+(cond&&cond.haz==='overgrowth'?2:0)],['brute',depth>=3?0.3+(depth-3)*0.18:0]]);}
@@ -33,7 +33,7 @@ function populate(startR,exitR){
     const ni=rnd(3);
     for(let k=0;k<ni;k++){const t=pickItem();got[t]=1;addItem(r,t);}
   }
-  if(Math.random()<0.3+Math.min(0.25,depth*0.03)){const fid=randomFileId();if(fid){const r=vaults.length&&Math.random()<0.6?vaults[rnd(vaults.length)]:randomRoom();addItem(r,'file',{file:fid});}}
+  subSeed(()=>{if(Math.random()<0.3+Math.min(0.25,depth*0.03)){const fid=randomFileId();if(fid){const r=vaults.length&&Math.random()<0.6?vaults[rnd(vaults.length)]:randomRoom();addItem(r,'file',{file:fid});}}});
   for(let k=aN(1);k>0;k--)if(Math.random()<0.45)addChest(randomRoom(),'common');
   for(let k=aN(levelMods.chests||0);k>0;k--)addChest(randomRoom(),Math.random()<.3?'rare':'common');
   for(const v of vaults){
@@ -52,7 +52,7 @@ function populate(startR,exitR){
   if(Math.random()<0.25)addItem(randomRoom(),'schematic');
   if(secrets.length&&Math.random()<0.3)addItem(randomRoom(),'secretmap');
   if(Math.random()<0.2)addItem(randomRoom(),'gear',{gear:randomGear()});
-  if(depth===1&&!ownedGear().includes('barrellight'))addItem(randomRoom(),'gear',{gear:'barrellight'});
+  subSeed(()=>{if(depth===1&&!ownedGear().includes('barrellight'))addItem(randomRoom(),'gear',{gear:'barrellight'});});
   const nk=Math.max(1,vaults.length+chests.length-rnd(2));
   for(let k=0;k<nk;k++)addItem(randomRoom(),'key');
   for(const t of ['pipe','battery'])if(!got[t])addItem(randomRoom(),t);
