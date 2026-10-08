@@ -44,15 +44,16 @@ function mulberry32(a){return ()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a
 // 32-bit hash of text (FNV-1a with a final mix)
 function seedHash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}h^=h>>>16;h=Math.imul(h,2246822507);h^=h>>>13;return h>>>0;}
 function withSeed(n,fn){const prev=Math.random;Math.random=mulberry32(n);try{return fn();}finally{Math.random=prev;}}
-// the run's seed: {code:'KESTREL-4471', kind:'random'|'typed'|'daily'}; null outside runs (test range, arcade)
+// the run's seed: {code:'40715382', kind:'random'|'typed'|'daily'}; null outside runs (test range, arcade)
 let runSeed=null;
-// typed seeds ignore case, spaces and punctuation: 'kestrel 4471' is the same seed as 'KESTREL-4471'
+// typed seeds ignore case, spaces and punctuation: 'brine 4471' is the same seed as 'BRINE-4471'
 const seedKey=code=>String(code).toUpperCase().replace(/[^A-Z0-9]/g,'');
 // run fn on its own sub-stream: takes exactly one draw from the current stream whatever fn does, so rolls that depend
 // on the player (files already found, gear owned) cannot shift the rest of a deck's generation
 function subSeed(fn){return withSeed((Math.random()*4294967296)>>>0,fn);}
 function seeded(keys,fn){return runSeed?withSeed(seedHash(seedKey(runSeed.code)+'|'+keys.join('|')),fn):fn();}
-function randomSeedCode(){return SEED_WORDS[Math.floor(realRandom()*SEED_WORDS.length)]+'-'+String(Math.floor(realRandom()*10000)).padStart(4,'0');}
+// random seeds are 8-digit numbers (no leading zero): 90 million possible stations
+function randomSeedCode(){return String(10000000+Math.floor(realRandom()*90000000));}
 function dailySeedCode(){const d=new Date();return 'DAILY-'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');}
 const D4=[[1,0],[-1,0],[0,1],[0,-1]],D8=[...D4,[1,1],[1,-1],[-1,1],[-1,-1]];
 function wpick(arr){let s=0;for(const a of arr)s+=a[1];let r=Math.random()*s;for(const a of arr){if((r-=a[1])<0)return a[0];}return arr[0][0];}
