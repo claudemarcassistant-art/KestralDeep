@@ -7,13 +7,14 @@ const DECKOPT=[
   {k:'type',label:'Deck type',vals:['station','flooded','cache']},
   {k:'size',label:'Size',vals:['random','small','medium','large']},
   {k:'traps',label:'Traps',vals:['normal','off','on']},
+  {k:'pdoor',label:'Plate door',vals:['normal','off','on']},
   {k:'light',label:'Lighting',vals:['random','normal','lit','dark']},
   {k:'haz',label:'Hazard',vals:['random','none','fog','steam','fire','toxic','anomaly','electrical','volatile','overgrowth','sprinklers','chasm','molten']},
   {k:'obj',label:'Lift',vals:['random','open','keycard','defend','both','arena']},
   {k:'waves',label:'Incoming waves',vals:['off','on']},
   {k:'haunt',label:'Haunted',vals:['off','on']},
   {k:'lowg',label:'Low gravity',vals:['off','on']}];
-const deckCfg={seed:'',depth:1,biome:'auto',type:'station',size:'random',traps:'normal',light:'random',haz:'random',obj:'random',waves:'off',haunt:'off',lowg:'off'};
+const deckCfg={seed:'',depth:1,biome:'auto',type:'station',size:'random',traps:'normal',pdoor:'normal',light:'random',haz:'random',obj:'random',waves:'off',haunt:'off',lowg:'off'};
 const deckRows=()=>[...DECKOPT.map(o=>({opt:o})),{seedRow:true},{act:'go',label:'Go to this deck'},{act:'rand',label:'Go to a random deck'},{act:'stay',label:'Stay here'}];
 function cycleDeck(o,d){const v=o.vals,i=v.indexOf(deckCfg[o.k]);deckCfg[o.k]=v[(i+d+v.length)%v.length];sfx('click');}
 // the seed of the test deck in play, so a deck can be rebuilt: blank seed = a new random one each time
@@ -26,6 +27,7 @@ function launchTestDeck0(rand){const c=deckCfg,type=rand?wpick([['station',6],['
   levelMods=type==='flooded'?{flood:0.85}:type==='cache'?{vaults:2,chests:2,enemyMul:1.35}:{};
   // traps: normal = as in a run (from depth 2), off = none, on = at any depth with at least one of each type and a panel
   if(!rand&&c.traps!=='normal')levelMods.traps=c.traps;
+  if(!rand&&c.pdoor!=='normal')levelMods.pdoor=c.pdoor;
   testDeck=true;deckUI=null;hazOff=false;levelLabel='TEST DECK';enterLevel();}
 function returnToTest(){testDeck=false;biomeOverride=null;levelMods={};cond={light:'normal',haz:null};hazOff=false;levelLabel='TEST RANGE';genTest();placeTestNpcs();player.liftCfgLock=true;say('back in the test range');}
 function deckChoose(i,d){const r=deckRows()[i];if(!r)return;if(r.seedRow){editText(deckCfg.seed,20,v=>{deckCfg.seed=v;});return;}if(r.opt)return cycleDeck(r.opt,d||1);if(r.act==='go')launchTestDeck(false);else if(r.act==='rand')launchTestDeck(true);else deckUI=null;}

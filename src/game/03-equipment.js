@@ -70,7 +70,7 @@ function useTool(id){const P=player;
     const hx=P.x+Math.cos(P.ang)*13,hy=P.y+Math.sin(P.ang)*13,tx=Math.floor(hx/TS),ty=Math.floor(hy/TS);sfx('thud');shake=Math.max(shake,4);noise(P.x,P.y,170);alertAdd(2);
     if(tx>=0&&ty>=0&&tx<MW&&ty<MH&&map[ty*MW+tx]===3){destroySecret(tx,ty);say('the wall caves in');}
     else if(solid(tx,ty))for(let k=0;k<8;k++)parts.push({x:hx,y:hy,vx:rr(-40,40),vy:rr(-40,40),t:0.3,m:0.3,c:'#8e978b',s:1});
-    for(const bb of barrels){if(bb.dead)continue;const dx=bb.x-P.x,dy=bb.y-P.y;if(Math.hypot(dx,dy)<26&&Math.abs(angDiff(Math.atan2(dy,dx),P.ang))<0.9)hitBarrel(bb,2,dx,dy,340);}
+    for(const bb of barrels){if(bb.dead)continue;const dx=bb.x-P.x,dy=bb.y-P.y;if(Math.hypot(dx,dy)<26&&Math.abs(angDiff(Math.atan2(dy,dx),P.ang))<0.9){if(bb.crate)breakCrate(bb);else hitBarrel(bb,2,dx,dy,340);}}
     for(const e of enemies){if(e.dead)continue;const dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy);if(d>24+e.r)continue;let da=Math.atan2(dy,dx)-P.ang;da=Math.atan2(Math.sin(da),Math.cos(da));if(Math.abs(da)<0.9)damageEnemy(e,4,dx,dy,e.type==='brute'?140:300);}
     return;}
   if(id==='scanner'){if((P.scanCd||0)>0){say('the scanner is still charging');sfx('click');return;}P.scanCd=6;scanT=3.5;scanBins=new Array(8).fill(0);

@@ -1,4 +1,4 @@
-// Traps: pressure plates, what each one fires, and trap control panels.
+// Traps (pressure plates, trap types, trap control panels) and weight plates (plate doors, crates, item weight).
 // powered traps (flame, dart) stop working while the deck power is cut at a breaker.
 const TRAP_TYPES={
   spike:{name:'Spike trap',powered:false,dmg:8,stun:40,stunE:45,
@@ -26,3 +26,18 @@ const TRAP_CFG={
   sonarR:200,scanR:160,// px within which a sonar pulse or the signal scanner reveals plates
   rubbleSlow:0.55};    // movement multiplier on rubble
 const TRAP_PANEL_DESC='A wall panel wired to nearby pressure plates; a thin dashed line runs from it to each plate once either is spotted. Hacking it locks those plates down. Failing the hack sets them all off at once and adds to the disturbance.';
+// ---- weight plates (v0.82): plate doors, crates and item weight
+// a plate door stays open only while its plate holds this much weight
+const PLATE_DOOR_CFG={
+  need:3,              // weight needed
+  chance:0.4,          // plate doors per Medium deck (scaled by deck area)
+  minDepth:2,
+  warn:1,              // seconds of grinding before the door closes
+  shortcutMin:24,      // a shortcut door must save at least this many tiles of walking
+  kinds:[['loot',2],['vault',1],['shortcut',1]]};
+// pushable crates: barrel physics, but they never burn or explode. Wooden ones break under a sledgehammer, a heavy
+// charged hit (2x damage or more) or an explosion, dropping a little scrap.
+const CRATE_CFG={weight:3,heavyMult:2,scrap:[1,3]};
+// weight of a dropped item on a plate; anything not listed weighs 1
+const ITEM_WEIGHT={gear:2,weapon:2};
+const PLATE_DOOR_DESC='A heavy door wired to a floor plate nearby. It stays open only while the plate holds enough weight: you, a creature, a crate, or a pile of dropped items (most items weigh 1, gear and weapons 2, a crate 3). Step off and it grinds shut a second later. There is always a crate or enough loose junk close by.';

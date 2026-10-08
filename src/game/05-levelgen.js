@@ -80,7 +80,7 @@ function genOil(start){
     if(!oilOK(i)||Math.abs(x-start.cx)+Math.abs(y-start.cy)<5)continue;let nearFire=false;
     for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const j=(y+dy)*MW+x+dx;if(j>=0&&j<MW*MH&&hz[j]===1)nearFire=true;}if(nearFire)continue;
     spillOil(x,y,1+rnd(3),3);break;}}
-  for(const b of barrels)if(Math.random()<0.35)spillOil(b.tx,b.ty,1,2);
+  for(const b of barrels)if(!b.crate&&Math.random()<0.35)spillOil(b.tx,b.ty,1,2);
 }
 function oilSpillSize(tx,ty){let c=0;const seenS=new Set([ty*MW+tx]),q=[ty*MW+tx];for(let h=0;h<q.length&&c<24;h++){c++;const x=q[h]%MW,y=(q[h]/MW)|0;
   for(const [dx,dy] of D4){const n=(y+dy)*MW+x+dx;if(!seenS.has(n)&&oil[n]>0){seenS.add(n);q.push(n);}}}return c;}
@@ -130,7 +130,7 @@ function setDeckSize(k){if(!DECK_SIZES[k])k='m';deckSize=k;const D=DECK_SIZES[k]
   liq=new Uint8Array(N);hz=new Uint8Array(N);furn=new Uint8Array(N);molten=new Uint8Array(N);webs=new Uint8Array(N);chasm=new Uint8Array(N);
   ice=new Uint8Array(N);flot=new Uint8Array(N);slime=new Uint8Array(N);slimeK=new Uint8Array(N);oil=new Uint8Array(N);openVent=new Uint8Array(N);rubble=new Uint8Array(N);
   flow=new Int16Array(N).fill(-1);flowB=new Int16Array(N);flowQ=new Int32Array(N);flowJob=null;oilCur=0;moltenCur=0;}
-function resetHidden(){traps=[];darts=[];trapJets=[];falls=[];rubbleL=[];rubble=new Uint8Array(MW*MH);furn=new Uint8Array(MW*MH);lamps=[];arrival=null;trips=[];secT=0;molten=new Uint8Array(MW*MH);chasm=new Uint8Array(MW*MH);webs=new Uint8Array(MW*MH);ice=new Uint8Array(MW*MH);fans=[];plants=[];mists=[];sprinkT=0;sprWait=rr(25,45);freightT=null;pendingSkip=0;modules=[];fixtures=[];modDoors=new Map();flot=new Uint8Array(MW*MH);slime=new Uint8Array(MW*MH);oil=new Uint8Array(MW*MH);oilIgnite=[];slimeK=new Uint8Array(MW*MH);ventRooms=[];hatchRooms=[];hatches=[];levers=[];cages=[];openVent=new Uint8Array(MW*MH);cables=[];cableMap=new Map();barrels=[];risers=[];}
+function resetHidden(){plateDoors=[];traps=[];darts=[];trapJets=[];falls=[];rubbleL=[];rubble=new Uint8Array(MW*MH);furn=new Uint8Array(MW*MH);lamps=[];arrival=null;trips=[];secT=0;molten=new Uint8Array(MW*MH);chasm=new Uint8Array(MW*MH);webs=new Uint8Array(MW*MH);ice=new Uint8Array(MW*MH);fans=[];plants=[];mists=[];sprinkT=0;sprWait=rr(25,45);freightT=null;pendingSkip=0;modules=[];fixtures=[];modDoors=new Map();flot=new Uint8Array(MW*MH);slime=new Uint8Array(MW*MH);oil=new Uint8Array(MW*MH);oilIgnite=[];slimeK=new Uint8Array(MW*MH);ventRooms=[];hatchRooms=[];hatches=[];levers=[];cages=[];openVent=new Uint8Array(MW*MH);cables=[];cableMap=new Map();barrels=[];risers=[];}
 function mkBarrel(tx,ty){return {tx,ty,x:tx*TS+6,y:ty*TS+6,vx:0,vy:0,hp:4,fuse:-1,dead:false,ph:Math.random()*6,roll:0};}
 function pushBarrel(b,dx,dy,f){if(!b||b.dead)return;const l=Math.hypot(dx,dy)||1;b.vx+=dx/l*f;b.vy+=dy/l*f;}
 function barrelWall(x,y){const tx=Math.floor(x/TS),ty=Math.floor(y/TS);if(tx<0||ty<0||tx>=MW||ty>=MH)return true;return map[ty*MW+tx]!==0;}
@@ -146,9 +146,9 @@ function updateBarrels(dt){const R=4.5;
       const fr=Math.pow(ice[Math.floor(b.y/TS)*MW+Math.floor(b.x/TS)]||lowGrav()?0.5:0.03,dt);b.vx*=fr;b.vy*=fr;}
     else{b.vx=0;b.vy=0;}
     b.tx=Math.floor(b.x/TS);b.ty=Math.floor(b.y/TS);const ti=b.ty*MW+b.tx;
-    {const hot=hz[ti]===1&&!hazOff||fires.some(f=>f.tx===b.tx&&f.ty===b.ty);if(hot){b.heat=(b.heat||0)+dt;if(Math.random()<0.3)parts.push({x:b.x+rr(-3,3),y:b.y+2,vx:rr(-6,6),vy:rr(-30,-10),t:0.3,m:0.3,c:'#ff9a4a',s:1});
+    {const hot=!b.crate&&(hz[ti]===1&&!hazOff||fires.some(f=>f.tx===b.tx&&f.ty===b.ty));if(hot){b.heat=(b.heat||0)+dt;if(Math.random()<0.3)parts.push({x:b.x+rr(-3,3),y:b.y+2,vx:rr(-6,6),vy:rr(-30,-10),t:0.3,m:0.3,c:'#ff9a4a',s:1});
       if(b.heat>=1.2&&b.fuse<0){b.fuse=1.4;sfx('hiss');float(b.x,b.y-8,'igniting','#ffb060');}}else if(b.heat>0)b.heat=Math.max(0,b.heat-dt*0.5);}
-    if(chasm[ti]){b.dead=true;sfx('fall');say('a barrel tips into the chasm');for(let k=0;k<6;k++)parts.push({x:b.x,y:b.y,vx:rr(-10,10),vy:rr(-10,10),t:0.4,m:0.4,c:'#8a3a22',s:1});continue;}
+    if(chasm[ti]){b.dead=true;sfx('fall');say(b.crate?'a crate tips into the chasm':'a barrel tips into the chasm');for(let k=0;k<6;k++)parts.push({x:b.x,y:b.y,vx:rr(-10,10),vy:rr(-10,10),t:0.4,m:0.4,c:'#8a3a22',s:1});continue;}
     // bodies push barrels (and barrels push back a little)
     const bodies=[player,...enemies.filter(e=>!e.dead&&!ET[e.type].fly&&!ET[e.type].ghost)];
     for(const o of bodies){const orad=o===player?4:(o.r||5),dx=b.x-o.x,dy=b.y-o.y,d=Math.hypot(dx,dy)||0.01,ov=orad+R-d;if(ov<=0)continue;
@@ -206,10 +206,10 @@ function extraHazards(start){
     for(const sc of secrets){if(Math.random()>0.4)continue;const x=sc.ex,y=sc.ey;const dirs=[[0,1],[1,0],[-1,0],[0,-1]].filter(([dx,dy])=>!solid(x+dx,y+dy)&&kind[(y+dy)*MW+x+dx]!==3);if(dirs.length)fans.push(mkFan(x,y,dirs[0],true));}}
 }
 function barrelAtTile(tx,ty){for(const b of barrels)if(!b.dead&&b.tx===tx&&b.ty===ty)return true;return false;}
-function hitBarrel(b,d,dx,dy,kb){if(b.dead)return;if(kb)pushBarrel(b,dx,dy,kb);b.hp-=d;sfx('barrelhit');if(b.hp>0)spillOil(b.tx,b.ty,1,2);
+function hitBarrel(b,d,dx,dy,kb){if(b.dead)return;if(kb)pushBarrel(b,dx,dy,kb);if(b.crate){sfx('thud');return;}b.hp-=d;sfx('barrelhit');if(b.hp>0)spillOil(b.tx,b.ty,1,2);
   for(let k=0;k<2;k++)parts.push({x:b.x+rr(-3,3),y:b.y+rr(-3,3),vx:rr(-30,30),vy:rr(-30,30),t:0.2,m:0.2,c:'#ffd070',s:1});
   if(b.hp<=0)boomBarrel(b);else if(b.hp<=2&&b.fuse<0){b.fuse=1.4;sfx('hiss');}}
-function boomBarrel(b){if(b.dead)return;b.dead=true;spillOil(b.tx,b.ty,2,3);explode(b.x,b.y);const i=b.ty*MW+b.tx;
+function boomBarrel(b){if(b.dead||b.crate)return;b.dead=true;spillOil(b.tx,b.ty,2,3);explode(b.x,b.y);const i=b.ty*MW+b.tx;
   if(map[i]===0&&liq[i]<2){hz[i]=1;fires.push({x:b.x,y:b.y,ph:Math.random()*6,temp:7,tx:b.tx,ty:b.ty});paintTile(b.tx,b.ty);paintScorch(b.tx,b.ty);}}
 function arcZone(c){const set=new Set(),q=[],i0=c.ty*MW+c.tx;set.add(i0);if(liq[i0]>=1)q.push([i0,0]);
   for(const [dx,dy] of D8){const nx=c.tx+dx,ny=c.ty+dy;if(solid(nx,ny))continue;const n=ny*MW+nx;set.add(n);if(liq[n]>=1)q.push([n,0]);}
@@ -246,6 +246,7 @@ function updateHazards2(dt){
       if(r.t<=0){r.phase='idle';r.t=rr(2.5,5);}}}
 }
 function drawBarrel(b){const x=Math.round(b.x-camX),y=Math.round(b.y-camY);if(x<-10||y<-10||x>W+10||y>H+10)return;
+  if(b.crate){F('rgba(0,0,0,0.45)',x-5,y+4,11,2);F('#120c08',x-5,y-5,11,10);const c0=b.wood?'#7a5a32':'#5a6066',c1=b.wood?'#a07a44':'#7a8288';F(c0,x-4,y-4,9,8);F(c1,x-4,y-4,9,1);F(c1,x-4,y-1,9,1);F(c1,x-4,y+2,9,1);if(b.wood){F('#4a3420',x-4,y-4,1,8);F('#4a3420',x+4,y-4,1,8);}else{F('#3a4044',x-1,y-4,1,8);}return;}
   F('rgba(0,0,0,0.45)',x-4,y+4,9,2);F('#120c08',x-4,y-5,9,10);F('#8a3a22',x-3,y-4,7,8);F('#b8552e',x-3,y-4,2,8);
   {const o=Math.floor((b.roll||0))%4;F('#d9a441',x-3,y-1+(o===1?-1:o===3?1:0),7,1);F('#1a1410',x-3,y+(o===1?-1:o===3?1:0),7,1);}F('#5a2616',x-3,y-4,7,1);
   if(b.hp<4)F('#2a1a10',x+1,y-3,1,2);if(b.fuse>=0&&Math.sin(T*30)>0)F('#fff0c0',x,y-5,1,1);}
@@ -365,6 +366,7 @@ function genLevel(){
   molten=new Uint8Array(MW*MH);if(cond&&cond.haz==='molten')genMolten(start,exitR);
   if(runMods.dark&&!testMode&&cond)cond.light='dark';
   secT=0;genTrips();
+  genPlateDoors(start);
   seen=new Uint8Array(MW*MH);seed=rnd(1e9);paintMap();genPanels(false);genVending();genGrinder();genListeners();genFreezers();
   if(freightT){const dec=panels.filter(q=>!q.hack);if(dec.length){const q=dec[rnd(dec.length)];q.hack=true;q.reward='doors';}}
   genTraps(start,exitR);

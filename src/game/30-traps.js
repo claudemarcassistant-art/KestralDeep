@@ -10,10 +10,12 @@ const tileIdx=o=>Math.floor(o.y/TS)*MW+Math.floor(o.x/TS);
 // creatures that can set off a plate: walking ones (not flying, ghostly, rooted or caged)
 function walker(e){const b=ET[e.type];return !e.dead&&!b.fly&&!b.ghost&&!b.plant&&!b.dummy&&!e.caged;}
 // weight on a tile. The player and walking creatures weigh 3; a floating player weighs nothing.
-// Session 4 (weight plates) adds dropped items and crates here.
+// Dropped items weigh ITEM_WEIGHT (1, gear and weapons 2) and crates CRATE_CFG.weight (3).
 function weightAt(tx,ty){const i=ty*MW+tx,p=player;let w=0;
   if(p&&!p.floating&&tileIdx(p)===i)w+=3;
   for(const e of enemies)if(walker(e)&&tileIdx(e)===i)w+=3;
+  for(const it of items)if(!it.dead&&!(it.fall>0)&&tileIdx(it)===i)w+=itemWeight(it);
+  for(const b of barrels)if(b.crate&&!b.dead&&b.tx===tx&&b.ty===ty)w+=CRATE_CFG.weight;
   return w;}
 // a trap can fire unless its panel locked it down, or it needs power and the deck power is cut
 function trapLive(t){return !t.off&&!(TRAP_TYPES[t.type].powered&&powerOff);}
@@ -38,10 +40,11 @@ function wireTrap(t){const R=TRAP_CFG.panelRange;
 // levelMods.traps (test lift): 'off' = none, 'on' = at any depth and at least one of each type.
 function genTraps(start,exitR){const C=TRAP_CFG,mode=levelMods.traps||'normal';
   if(mode==='off'||mode==='normal'&&depth<C.minDepth)return;
-  const inR=(x,y,r,m)=>x>=r.x-m&&x<r.x+r.w+m&&y>=r.y-m&&y<r.y+r.h+m,special=[...vaults,...secrets,...ventRooms,...hatchRooms,...modules],cor=[],rm=[];
+  const inR=(x,y,r,m)=>x>=r.x-m&&x<r.x+r.w+m&&y>=r.y-m&&y<r.y+r.h+m,special=[...vaults,...secrets,...ventRooms,...hatchRooms,...modules,...plateDoors.filter(p=>p.room).map(p=>p.room)],cor=[],rm=[];
   for(let y=2;y<MH-2;y++)for(let x=2;x<MW-2;x++){const i=y*MW+x;
     if(map[i]!==0||liq[i]>=2||chasm[i]||molten[i]||hz[i]||kind[i]===3||kind[i]===4)continue;
     if(inR(x,y,start,2)||exitR&&inR(x,y,exitR,1)||Math.abs(x-exitT.x)+Math.abs(y-exitT.y)<4||special.some(r=>inR(x,y,r,0)))continue;
+    if(plateDoors.some(p=>Math.abs(p.px-x)+Math.abs(p.py-y)<3||Math.abs(p.tx-x)+Math.abs(p.ty-y)<3))continue;
     (rooms.some(r=>inR(x,y,r,0))?rm:cor).push([x,y]);}
   const forced=mode==='on'?['spike','flame','dart','debris']:[],n=Math.max(forced.length,aN(C.perDeck[0]+rnd(C.perDeck[1]-C.perDeck[0]+1)));
   for(let k=0,tries=0;k<n&&tries<n*40;tries++){const L=Math.random()<C.corridorShare&&cor.length?cor:rm.length?rm:cor;if(!L.length)break;

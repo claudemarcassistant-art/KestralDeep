@@ -50,7 +50,8 @@ function sfx(k){if(!AC)return;try{switch(k){
   case 'slosh':nz(0.25,'bandpass',500,0.12);break;
   case 'hiss':nz(0.8,'highpass',3000,0.08);break;
   case 'steam':nz(1.3,'bandpass',1200,0.25);break;
-  case 'plate':tone(0.04,'square',420,380,0.12);tone(0.05,'square',260,240,0.1);break;
+  case 'grind':nz(0.9,'bandpass',180,0.35);tone(0.9,'sawtooth',70,55,0.06);break;
+case 'plate':tone(0.04,'square',420,380,0.12);tone(0.05,'square',260,240,0.1);break;
 case 'spikes':nz(0.12,'highpass',3000,0.35);tone(0.08,'sawtooth',700,300,0.12);break;
 case 'dart':nz(0.08,'bandpass',2600,0.3);nz(0.08,'bandpass',2200,0.25);break;
 case 'rumble':nz(0.8,'lowpass',140,0.5);break;

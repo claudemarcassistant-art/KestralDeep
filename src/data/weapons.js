@@ -33,7 +33,7 @@ const WPN={
   ray:{name:'RAY GUN',ammo:'cells',dmg:3,cd:0.3,spread:0,speed:520,pellets:1,kb:20,noise:60,shake:2,sfx:'ray',pierce:true},
   bolt:{name:'BOLT DRIVER',ammo:'bolts',dmg:7,cd:0.9,spread:0,speed:720,pellets:1,kb:130,noise:80,shake:2.5,sfx:'bolt',pierce:true}
 };
-const WCRIT={bow:0.15,knives:0.25,pistol:0.10,smg:0.04,scatter:0.03,nailer:0.06,bolt:0.20,ray:0.08,flamer:0,fists:0.05,cutter:0.18,crowbar:0.08,bat:0.06,spear:0.12,whip:0.15,chainsaw:0.02,shield:0.04};
+const WCRIT={kick:0.08,bow:0.15,knives:0.25,pistol:0.10,smg:0.04,scatter:0.03,nailer:0.06,bolt:0.20,ray:0.08,flamer:0,fists:0.05,cutter:0.18,crowbar:0.08,bat:0.06,spear:0.12,whip:0.15,chainsaw:0.02,shield:0.04};
 const MAGS={pistol:[10,1.1],smg:[30,1.7],scatter:[4,2.2],nailer:[40,1.8],bolt:[1,1.4],ray:[8,1.6],flamer:[60,2.4]};
 const CHARGE=['bat','whip','spear','bow'];
 const COMBO_T=[[15,'frenzy','#ff7a5a'],[10,'momentum','#ffb050'],[5,'flow','#e8dcb0']];

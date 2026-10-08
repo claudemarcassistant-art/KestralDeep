@@ -21,7 +21,7 @@ src/
   styles.css      page styles
   boot.js         font loader and the on-screen error reporter
   data/           content and tuning tables (loaded first)
-    character.js            crew files, substats, cores, skills, movement skills, psychic actions, sling, injuries
+    character.js            crew files, substats, cores, skills, movement skills, psychic actions, sling, injuries, spacebar styles
     crafting.js             Workbench recipes and upgrades, grinder salvage yields
     creatures.js            creature stats, bestiary order and text, kill points, threat costs, bosses
     events.js               between-deck events, transit stop text
@@ -29,7 +29,7 @@ src/
     items.js                gear, quick items, tools, pickups, flasks, liquid tank, vending stock, resource text
     npcs.js                 NPCs
     progress.js             deck grades, run stats, achievements, point trades, challenge modifiers
-    traps.js                trap types, trap tuning, trap control panel text
+    traps.js                trap types, trap tuning, trap control panel text, plate doors, crates, item weight
     versions.js             in-game version history
     weapons.js              armaments, gun stats, magazines, crits, charge and combo timing
     world.js                sectors, biome layouts, palettes, route nodes, water depths, room modules, deck conditions, hazard text, deck sizes
@@ -64,6 +64,8 @@ src/
     28-render-world.js      world rendering, lighting, fog
     29-loop.js              main loop
     30-traps.js             pressure plate traps and trap control panels
+    31-plate-doors.js       plate doors, crates, item weight
+    32-spacebar.js          spacebar styles: kick and repulse
 scripts/build.mjs  the build
 docs/specs/        change request batches
 ```

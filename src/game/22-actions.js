@@ -125,7 +125,7 @@ function primaryAttack(m){const p=player;p.mcd=m.cd;p.mcdMax=m.cd;p.swingT=m.jab
       if(m.perfect&&!ET[e.type].dummy)e.stun=Math.max(e.stun||0,0.9);
       if(m.lash&&!ET[e.type].dummy){e.stunB=(e.stunB||0)+(e.type==='brute'?28:45)*(m.mult||1);if(e.stunB>=100){e.stunB=0;e.stun=Math.max(e.stun||0,1.4);float(e.x,e.y-8,'reeling','#e8dcb0');}sfx('hit');}const amb=(p.creeping||cloaked)&&!e.alert;if(amb){float(e.x,e.y,'ambush','#ff9a7a');if(lvl)lvl.ambush++;}
       {connected++;let md=(m.dmg+bonus)*(amb?(perk('ambusher')?4:3):1)*comboDmg();const mk=player.arms[player.armSet].main||'fists';const flurry=perk('flurry')&&comboTier()>=2&&connected===1&&(++p.flurryN)%5===0;if(flurry||Math.random()<critChance(mk)){md*=2;critFx(e,md);}damageEnemy(e,md,dx,dy,e.type==='brute'?m.kb*0.35:m.kb);}}}
-  for(const bb of barrels){if(bb.dead)continue;const dx=bb.x-p.x,dy=bb.y-p.y;if(m.lash?inLash(p,bb.x,bb.y,4,m):m.jab?inJab(p,bb.x,bb.y,4,m):(Math.hypot(dx,dy)<m.range+4&&Math.abs(angDiff(Math.atan2(dy,dx),p.ang))<m.arc)){hitBarrel(bb,m.dmg,dx,dy,m.kb*0.9);connected++;}}
+  for(const bb of barrels){if(bb.dead)continue;const dx=bb.x-p.x,dy=bb.y-p.y;if(m.lash?inLash(p,bb.x,bb.y,4,m):m.jab?inJab(p,bb.x,bb.y,4,m):(Math.hypot(dx,dy)<m.range+4&&Math.abs(angDiff(Math.atan2(dy,dx),p.ang))<m.arc)){if(bb.crate&&(m.mult||1)>=CRATE_CFG.heavyMult)breakCrate(bb);else hitBarrel(bb,m.dmg,dx,dy,m.kb*0.9);connected++;}}
   for(const pl of plants){if(pl.burst)continue;const dx=pl.x-p.x,dy=pl.y-p.y;if(Math.hypot(dx,dy)<m.range+4&&Math.abs(angDiff(Math.atan2(dy,dx),p.ang))<m.arc)burstPlant(pl);}
   for(const c of cores){if(c.dead)continue;const dx=c.x-p.x,dy=c.y-p.y;if(Math.hypot(dx,dy)<m.range+6&&Math.abs(angDiff(Math.atan2(dy,dx),p.ang))<m.arc)hitCore(c,m.dmg*2);}
   const ca=Math.cos(p.ang),sa=Math.sin(p.ang);for(let s2=4;s2<=m.range;s2+=3){const tx=Math.floor((p.x+ca*s2)/TS),ty=Math.floor((p.y+sa*s2)/TS);if(solid(tx,ty)){if(map[ty*MW+tx]===3)damageSecret(tx,ty,m.dmg*2);break;}}
@@ -409,7 +409,7 @@ function explode(x,y){puff(x,y,'smoke',16);
   for(let i=0;i<16;i++){const a=Math.random()*6.283,s=rr(10,40);parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:1.2,m:1.2,c:'#3a3d3b',s:3});}
   splat(x,y,'#0b0d0c',50,Rr*0.5);clearSlimeAround(x,y,Rr);igniteOilAround(x,y,Rr);for(const pl of plants)if(!pl.burst&&Math.hypot(pl.x-x,pl.y-y)<Rr)burstPlant(pl);for(const f of fans)if(!f.dead&&Math.hypot(f.x-x,f.y-y)<Rr)hitFan(f,99);{const tx0=Math.floor(x/TS),ty0=Math.floor(y/TS);for(let yy=ty0-4;yy<=ty0+4;yy++)for(let xx=tx0-4;xx<=tx0+4;xx++)if(xx>=0&&yy>=0&&xx<MW&&yy<MH&&Math.hypot(xx*TS+6-x,yy*TS+6-y)<Rr)ice[yy*MW+xx]=0;}
   for(const c of cores)if(!c.dead&&Math.hypot(c.x-x,c.y-y)<Rr+6)hitCore(c,18);
-  for(const bb of barrels)if(!bb.dead&&Math.hypot(bb.x-x,bb.y-y)<Rr+4){bb.fuse=bb.fuse>=0?Math.min(bb.fuse,0.15):0.15;pushBarrel(bb,bb.x-x,bb.y-y,260);}
+  for(const bb of barrels)if(!bb.dead&&Math.hypot(bb.x-x,bb.y-y)<Rr+4){if(bb.crate){pushBarrel(bb,bb.x-x,bb.y-y,260);breakCrate(bb);continue;}bb.fuse=bb.fuse>=0?Math.min(bb.fuse,0.15):0.15;pushBarrel(bb,bb.x-x,bb.y-y,260);}
   for(const e of enemies){const d=Math.hypot(e.x-x,e.y-y);if(d<Rr+e.r&&hasLOS(x,y,e.x,e.y))damageEnemy(e,16*(perk('boom')?1.25:1)*(1-d/(Rr+e.r)*0.5),e.x-x,e.y-y,220);}
   const tx=Math.floor(x/TS),ty=Math.floor(y/TS);
   for(let yy=ty-5;yy<=ty+5;yy++)for(let xx=tx-5;xx<=tx+5;xx++)if(xx>=0&&yy>=0&&xx<MW&&yy<MH&&(map[yy*MW+xx]===6||map[yy*MW+xx]===7)&&Math.hypot(xx*TS+6-x,yy*TS+6-y)<Rr+6)blowModDoor(yy*MW+xx);

@@ -77,7 +77,7 @@ function onPress(code){
   else if(code==='KeyQ'&&player.actMode){player.actMode=false;setHot(2);say('back to your items');}
   else if(code==='KeyQ'){const qs=selQuick();setHot(2+((qs<0?-1:qs)+1)%qCap());}
   else if(code==='KeyF')useSkill(2);
-  else if(code==='Space')shove();
+  else if(code==='Space')spaceAct();
   else if(code==='KeyR')interact();
   else if(code==='KeyE')useSkill(1);
   else if((code==='ShiftLeft'||code==='ShiftRight')&&hasMove('blink'))blink();

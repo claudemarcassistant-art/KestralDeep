@@ -2,14 +2,14 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v0.81**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v0.82**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
 - **Source lives in `src/`** and is built into **one self-contained HTML file**, `dist/index.html` (about 640 KB). No dependencies, no external assets. All art is drawn procedurally on a canvas; all sound is synthesised with the Web Audio API. The only network request is the optional Silkscreen font from Google Fonts in `src/boot.js` (the game falls back to a built-in font if it fails).
   - `src/index.html` is the page template; the build fills in `{{styles}}` (`src/styles.css`), `{{boot}}` (`src/boot.js`: font loader and the red error overlay) and `{{game}}`.
   - `src/data/*.js` are the content and tuning tables (creatures, weapons, items, recipes, food, crew files, achievements, NPCs, world, events, versions). Balance changes usually only touch these.
-  - `src/game/NN-name.js` are 30 game files, split by system. `README.md` lists what each file holds.
+  - `src/game/NN-name.js` are 32 game files, split by system. `README.md` lists what each file holds.
   - `scripts/build.mjs` is the build (plain Node 20+, no npm install needed).
 - **Play or test:** `npm run dev` serves http://localhost:5173 and rebuilds on every save (refresh the page). `npm run build` writes `dist/index.html`, which can also be opened straight from disk in Chrome or Edge.
 - **Playable link:** https://claudemarcassistant-art.github.io/KestralDeep/ . Every push to `main` is built and deployed by `.github/workflows/pages.yml`; other branches and pull requests are built only, which catches syntax errors.
@@ -35,7 +35,7 @@ Current version: **v0.81**. The game was built iteratively in claude.ai chats up
 
 1. ~~Enable GitHub Pages~~ Done: deployed from `main`, link above.
 2. ~~Split the code into files with a build step~~ Done, by section (see above), and the data tables gathered into `src/data/`. Play-tested after each step: title screen, new run, saving and continuing, route map to the next deck or stop, test range, arcade, Codex, Version history, pack menu; no errors.
-3. **Batch 1** (`docs/specs/batch-1.md`): four sessions, done one at a time; the owner playtests and says "continue" between them. Sessions 1 (deck sizes, v0.79), 2 (run seeds, v0.80) and 3 (traps and trap panels, v0.81) are done. Next: Session 4 (weight plates, plate doors, crates, spacebar styles).
+3. **Batch 1** (`docs/specs/batch-1.md`): four sessions, done one at a time; the owner playtests and says "continue" between them. All four sessions are done: 1 (deck sizes, v0.79), 2 (run seeds, v0.80), 3 (traps and trap panels, v0.81), 4 (plate doors, crates, item weight, spacebar styles, v0.82).
 4. **Balance pass** (the owner will play test runs and report findings). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
 
 ## Working conventions
@@ -53,7 +53,7 @@ Current version: **v0.81**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v0.81)
+## Architecture overview (as of v0.82)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -75,11 +75,22 @@ Current version: **v0.81**. The game was built iteratively in claude.ai chats up
 
 **Traps (v0.81):** code in `src/game/30-traps.js`, numbers in `src/data/traps.js` (`TRAP_TYPES`, `TRAP_WEIGHTS`, `TRAP_CFG`, `TRAP_PANEL_DESC`).
 - **Generation:** `genTraps(start, exitR)` runs at the end of `genLevel()` and `genArena()`, inside the deck's seeded scope: `aN(2-5)` plates from depth 2 (`levelMods.traps` from the test lift: `'off'`, or `'on'` for any depth with every type and a panel), about 75% in corridors (floor outside every room rect), never in or near the start room, near the exit, or in vaults, secrets, crawlspaces, below-deck rooms or modules. A trap is `{tx,ty,type,state,t,found,off,panel,dir,area}`; flame and dart traps need a wall beside the plate (`dir`), debris covers a 2x2 `area`.
-- **Running:** `updateTraps(dt)` (called in `updatePlay()`): a plate in state `armed` with `weightAt(tx,ty) >= TRAP_CFG.weight` goes `click` (0.4 s), then `fireTrap()` and `cool` (6 s re-arm). `weightAt()` counts the player (3, not when floating) and walking creatures (3; `walker()` excludes flying, ghosts, plants, dummies, caged). **Session 4 adds item and crate weight inside `weightAt()`.** `trapLive()` is false when a panel locked the trap (`off`) or it is powered (flame, dart) and `powerOff`.
+- **Running:** `updateTraps(dt)` (called in `updatePlay()`): a plate in state `armed` with `weightAt(tx,ty) >= TRAP_CFG.weight` goes `click` (0.4 s), then `fireTrap()` and `cool` (6 s re-arm). `weightAt()` counts the player (3, not when floating) and walking creatures (3; `walker()` excludes flying, ghosts, plants, dummies, caged), dropped items (`itemWeight()`: 1, gear and weapons 2) and crates (3). `trapLive()` is false when a panel locked the trap (`off`) or it is powered (flame, dart) and `powerOff`.
 - **Effects:** spikes hit whatever is on the plate; flame traps spray the flamethrower's own `flames` particles (marked `trap`, with a `jet` that limits player hits to one per 0.3 s in `updateFlames()`); darts (`darts`) hit the player and creatures; debris (`falls`) lands after 0.8 s and leaves `rubble` (a per-tile array, slows the player in `updatePlay()` and creatures in `move()`; timers in `rubbleL`).
 - **Spotting:** plates are drawn as a faint lighter tile with rivets (`drawTraps()`, called in `render()` before the panels, so under the fog); `found` plates get an outline and show on the station map. Perception >= 3 within 30 px, the sonar pulse and the signal scanner (`revealTraps()`) set `found`.
 - **Trap control panels:** an ordinary hack panel `{reward:'traps', traps:[...]}` pushed into `panels` (`wireTrap()`), within 6 tiles with line of sight to its plates, up to 3 plates each. `HACKR.traps` locks them down (`trapsLockDown()`); a failed hack (2 misses in `hackTry()`) calls `trapsSetOff()`. The dashed floor line shows once the panel is seen or the plate found.
 - **Test range:** the arena room south of the main hall has all four traps, three wired to a panel on its north wall.
+
+**Plate doors and crates (v0.82):** code in `src/game/31-plate-doors.js`, numbers in `src/data/traps.js` (`PLATE_DOOR_CFG`, `CRATE_CFG`, `ITEM_WEIGHT`, `PLATE_DOOR_DESC`).
+- **Plate doors:** `{tx,ty,px,py,dir,kind,room,state,t,hinted,junk}` in `plateDoors` (reset in `resetHidden()`). The door tile is a wall (`map` 1) while closed; `setPlateDoor()` flips it to floor, repaints it and sets `flowT=0`. States `closed` -> `open` (plate weight >= 3) -> `closing` (1 s grind) -> `closed`; it stays jammed while the doorway is occupied, and pushes items on the door tile out when it shuts.
+- **Generation:** `genPlateDoors(start)` runs in `genLevel()` just before `genPanels()` (seeded): `aN(0.4)` doors from depth 2 (`levelMods.pdoor` from the test lift: `'off'`, or `'on'` for at least one at any depth). Kinds: `loot` (small room via `attach()`), `vault` (room with a chest) and `shortcut` (a one-tile wall between floor that is at least 24 tiles apart on foot). The plate goes 3 (or 2) tiles out from the door on the open side. **A way to hold the plate always exists:** a crate within 2-6 walking tiles of the plate (`crateSpotNear()`, open on all four sides so it can be pushed), or, if there is no room, 3 scrap left nearby (`pd.junk`, placed by `fillPlateRooms()` because `populate()` clears `items`). `fillPlateRooms()` (end of `populate()`) stocks the rooms. Measured: ~47% of mixed-size depth-4 decks get one; every plate is reachable from the start.
+- **Crates** are barrels with `crate:true` (`mkCrate()`; `wood` 75% at generation), so every barrel push (shove, kick, tackle, telekinesis, fans, wells, explosions, repulse) moves them. They never heat, burn or explode (`hitBarrel()`, `boomBarrel()`, `updateBarrels()` and the oil spill skip them). `breakCrate()` breaks wooden ones (sledge, a charged hit at 2x or more, explosions) and drops 1-3 scrap. **Any new code that loops over `barrels` must decide what to do with crates.**
+- Loose items slide when thrown (`it.kvx`/`it.kvy`, `updateLoose()`).
+- **Test range:** a vault-style plate door south of the trap room (plate at 8,41, door at 8,43) with a wooden and a metal crate and some scrap; the test lift has a Plate door option (normal/off/on).
+
+**Spacebar styles (v0.82):** code in `src/game/32-spacebar.js`, numbers in `SPACE_STYLES` (`src/data/character.js`). SPACE calls `spaceAct()`, which runs `activeSpace()`: `player.space` (saved with the player; missing means shove), falling back to shove if no longer owned. A style is owned when an attuned file tier has `space:'kick'` (Brawler tier 8, 2 clearance) or `space:'repulse'` (Kinetic tier 9, 3 clearance). Files > Skills lists them in a Spacebar section (`skillList()` rows with `t:'SPACE'`; `bindSkill()` sets `player.space`).
+- `kick()`: 0.5 rad half-arc, reach 26, 3 damage plus melee bonuses, 2x shove knockback, 12 stamina, 1.2x shove recovery; ambush, combo damage, crits (`WCRIT.kick`), `comboAdd(1)`; sprinting makes a flying kick (`tackleT`, boost). Hits barrels, crates, plants, cores and weak walls.
+- `repulse()`: radius 40 burst, 1 damage, 0.7x telekinetic push on creatures, barrels and crates, throws items and gas clouds, 15 stamina (half the shortfall from health), 4 s recharge (`player.repulseCd`, times `actCdMul()` for Focus).
 
 **Run structure:** each biome is a sector map of 12-15 junctions (`route.nodes`) with the exit 3-4 jumps away. Shafts are hidden until ridden or revealed by intel (`route.lk`). A biome hunter boss can roam the sector (`route.chaser`). Each sector has 1-2 arena decks. The player arrives on each deck sealed in a lift cab and opens the doors with R.
 
@@ -99,7 +110,7 @@ Current version: **v0.81**. The game was built iteratively in claude.ai chats up
 
 | File | Tables |
 |---|---|
-| `character.js` | `SKILLS`, `ACTS`, `SLING`, `FT()`, `FILES`, `MOVES`, `CORES`, `SUBS`, `FILESUB`, `INJ` |
+| `character.js` | `SKILLS`, `ACTS`, `SLING`, `FT()`, `FILES`, `MOVES`, `CORES`, `SUBS`, `FILESUB`, `INJ`, `SPACE_STYLES` |
 | `crafting.js` | `RECIPES` (with `upgRecipe()`, `ROMAN`), `UPGS`, grinder yields `GEARY`, `ARMY`, `CONY`, `AMMOY` |
 | `creatures.js` | `ET`, `BOSSES`, `KILLPTS`, `THREAT`, `BEASTS`, `BEASTINFO` |
 | `events.js` | `TEXTEV`, `ROOMDESC` |
@@ -109,7 +120,7 @@ Current version: **v0.81**. The game was built iteratively in claude.ai chats up
 | `progress.js` | `GRADES`, `MODS_RUN`, `LVLSTAT`, `ACH`, `AP_TRADES` |
 | `versions.js` | `VERSIONS`, `GAME_VERSION` |
 | `weapons.js` | `WORDER`, `ARM`, `FIST`, `IMPLEMENTS`, `WPN`, `WCRIT`, `MAGS`, `CHARGE`, `COMBO_T` |
-| `traps.js` | `TRAP_TYPES`, `TRAP_WEIGHTS`, `TRAP_CFG`, `TRAP_PANEL_DESC` |
+| `traps.js` | `TRAP_TYPES`, `TRAP_WEIGHTS`, `TRAP_CFG`, `TRAP_PANEL_DESC`, `PLATE_DOOR_CFG`, `CRATE_CFG`, `ITEM_WEIGHT`, `PLATE_DOOR_DESC` |
 | `world.js` | `SECTORS`, `BNAMES`, `PAL`, `COND_LIGHT`, `COND_HAZ`, `MODS`, `ROOMNAMES`, `HAZDESC`, `LIQ`/`LIQNAME`, `BIOME`, `NODE`, `HIDDEN_TYPES`, `DECK_SIZES`, `DECK_SIZE_ODDS` |
 
 **Code (`src/game/`):**
@@ -138,6 +149,8 @@ Current version: **v0.81**. The game was built iteratively in claude.ai chats up
 | `render()` | `28-render-world.js` |
 | `frame()` | `29-loop.js` |
 | traps: `genTraps()`, `updateTraps()`, `fireTrap()`, `weightAt()`, `drawTraps()`, trap panels | `30-traps.js` |
+| plate doors and crates: `genPlateDoors()`, `fillPlateRooms()`, `updatePlateDoors()`, `mkCrate()`, `breakCrate()`, `itemWeight()` | `31-plate-doors.js` |
+| spacebar styles: `spaceAct()`, `activeSpace()`, `kick()`, `repulse()` (`shove()` stays in `22-actions.js`) | `32-spacebar.js` |
 
 To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "const NAME=" src/data/*.js`.
 
@@ -160,9 +173,10 @@ To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "con
 - Several arcade cabinets in one place take their games from `arcPicks(n)` (distinct games), not independent random picks.
 - Any new chest needs a loot seed `ls:(Math.random()*4294967296)>>>0` where it is created (inside generation), or its contents will not repeat on the same seed. `addChest()` does this for you.
 - When checking that generation repeats, take the fingerprint in the same instant the deck is built: the game loop keeps running between test steps, and creatures move and fires spread.
-- `30-traps.js` loads after `29-loop.js`. That is fine because nothing in it runs at load time, but `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
+- `30-traps.js`, `31-plate-doors.js` and `32-spacebar.js` load after `29-loop.js`. That is fine because nothing in it runs at load time, but `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
 - `newTest()`, `newGame()` and `loadRun()` replace the `player` object (`initPlayer()`), so tests must re-read `player` after calling them.
 - Before v0.81, `genArena()` did not reset `panels` or `vendors`, so arena decks kept the previous deck's hack panels and vending machines at stale positions. Every generator that builds a full deck must reset every per-deck list (`resetHidden()` covers most; panels and vendors are reset by `genPanels()`/`genVending()` or by hand).
+- `populate()` starts with `items=[]`, so items placed earlier in `genLevel()` are lost; anything generation wants on the floor goes in during or after `populate()` (see `fillPlateRooms()`).
 - `player.floating` is recalculated every frame from the movement keys, so setting it in a test does nothing; test `weightAt()` directly.
 
 ## Ideas on the list (not yet started)

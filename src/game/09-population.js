@@ -72,5 +72,6 @@ function populate(startR,exitR){
       enemies.push(mkEnemy('lurker',(i%MW)*TS+6,((i/MW)|0)*TS+6));}
     if(depth>=2&&deep.length>=10){const shore=deep.filter(i=>{const x=i%MW,y=(i/MW)|0;return D4.some(([dx,dy])=>liq[(y+dy)*MW+x+dx]<3&&map[(y+dy)*MW+x+dx]===0);});
       const ng=Math.min(2,Math.floor(deep.length/40)+(Math.random()<0.6?1:0));for(let k=0;k<ng&&shore.length;k++){const i=shore[rnd(shore.length)];enemies.push(mkEnemy('grasper',(i%MW)*TS+6,((i/MW)|0)*TS+6));}}}}
+  fillPlateRooms();
 }
 

@@ -1,4 +1,4 @@
-function skillList(){return [...player.moveSkills.map((id,i)=>({t:'SHIFT',id,i,d:MOVES[id]})),...player.skills.map((id,i)=>({t:'E',id,i,d:SKILLS[id]}))];}
+function skillList(){return [...spaceList().map((id,i)=>({t:'SPACE',id,i,d:SPACE_STYLES[id]})),...player.moveSkills.map((id,i)=>({t:'SHIFT',id,i,d:MOVES[id]})),...player.skills.map((id,i)=>({t:'E',id,i,d:SKILLS[id]}))];}
 function floatCost(){return 10*Math.max(0.3,1-0.06*(subPts('perc')+subPts('resolve')));}
 function lowGrav(){return !!(cond&&cond.lowg)&&state==='play';}
 function kbFr(){return lowGrav()?0.08:0.0005;}
@@ -19,7 +19,7 @@ function genTrips(){trips=[];if(depth<2||Math.random()>0.35)return;const n=Math.
 function updateAlarm(dt){const P=player;for(const t of trips){if(!t.on)continue;if(segDist(P.x,P.y,t.x1,t.y1,t.x2,t.y2)<P.r+1&&!(P.cloakT>0&&false)){t.on=false;raiseAlarm(P.x,P.y,3+rnd(3),'trip');}}
   if(secT>0){secT-=dt;secBeep-=dt;if(secBeep<=0){secBeep=0.8;sfx('klaxon');}}}
 function hasMove(k){const P=player;return P&&P.moveSkills.includes(k)&&(k==='sprint'?!hasMove('float'):(P.moveOn||{})[k]!==false);}
-function bindSkill(o){if(o.t!=='E'&&o.id==='float'&&player.floating&&chasm[Math.floor(player.y/TS)*MW+Math.floor(player.x/TS)]){say('not while you are hanging over a chasm');sfx('click');return;}if(o.t==='E')player.skillIdx=o.i;else if(o.id!=='sprint'){player.moveOn=player.moveOn||{};player.moveOn[o.id]=!(player.moveOn[o.id]!==false);say(o.d.name.toLowerCase()+(player.moveOn[o.id]?' on':' off'));}sfx('click');}
+function bindSkill(o){if(o.t==='SPACE'){player.space=o.id;say(o.d.name.toLowerCase()+' is on space');sfx('click');return;}if(o.t!=='E'&&o.id==='float'&&player.floating&&chasm[Math.floor(player.y/TS)*MW+Math.floor(player.x/TS)]){say('not while you are hanging over a chasm');sfx('click');return;}if(o.t==='E')player.skillIdx=o.i;else if(o.id!=='sprint'){player.moveOn=player.moveOn||{};player.moveOn[o.id]=!(player.moveOn[o.id]!==false);say(o.d.name.toLowerCase()+(player.moveOn[o.id]?' on':' off'));}sfx('click');}
 function setWeapon(w){if(!player.has[w]){say('no '+WPN[w].name.toLowerCase()+' yet. build one at the workbench [C]');return;}
   if(player.weapon!==w){player.weapon=w;sfx('click');}}
 function cycleWeapon(dir){const owned=WORDER.filter(w=>player.has[w]);if(owned.length<2)return;
