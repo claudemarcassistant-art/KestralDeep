@@ -111,6 +111,8 @@ const ARC={
     ctx.fillStyle='#ffffff';circ(ox+a.ball.x,oy+a.ball.y,2);txt('lines '+a.lines+'/6',gx+4,gy+4,'#ff8a5a');}}
 };
 const ARC_IDS=Object.keys(ARC);
+// n different arcade games in random order, so a room of cabinets never repeats a game
+function arcPicks(n){return ARC_IDS.slice().sort(()=>Math.random()-0.5).slice(0,n);}
 const PIECES=[[[0,0],[1,0],[2,0],[3,0]],[[0,0],[1,0],[0,1],[1,1]],[[1,0],[0,1],[1,1],[2,1]],[[0,0],[0,1],[1,1],[2,1]],[[2,0],[0,1],[1,1],[2,1]],[[1,0],[2,0],[0,1],[1,1]],[[0,0],[1,0],[1,1],[2,1]]];
 const PCOL=['#5af0ff','#e8d070','#c08aff','#6a8aff','#ff9a4a','#7fd08e','#ff5a6a'];
 function arcNewPiece(a){const i=rnd(7);a.pid=i;a.pc=PCOL[i];a.rot=0;a.px=3;a.py=0;if(!arcFits(a,a.px,a.py))arcLose(a,'the stack reached the top');}

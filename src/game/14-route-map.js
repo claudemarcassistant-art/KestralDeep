@@ -4,8 +4,10 @@ function spawnBoss(){bossPending=false;const c=route.chaser;if(!c)return;const B
   if(!best)return;const e=mkEnemy('warden',best.tx*TS+6,best.ty*TS+6);e.boss=c.boss;e.hp=e.mhp=c.hp!=null?c.hp:60+depth*6;e.mhp=60+depth*6;e.alert=true;enemies.push(e);bossRef=e;
   bannerBoss=4;say('the '+B.name.toLowerCase()+' is on this deck. kill it or reach the lift');sfx('alarm');shake=8;}
 let bossRef=null,bannerBoss=0;
+// Only about 1 in 40 attempts lands the exit 3-4 jumps away with every junction connected, so allow plenty of
+// attempts (well under a millisecond on average). The straight-line fallback below is then never reached in practice.
 function genSector(sec){
-  for(let tries=0;tries<200;tries++){const N=[{x:0.04,y:0.5,type:'station',known:true,cond:{light:'normal',haz:null},links:[]}];
+  for(let tries=0;tries<3000;tries++){const N=[{x:0.04,y:0.5,type:'station',known:true,cond:{light:'normal',haz:null},links:[]}];
     const tgt=12+rnd(4);for(let k=0;k<400&&N.length<tgt;k++){const x=0.14+Math.random()*0.72,y=0.08+Math.random()*0.84;if(N.some(n=>Math.hypot((n.x-x)*1.6,n.y-y)<0.2))continue;
       const d=depth+Math.round(x*3);const type=wpick([['station',60],['flooded',d>=2?13:6],['cache',12],['rest',5],['merchant',5],['event',5]]);N.push({x,y,type,known:false,links:[],cond:rollCond(type)});}
     N.push({x:0.96,y:0.15+Math.random()*0.7,type:'station',known:true,exit:true,links:[],cond:rollCond('station')});

@@ -400,7 +400,7 @@ function fillModule(m){
   else if(m.type==='breakroom'){if(tw.length)vendors.push(mkVendor(tw[0],m.y-1));fixtures.push({tx:m.cx,ty:m.cy,kind:'table'});put('food');put('food');put('food');put('key');put('scrap');}
   else if(m.type==='lab'){put('powder');put('powder');put('battery');put('medkit');if(Math.random()<0.3)put('chip');fixtures.push({tx:m.x,ty:m.y,kind:'bench'},{tx:m.x+m.w-1,ty:m.y,kind:'bench'});
     for(let k=0;k<2;k++){const t=freeTile(m);if(t)hz[t.ty*MW+t.tx]=2;}if(Math.random()<0.5){const q=spotIn(m);if(q)enemies.push(mkEnemy('toxslug',q.x,q.y));}}
-  else if(m.type==='arcade'){for(const x of tw.slice(0,2))fixtures.push({tx:x,ty:m.y-1,kind:'arcade',wall:true,won:false,game:ARC_IDS[rnd(ARC_IDS.length)]});put('scrap');put('scrap');}
+  else if(m.type==='arcade'){const g=arcPicks(2);tw.slice(0,2).forEach((x,k)=>fixtures.push({tx:x,ty:m.y-1,kind:'arcade',wall:true,won:false,game:g[k]}));put('scrap');put('scrap');}
   else if(m.type==='cafeteria'){if(tw.length)vendors.push(mkVendor(tw[tw.length-1],m.y-1));for(let x=m.x+1;x<m.x+m.w-1;x+=3)fixtures.push({tx:x,ty:m.y+2,kind:'table'});
     for(let x=m.x;x<m.x+Math.min(3,m.w);x++)fixtures.push({tx:x,ty:m.y,kind:'counter'});for(let k=0;k<3+rnd(2);k++)put('food');put('cloth');if(Math.random()<0.3){const q=spotIn(m);if(q)enemies.push(mkEnemy('slug',q.x,q.y));}}
   else if(m.type==='bathhouse'){for(let y=m.y+1;y<m.y+m.h-1;y++)for(let x=m.x+1;x<m.x+m.w-1;x++){const i=y*MW+x,edge=y===m.y+1||y===m.y+m.h-2||x===m.x+1||x===m.x+m.w-2;liq[i]=edge?2:3;paintTile(x,y);}

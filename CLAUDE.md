@@ -2,7 +2,7 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v0.79**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v0.79.1**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
@@ -138,6 +138,8 @@ To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "con
 - Large single-line functions are common; when editing, anchor changes on exact unique strings and re-test.
 - A plain floor flood-fill from the start room does not always reach the exit: locked doors, module doors, weak walls and vents count as walls to `bfs()`. Treat any tile other than wall (`map` 1) as passable when checking that a deck is connected.
 - The test deck builder's `DECKOPT` is indexed by position in one place (`DECKOPT[1]` is Biome), so add new options after it.
+- `genSector()` builds the sector map by trial: only about 1 in 40 attempts puts the exit 3-4 jumps away with every junction connected. It allows 3000 attempts; at the old 200, about 1 sector in 250 fell back to a 4-junction straight line (fixed in v0.79.1). Changing the placement rules changes that success rate, so re-measure it.
+- Several arcade cabinets in one place take their games from `arcPicks(n)` (distinct games), not independent random picks.
 
 ## Ideas on the list (not yet started)
 
