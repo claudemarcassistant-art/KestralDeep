@@ -44,7 +44,7 @@ function updatePlay(dt){
   p.moveMul=p.sprinting?1:mv/base;
   if(p.sprinting){p.stam-=28*dt;p.stamDelay=0.7;if(p.stam<=0){p.stam=0;p.stamLock=true;}
     p.stepT-=dt;if(p.stepT<=0){p.stepT=0.3;noise(p.x,p.y,70);parts.push({x:p.x+rr(-2,2),y:p.y+4,vx:-p.vx*0.2,vy:-p.vy*0.2,t:0.4,m:0.4,c:'#3a403d',s:2});}}
-  else if(p.stamDelay<=0)p.stam=Math.min(maxSt,p.stam+22*(1+S.stamina*0.5)*(p.stimT>0?2:1)*dt);
+  else if(p.stamDelay<=0)p.stam=Math.min(maxSt,p.stam+22*(1+S.stamina*0.5)*(1+(S.stamRegen||0))*(p.stimT>0?2:1)*dt);
   if(p.stamLock&&p.stam>=30)p.stamLock=false;
   if(pl===4){if(il>0||Math.hypot(p.vx,p.vy)>6){p.stam=Math.max(0,p.stam-14*dt);p.stamDelay=0.5;}
     if(p.stam<=0){mv*=0.6;p.drownT=(p.drownT||0)+dt;if(p.drownT>=0.3){p.drownT-=0.3;hurtPlayer(1.5,true);if(Math.random()<.5)say('out of breath. get to shallower water');}}
@@ -79,7 +79,7 @@ function updatePlay(dt){
   if(S.regen){p.regenAcc+=S.regen*dt;while(p.regenAcc>=1){p.regenAcc--;if(p.hp<maxHp())p.hp=Math.min(maxHp(),p.hp+1);}}
   if(S.pinger&&markSecretsNear(p.x,p.y,70))say('your pinger clicks. a hollow wall nearby');
   sonarT-=dt;sonarRing+=dt;
-  updateHazards(dt);updateHazards2(dt);updateObjective(dt);updateWaves(dt);updateAlert(dt);updateActs(dt);updateBarrels(dt);updateMines(dt);updateReload(dt);updateSoaks(dt);if(p.slCd>0)p.slCd-=dt;if(p.actMode!=='sling'&&p.slChg>0){p.slChg=0;p.slFull=false;}updateMolten(dt);updateTraps(dt);updatePlateDoors(dt);updateLoose(dt);updateSpace(dt);updateEnemyCold(dt);updateAlarm(dt);checkAch(dt);updateFlames(dt);updateNades(dt);updateClouds(dt);if(p.jabT>0)p.jabT-=dt;if(p.combo>0){p.comboIdle=(p.comboIdle||0)+dt;if(p.comboIdle>1.8){p.combo=Math.max(0,p.combo-dt*(perk('secondnature')?0.85:1.7));if(p.combo<=0)p.comboShield=false;}}if(p.lashT>0)p.lashT-=dt;if(p.sledgeCd>0)p.sledgeCd-=dt;if(p.blinkCd>0)p.blinkCd-=dt;if(p.scanCd>0)p.scanCd-=dt;if(scanT>0)scanT-=dt;updateStatus(dt);
+  updateHazards(dt);updateHazards2(dt);updateObjective(dt);updateWaves(dt);updateAlert(dt);updateActs(dt);updateBarrels(dt);updateMines(dt);updateReload(dt);updateSoaks(dt);if(p.slCd>0)p.slCd-=dt;if(p.actMode!=='sling'&&p.slChg>0){p.slChg=0;p.slFull=false;}updateMolten(dt);updateTraps(dt);updatePlateDoors(dt);updateLoose(dt);updateSpace(dt);updateEnemyCold(dt);updateHerbs(dt);updateAlarm(dt);checkAch(dt);updateFlames(dt);updateNades(dt);updateClouds(dt);if(p.jabT>0)p.jabT-=dt;if(p.combo>0){p.comboIdle=(p.comboIdle||0)+dt;if(p.comboIdle>1.8){p.combo=Math.max(0,p.combo-dt*(perk('secondnature')?0.85:1.7));if(p.combo<=0)p.comboShield=false;}}if(p.lashT>0)p.lashT-=dt;if(p.sledgeCd>0)p.sledgeCd-=dt;if(p.blinkCd>0)p.blinkCd-=dt;if(p.scanCd>0)p.scanCd-=dt;if(scanT>0)scanT-=dt;updateStatus(dt);
   if(p.weapon==='ray'){if(p.aiming&&mouse.l&&!(p.dazeT>0)){if(p.reloadT>0){}else if(!p.charge&&magLeft('ray')<=0){useMag('ray');}else p.charge=Math.min(1.2,(p.charge||0)+dt);}
     else if(p.aiming&&(p.charge||0)>0.08){fireRay(p.charge);p.charge=0;}else p.charge=0;}
   else if(p.weapon&&p.aiming&&mouse.l&&p.cd<=0&&!(p.dazeT>0))fire();
@@ -109,6 +109,7 @@ function updatePlay(dt){
       case 'knives':p.inv.knives+=it.amt||1;if(!p.has.knives)gainArm('knives');float(it.x,it.y,'+'+(it.amt||1)+' knife','#c8ccc4');break;
       case 'file':gainFile(hasFile(it.file)?randomFileId()||it.file:it.file);float(it.x,it.y,'crew file','#c9a8ff');break;
       case 'raw':p.raw[it.raw]=(p.raw[it.raw]||0)+1+(perk('forager')?1:0);float(it.x,it.y,RAW[it.raw].name.toLowerCase(),RAW[it.raw].col);if(it.raw==='spores'&&!S.poisonRes){addStatus('psn',15);say('the spores puff in your face');}break;
+      case 'tuft':{const n=(it.amt||1)*(perk('forager')?2:1);p.herbs[it.tuft]=(p.herbs[it.tuft]||0)+n;float(it.x,it.y,HERBS[it.tuft].name.toLowerCase()+(n>1?' x'+n:''),HERBS[it.tuft].col);break;}
       case 'food':p.food[it.food]=(p.food[it.food]||0)+1;float(it.x,it.y,FOOD[it.food].name.toLowerCase(),'#e8c070');break;
       case 'emetic':p.inv.emetic=(p.inv.emetic||0)+1;float(it.x,it.y,'emetic syrup','#b8c060');break;
       case 'liftcard':liftCard=true;float(it.x,it.y,'lift keycard','#ffd070');if(liftState==='locked'){liftState=(cond&&cond.obj==='both')?'idle':'open';say(liftState==='idle'?'keycard in hand. the lift can be called now':'keycard in hand. the lift is unlocked');}break;

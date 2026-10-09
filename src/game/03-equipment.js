@@ -85,7 +85,7 @@ function quickPrimary(){const P=player,id=P.quick[selQuick()],q=qInfo(id);if(!q)
 function quickSecondary(){const P=player,id=P.quick[selQuick()];if(!id)return;if(id==='flask')return throwFlask();if(id==='glowstick')return throwGlow();if(TOOLS[id])return;dropQuick(id);}
 function useQuick(){const id=player.quick[player.quickSel],q=qInfo(id);if(!q){say('empty quick slot. fill it from the pack (TAB)');sfx('click');return;}if(q.n()<=0){say('out of '+q.name.toLowerCase());sfx('click');return;}q.use();}
 function assignQuick(id,slot){if(slot>=qCap()){say('that slot is locked. belt pouches and bandoliers add more');sfx('click');return;}const Q=player.quick;const j=Q.indexOf(id);if(j>=0)Q[j]=null;Q[slot]=id;sfx('click');}
-function qIcon(id,x,y){if(!id)return;
+function qIcon(id,x,y){if(!id)return;if(prepIcon(id,x,y))return;
   if(id==='glowstick'){const on=player&&player.glowOn;F('#15110a',x-2,y-5,5,11);F(on?'#9fff9a':'#4a7a4a',x-1,y-4,3,9);if(on){ctx.globalAlpha=0.3;ctx.fillStyle='#9fff9a';circ(x,y,5);ctx.globalAlpha=1;}return;}
   if(id==='sledge'){F('#15110a',x-4,y-5,9,5);F('#6a7078',x-3,y-4,7,3);F('#8a6a3a',x,y-1,1,7);return;}
   if(id==='scanner'){F('#15110a',x-3,y-4,7,9);F('#3a4a3a',x-2,y-3,5,7);F('#9fe0b0',x-1,y-2,3,2);F('#c8c0a0',x+2,y-6,1,3);return;}const di=(t,e)=>drawItem(Object.assign({x:x+camX,y:y+camY,type:t,ph:0},e||{}));

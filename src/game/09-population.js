@@ -65,7 +65,8 @@ function populate(startR,exitR){
     if(Math.random()<0.18)addItem(randomRoom(),'raw',{raw:'glowcap'});
     const nr=aN(5+rnd(4));for(let k=0;k<nr;k++){const id=['tuber','tuber','spores','grubs','berries'][rnd(5)];let placed=false;
       if(id==='berries'||Math.random()<0.4){const pl=plants.filter(q=>!q.burst&&(id==='berries'?q.type==='sting':true));if(pl.length){const q=pl[rnd(pl.length)],qx=Math.floor(q.x/TS),qy=Math.floor(q.y/TS);for(const [dx,dy] of D8){const x=qx+dx,y=qy+dy;if(!solid(x,y)&&!plants.some(z=>Math.floor(z.x/TS)===x&&Math.floor(z.y/TS)===y)){items.push({x:x*TS+6,y:y*TS+6,type:'raw',raw:id,ph:Math.random()*6});placed=true;break;}}}}
-      if(!placed)addItem(randomRoom(),'raw',{raw:id});}}
+      if(!placed)addItem(randomRoom(),'raw',{raw:id});}
+    genOvergrownHerbs();}
   if(cond&&cond.haunt){const ng=Math.max(1,aN(3+rnd(3)));for(let k=0;k<ng;k++){const r=randomRoom();enemies.push(mkEnemy('ghost',r.cx*TS+6,r.cy*TS+6));}}
   {const deep=[];for(let i=0;i<MW*MH;i++)if(map[i]===0&&liq[i]>=3&&kind[i]>=1)deep.push(i);
     if(deep.length>=6){const n=Math.min(3,1+Math.floor(deep.length/30));for(let k=0;k<n;k++){const pick=deep.filter(i=>liq[i]===4);const src=pick.length?pick:deep;const i=src[rnd(src.length)];

@@ -108,7 +108,7 @@ function menuKey(code){
     const L=skillList();if(up)skSel=Math.max(0,skSel-1);if(down)skSel=Math.min(L.length-1,skSel+1);
     if(go&&L[skSel])bindSkill(L[skSel]);
   }else if(menuTab===3&&fdMode===1&&code==='KeyX'){cookOnly=!cookOnly;fdSel=0;sfx('click');
-  }else if(menuTab===3){if(code==='KeyA'||code==='KeyD'||code==='ArrowLeft'||code==='ArrowRight'){fdMode=1-fdMode;fdSel=0;sfx('click');return;}const L=foodList();if(up)fdSel=Math.max(0,fdSel-1);if(down)fdSel=Math.min(L.length-1,fdSel+1);if(go&&L[fdSel])useFoodRow(L[fdSel]);}
+  }else if(menuTab===3){if(code==='KeyA'||code==='KeyD'||code==='ArrowLeft'||code==='ArrowRight'){fdMode=(fdMode+(code==='KeyA'||code==='ArrowLeft'?2:1))%3;fdSel=0;sfx('click');return;}const L=foodList();if(up)fdSel=Math.max(0,fdSel-1);if(down)fdSel=Math.min(L.length-1,fdSel+1);if(go&&L[fdSel])useFoodRow(L[fdSel]);}
   else if(code==='KeyA'||code==='KeyD'||code==='ArrowLeft'||code==='ArrowRight'){progMode=(progMode+(code==='KeyA'||code==='ArrowLeft'?2:1))%3;sfx('click');}
   else if(progMode===2){const n=AP_TRADES.length;if(up)apSel=(apSel+n-1)%n;if(down)apSel=(apSel+1)%n;if(go)apTrade(AP_TRADES[apSel]);}
   else{if(up)bxSel=Math.max(0,bxSel-1);if(down)bxSel=Math.min(BEASTS.length-1,bxSel+1);}

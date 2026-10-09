@@ -1,12 +1,13 @@
 let fdSel=0;
 let fdMode=0;
 let cookOnly=false;
-function foodList(){if(fdMode===1)return COOK.filter(c=>!cookOnly||cookOk(c)).map(c=>({cook:c}));const L=Object.keys(FOOD).filter(k=>player.food[k]>0).map(k=>({k}));if(player.inv.emetic>0)L.push({emetic:true});return L;}
-function useFoodRow(r){if(r.cook)return cook(r.cook);if(r.emetic){if(player.sat<=0&&!player.buffs.length){say('nothing to bring up');sfx('click');return;}player.inv.emetic--;vomit('you drink the syrup. that was unpleasant');return;}eatFood(r.k);}
+function foodList(){if(fdMode===2)return HERBAL.map(h=>({prep:h}));if(fdMode===1)return COOK.filter(c=>!cookOnly||cookOk(c)).map(c=>({cook:c}));const L=Object.keys(FOOD).filter(k=>player.food[k]>0).map(k=>({k}));if(player.inv.emetic>0)L.push({emetic:true});return L;}
+function useFoodRow(r){if(r.prep)return makePrep(r.prep);if(r.cook)return cook(r.cook);if(r.emetic){if(player.sat<=0&&!player.buffs.length){say('nothing to bring up');sfx('click');return;}player.inv.emetic--;vomit('you drink the syrup. that was unpleasant');return;}eatFood(r.k);}
 function drawFood(x,y,w,h){
   const P=player,L=foodList();fdSel=Math.max(0,Math.min(fdSel,L.length-1));const lx=x+8,lw=180;
-  ['Pouch','Cook'].forEach((n,i)=>{const bx=lx+i*44,act=fdMode===i;ui(bx,y+2,40,11,{click:()=>{fdMode=i;fdSel=0;sfx('click');}});F(act?'#1c2220':'#0a0d0c',bx,y+2,40,11);F(act?AMBER:'#2a302e',bx,y+12,40,1);txt(n,bx+20,y+4,act?AMBER:'#8e978b','center');});
-  txt(fdMode?'A D switch  R cook':'A D switch  R eat',lx+lw,y+4,'#3f4642','right');
+  ['Pouch','Cook','Herbalism'].forEach((n,i)=>{const bw=i===2?56:40,bx=lx+i*44,act=fdMode===i;ui(bx,y+2,bw,11,{click:()=>{fdMode=i;fdSel=0;sfx('click');}});F(act?'#1c2220':'#0a0d0c',bx,y+2,bw,11);F(act?AMBER:'#2a302e',bx,y+12,bw,1);txt(n,bx+bw/2,y+4,act?AMBER:'#8e978b','center');});
+  txt(fdMode===2?'R make':fdMode?'R cook':'A D  R eat',lx+lw,y+4,'#3f4642','right');
+  if(fdMode===2)return drawHerbalism(x,y,w,h,L);
   if(fdMode===1){{const fh=ui(lx-2,y+15,lw+4,11,{click:()=>{cookOnly=!cookOnly;fdSel=0;sfx('click');}});txt('X  only cookable: '+(cookOnly?'on':'off'),lx,y+17,cookOnly?AMBER:fh?'#c9cfc2':'#8e978b');}
     if(!L.length)wrap('Nothing you can cook with what you have. Turn the filter off to see every recipe.',lx,y+31,lw,9,'#5d655f');
     L.forEach((r,i)=>{const c=r.cook,f=FOOD[c.out],yy=y+30+i*10,sel=i===fdSel,ok=cookOk(c);const hov=ui(lx-2,yy-2,lw+4,10,{click:()=>{fdSel=i;cook(c);}});if(hov&&mouse.moved)fdSel=i;
@@ -33,9 +34,21 @@ function drawFood(x,y,w,h){
   F('#141817',sx,y+16,sw,5);F('#c8a060',sx,y+16,Math.round(sw*P.sat/100),5);
   wrap('Eating earns food xp, cooked dishes half again. Each food level heals you and adds ghost health: it soaks hits after armor and never heals.',sx,y+26,sw,9,'#6f7a6a');
   txt('Active buffs',sx,y+72,AMBER);
-  if(!P.buffs.length)txt('none',sx,y+84,'#3f4642');
+  if(!P.buffs.length&&!(P.tbuffs||[]).length)txt('none',sx,y+84,'#3f4642');
   P.buffs.forEach((b,i)=>{const f=FOOD[b.id],yy=y+84+i*10;if(yy>y+h-10)return;txt(f.name,sx,yy,'#c9cfc2');txt(b.lv+' deck'+(b.lv>1?'s':''),sx+sw,yy,'#8e978b','right');});
+  (P.tbuffs||[]).forEach((b,i)=>{const yy=y+84+(P.buffs.length+i)*10;if(yy>y+h-10)return;txt(tbuffName(b),sx,yy,'#9fcf9a');txt(Math.ceil(b.t)+'s',sx+sw,yy,'#8e978b','right');});
 }
+function drawHerbalism(x,y,w,h,L){const P=player,lx=x+8,lw=180;let lastKind='';let yy=y+18;
+  L.forEach((r,i)=>{const hp=r.prep;if(hp.kind!==lastKind){lastKind=hp.kind;txt(hp.kind==='poultice'?'Poultices':hp.kind==='incense'?'Incense':'Draughts',lx,yy,'#6f7a6a');yy+=10;}
+    const sel=i===fdSel,ok=prepOk(hp),ry=yy;const hov=ui(lx-2,ry-2,lw+4,10,{click:()=>{fdSel=i;makePrep(hp);}});if(hov&&mouse.moved)fdSel=i;
+    if(sel){F('#1c2220',lx-2,ry-2,lw+4,10);F(AMBER,lx-2,ry-2,2,10);}F(hp.col||FOOD[hp.id].col,lx+2,ry,3,5);txt(hp.name,lx+8,ry,ok?'#e3e6dc':'#6f7a6a');txt('x'+prepCount(hp),lx+lw,ry,'#5d655f','right');yy+=10;});
+  const hp=L[fdSel]&&L[fdSel].prep;if(hp){const by=yy+4;F('#1f2524',lx,by-4,lw,1);txt(hp.name,lx,by,AMBER);wrap(prepDesc(hp),lx,by+11,lw,9,prepOk(hp)?'#9fcf9a':'#b9c0b3');}
+  const sx=x+200,sw=w-208;F('#1f2524',x+192,y+4,1,h-10);txt('Herbs',sx,y+4,AMBER);yy=y+17;
+  for(const k in HERBS){const n=P.herbs[k]||0;F(HERBS[k].col,sx,yy+1,3,5);txt(HERBS[k].name,sx+6,yy,n?'#c9cfc2':'#3f4642');txt(''+n,sx+sw,yy,n?'#e3e6dc':'#3f4642','right');yy+=10;}
+  txt('Cloth: '+(P.inv.cloth||0),sx,yy+4,'#c9cfc2');txt('Flask water: '+(P.flask.kind==='water'?P.flask.n:0)+' swig'+((P.flask.kind==='water'&&P.flask.n===1)?'':'s'),sx,yy+14,'#6fb3c3');
+  if(hp){let ny=yy+30;txt('Needs',sx,ny,AMBER);ny+=11;const row=(label,have,need)=>{txt(label,sx,ny,have>=need?'#9fcf9a':'#c08070');txt(have+' / '+need,sx+sw,ny,have>=need?'#9fcf9a':'#c08070','right');ny+=10;};
+    for(const k in hp.need)row(HERBS[k].name,P.herbs[k]||0,hp.need[k]);if(hp.cloth)row('Cloth',P.inv.cloth||0,hp.cloth);if(hp.water)row('Flask water',P.flask.kind==='water'?P.flask.n:0,hp.water);
+    wrap(hp.kind==='draught'?'Drink it from the pouch.':'Goes in your quick slots.',sx,ny+4,sw,9,'#5d655f');}}
 let skSel=0,bxSel=0,bxScroll=0,bestiary=null;
 let progMode=0,apSel=0;
 function runStat(k){const P=player;return ((P.rs&&P.rs[k])||0)+(LVLSTAT.includes(k)&&lvl?(lvl[k]||0):0);}

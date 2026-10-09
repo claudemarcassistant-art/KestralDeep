@@ -28,6 +28,7 @@ function drawItem(it){
     case 'schematic':F('#3d5a78',x-3,y-3,7,6);F('#9fc3e0',x-2,y-2,5,1);F('#9fc3e0',x-2,y,3,1);F('#9fc3e0',x+1,y-1,1,3);break;
     case 'secretmap':F('#b8a47a',x-3,y-3,7,6);F('#8a7652',x-3,y-3,7,1);F('#b8493a',x-1,y-1,1,1);F('#b8493a',x+1,y+1,1,1);F('#b8493a',x,y,1,1);F('#b8493a',x+1,y-1,1,1);F('#b8493a',x-1,y+1,1,1);break;
     case 'chip':F('#1f4a2e',x-3,y-2,6,5);F('#d9b45a',x-4,y-1,1,1);F('#d9b45a',x-4,y+1,1,1);F('#d9b45a',x+3,y-1,1,1);F('#d9b45a',x+3,y+1,1,1);F('#7fd08e',x-1,y-1,2,2);break;
+    case 'tuft':drawTuft(it,x,y);break;
     case 'herb':F('#1a300e',x-3,y-2,7,5);F('#4a9a3a',x-2,y-2,2,3);F('#6ac04a',x,y-3,2,4);F('#4a9a3a',x+2,y-1,2,2);break;
     case 'cells':F('#0a1a10',x-3,y-2,6,4);F('#8fffa8',x-2,y-1,1,2);F('#8fffa8',x,y-1,1,2);F('#8fffa8',x+2,y-1,1,2);break;
     case 'trauma':case 'regen':case 'mine':case 'surgery':qIcon(it.type,x,y);break;

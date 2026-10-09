@@ -196,7 +196,7 @@ function interact(){
     if(m===7){if(inside){map[i]=0;openDoor[i]=1;paintArea(it.tx,it.ty);sfx('door');flowT=0;return;}
       if(player.inv.key<=0){say('locked from the other side. a key or an explosion would do it');sfx('click');return;}player.inv.key--;map[i]=0;openDoor[i]=1;paintArea(it.tx,it.ty);sfx('door');flowT=0;if(lvl)lvl.doors++;return;}}
   if(it.k==='fix'){const f=it.f;
-    if(f.kind==='locker'){f.used=true;sfx('door');const t=wpick([['food',3],['raw',1.5],['cloth',2],['scrap',2],['powder',1],['gear',0.7],['key',0.5],['emetic',0.5]]);const q={x:f.tx*TS+6,y:(f.ty+1)*TS+4,type:t,ph:0,pop:0.35};if(t==='gear')q.gear=randomGear();if(t==='food')q.food=randFood();if(t==='raw')q.raw=randRaw();items.push(q);return;}
+    if(f.kind==='locker'){f.used=true;sfx('door');const t=wpick([['food',3],['raw',1.5],['tuft',HERB_CFG.locker],['cloth',2],['scrap',2],['powder',1],['gear',0.7],['key',0.5],['emetic',0.5]]);const q={x:f.tx*TS+6,y:(f.ty+1)*TS+4,type:t,ph:0,pop:0.35};if(t==='gear')q.gear=randomGear();if(t==='tuft')q.tuft=randHerb();if(t==='food')q.food=randFood();if(t==='raw')q.raw=randRaw();items.push(q);return;}
     if(f.kind==='medstation'){f.used=true;if(cureInjury(false))say('the medstation sets your injury');player.hp=100;player.st.psn=0;player.st.rad=Math.max(0,player.st.rad-50);sfx('stim');say('the medstation patches you up. it powers down after');return;}
     if(f.kind==='stasis'){const P=player;f.used=true;const n=cureInjury(true);P.hp=maxHp();clearStatus();sfx('learn');say('the stasis pod hisses shut. you wake whole'+(n?', '+n+' injur'+(n>1?'ies':'y')+' mended':'')+'. the pod goes dark');return;}
     if(f.kind==='breaker'){openBreaker(f);return;}
@@ -327,8 +327,8 @@ let newSeen=0,alertM=0,alertWaves=0,runAlertWaves=0,alertCarry=false,alertRumble
 function alertOn(){return depth>=3&&!stopMode&&!arcadeMode&&!(testMode&&!testDeck)&&state==='play';}
 let alertLock=false;
 function alertMul(){return 1-(perk('lowprofile')?0.2:0)-(perk('ductrat')?0.2:0)-(perk('quietmind')?0.15:0);}
-function alertAdd(v){if(!alertOn()||alertLock)return;alertM+=v*alertMul();}
-function updateAlert(dt){if(!alertOn()||alertLock){newSeen=0;return;}alertM+=newSeen*0.045*alertMul()/AREA;newSeen=0;
+function alertAdd(v){if(!alertOn()||alertLock||sageCalm())return;alertM+=v*alertMul();}
+function updateAlert(dt){if(!alertOn()||alertLock||sageCalm()){newSeen=0;return;}alertM+=newSeen*0.045*alertMul()/AREA;newSeen=0;
   if(alertM>=75&&!alertRumble){alertRumble=true;say('something far below is starting to stir');sfx('hiss');}
   if(alertM>=100){alertM=0;alertRumble=false;alertWaves++;runAlertWaves++;
     const cnt=3+Math.floor(depth/3)+alertWaves,p=player,far=rooms.filter(r=>Math.hypot(r.cx*TS-p.x,r.cy*TS-p.y)>100);
@@ -360,7 +360,7 @@ function damageEnemy(e,dmg,dx,dy,kb,quiet){if(e&&e.hexT>0)dmg*=1.35;if(e)dmg*=fr
 function addStatus(k,a,src){const p=player,s=p.st;if(state!=='play'||!s)return;if(k!=='wet')a*=Math.max(0.3,1-0.08*U('resil')-0.05*coreLv('spirit')-0.05*subPts('resolve'));
   if(k==='shk')a*=(s.wet>30?1.6:1)*(1-S.shockRes);
   if(k==='psn')a*=(1-S.poisonRes);
-  if(k==='frz'){if(p.frozenT>0)return;if(s.brn>0){s.brn=Math.max(0,s.brn-a);return;}if(s.wet>30)a*=1.4;if((s.frz||0)+a>=100){if(p.frzImm>0){s.frz=99;return;}freezePlayer();return;}}
+  if(k==='frz'){if(p.frozenT>0||S.coldImm>0||inEmber(p.x,p.y))return;if(s.brn>0){s.brn=Math.max(0,s.brn-a);return;}if(s.wet>30)a*=1.4;if((s.frz||0)+a>=100){if(p.frzImm>0){s.frz=99;return;}freezePlayer();return;}}
   if(k==='brn'){frozenFireHit();a*=1+(s.slk||0)/100;if(s.wet>30)a*=0.3;if(s.frz>0)s.frz=Math.max(0,s.frz-a);if(liqAt(p.x,p.y)>=2)return;if(s.brn<100&&s.brn+a>=100){float(p.x,p.y-6,'ablaze','#ff8a3a');say('you are on fire. find water or dash to roll it out');}}
   if(k==='stn'){if(p.dazeT>0||p.stnImm>0)return;a*=(1-S.stunRes);}
   s[k]=Math.min(100,s[k]+a);

@@ -32,7 +32,7 @@ function buildStop(sk){stopMode=true;stopAmbush=sk==='ambush';nodeUI=null;setDec
     else if(sk==='quarters'){fixtures.push({tx:27,ty:21,kind:'locker',used:false,wall:true},{tx:29,ty:21,kind:'locker',used:false,wall:true},{tx:31,ty:21,kind:'locker',used:false,wall:true});
       chests.push({tx:33,ty:23,x:33*TS+6,y:23*TS+6,tier:'common',opened:false,ls:(Math.random()*4294967296)>>>0});items.push({x:27*TS+6,y:26*TS+6,type:'food',food:randFood(),ph:0},{x:28*TS+6,y:25*TS+6,type:'cloth',ph:0});
       if(Math.random()<0.4){const e=mkEnemy('husk',32*TS+6,25*TS+6);e.alert=false;enemies.push(e);}}
-    else if(sk==='camp'){fixtures.push({tx:30,ty:23,kind:'npc',npc:NPC_IDS[rnd(NPC_IDS.length)],ph:Math.random()*6});items.push({x:27*TS+6,y:26*TS+6,type:'food',food:randFood(),ph:0});}
+    else if(sk==='camp'){fixtures.push({tx:30,ty:23,kind:'npc',npc:NPC_IDS[rnd(NPC_IDS.length)],ph:Math.random()*6});items.push({x:27*TS+6,y:26*TS+6,type:'food',food:randFood(),ph:0});if(Math.random()<HERB_CFG.camp)items.push({x:28*TS+6,y:26*TS+6,type:'tuft',tuft:randHerb(),ph:0});}
     else if(sk==='arcade'){arcPicks(3).forEach((g,k)=>fixtures.push({tx:27+k*3,ty:21,kind:'arcade',wall:true,won:false,game:g}));items.push({x:30*TS+6,y:26*TS+6,type:'scrap',ph:0});}}
   exitT={x:30,y:32};seen=new Uint8Array(MW*MH);for(let y=19;y<=35;y++)for(let x=24;x<=37;x++)seen[y*MW+x]=1;seed=rnd(1e9);paintMap();
   player.x=30*TS+6;player.y=31*TS+6;player.vx=player.vy=0;resetLevelState();bfs(30,31,flow);setupObjective(null,null,'open');startLevelScore();state='play';bannerT=2.5;

@@ -25,7 +25,7 @@ function frozenMeleeMul(src){const p=player;if(!(p.frozenT>0)||!src||!enemies.in
 
 // ---- creatures
 function canFreeze(e){const b=ET[e.type];return !e.dead&&!b.ghost&&!b.drone&&!(e.caged&&!e.caged.open);}
-function chillEnemy(e,a){if(!canFreeze(e)||e.frozenT>0)return;if(e.burnT>0){e.burnT=Math.max(0,e.burnT-a*0.05);return;}
+function chillEnemy(e,a){if(!canFreeze(e)||e.frozenT>0||inEmber(e.x,e.y,e.r))return;if(e.burnT>0){e.burnT=Math.max(0,e.burnT-a*0.05);return;}
   e.frz=Math.min(100,(e.frz||0)+a);if(e.frz>=100){if(e.frzImm>0)e.frz=99;else freezeEnemy(e);}}
 function freezeEnemy(e){const C=FREEZE_CFG.creature,boss=!!ET[e.type].warden;e.frz=100;e.frozenT=boss?C.boss:C.dur;e.vx*=0.3;e.vy*=0.3;e.dash=0;
   float(e.x,e.y-8,'frozen','#cfe8ff');sfx('crackle');for(let k=0;k<8;k++)parts.push({x:e.x+rr(-e.r,e.r),y:e.y+rr(-e.r,e.r),vx:rr(-25,25),vy:rr(-25,25),t:0.4,m:0.4,c:'#e8f6ff',s:1});}

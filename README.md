@@ -29,6 +29,7 @@ src/
     items.js                gear, quick items, tools, pickups, flasks, liquid tank, vending stock, resource text
     npcs.js                 NPCs
     progress.js             deck grades, run stats, achievements, point trades, challenge modifiers
+    herbs.js                herbs, herbal preparations (poultices, incense, draughts)
     status.js               frozen status and cryo grenade tuning, active reload
     traps.js                trap types, trap tuning, trap control panel text, plate doors, crates, item weight
     versions.js             in-game version history
@@ -68,6 +69,7 @@ src/
     31-plate-doors.js       plate doors, crates, item weight
     32-spacebar.js          spacebar styles: kick and repulse
     33-cold.js              creature cold meters, frozen player and creatures, cryo clouds
+    34-herbs.js             herb generation, herbalism, poultices, incense, draughts, timed buffs
 scripts/build.mjs  the build
 docs/specs/        change request batches
 ```
