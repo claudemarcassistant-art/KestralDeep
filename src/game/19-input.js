@@ -58,7 +58,7 @@ function onPress(code){
   if(code==='Tab'){menuOpen=!menuOpen;mapOpen=false;mouse.l=false;mouse.r=false;sfx('map');return;}
   if(state==='route'||state==='node'){
     if(menuOpen){if(code==='Escape')menuOpen=false;else menuKey(code);return;}
-    if(state==='route'){const n=curNode().links.length;if(up)routeSel=(routeSel+n-1)%n;if(down)routeSel=(routeSel+1)%n;if(go)chooseRoute(curNode().links[routeSel]);}
+    if(state==='route'){const n=routeOpts().length;if(up)routeSel=(routeSel+n-1)%n;if(down)routeSel=(routeSel+1)%n;if(go)pickRoute(routeSel);}
     else{const n=nodeUI.options.length;if(up)nodeSel=(nodeSel+n-1)%n;if(down)nodeSel=(nodeSel+1)%n;if(go)nodeChoose(nodeSel);
       const d=code.startsWith('Digit')?+code.slice(5):0;if(d>=1&&d<=n)nodeChoose(d-1);}
     return;}

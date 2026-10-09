@@ -19,6 +19,7 @@ function genSector(sec){
       const want=Math.min(cand.length,(depth>=2||sec>=1?1:0)+(Math.random()<0.55?1:0));for(let k=0;k<want;k++){const i=cand.splice(rnd(cand.length),1)[0];N[i].cond.obj='arena';}}
     // the exit deck and arena decks lean large
     for(const n of N)if(n.cond&&(n.exit||n.cond.obj==='arena'))n.cond.size=wpick(DECK_SIZE_ODDS.big);
+    genExpress(N);genVaultJunctions(N,ex,sec);
     return {nodes:N,exit:ex};}
   const N=[{x:0.04,y:0.5,type:'station',known:true,links:[1],cond:{light:'normal',haz:null}}];for(let k=1;k<=3;k++)N.push({x:0.04+k*0.3,y:0.5,type:'station',known:k===3,exit:k===3,links:[k-1].concat(k<3?[k+1]:[]),cond:rollCond('station')});N[3].cond.size=wpick(DECK_SIZE_ODDS.big);return {nodes:N,exit:3};}
 function newSector(sec){seeded(['sector',sec],()=>newSector0(sec));}
@@ -29,7 +30,7 @@ function newRoute(){route={sector:0,nodes:[],cur:0,exit:0,chaser:null};newSector
 const curNode=()=>route.nodes[route.cur];
 function nodeDist(from){const N=route.nodes,dist=new Array(N.length).fill(-1),q=[from];dist[from]=0;while(q.length){const k=q.shift();for(const j of N[k].links)if(dist[j]<0){dist[j]=dist[k]+1;q.push(j);}}return dist;}
 const lkey=(i,j)=>i<j?i+'-'+j:j+'-'+i;
-function learnLinks(i){if(!route.lk)route.lk=new Set();for(const j of route.nodes[i].links)route.lk.add(lkey(i,j));}
+function learnLinks(i){if(!route.lk)route.lk=new Set();for(const j of route.nodes[i].links)route.lk.add(lkey(i,j));for(const j of route.nodes[i].xl||[])route.lk.add('x'+lkey(i,j));}
 function knownDist(from){const N=route.nodes,dist=new Array(N.length).fill(-1),q=[from];dist[from]=0;while(q.length){const k=q.shift();for(const j of N[k].links)if(dist[j]<0&&linkKnown(k,j)){dist[j]=dist[k]+1;q.push(j);}}return dist;}
 function linkKnown(i,j){return route.lk&&route.lk.has(lkey(i,j));}
 function revealNear(r){const d=nodeDist(route.cur);route.nodes.forEach((n,i)=>{if(d[i]>=0&&d[i]<=r){n.known=true;if(d[i]<r)learnLinks(i);}});if(route.chaser&&d[route.chaser.at]>=0&&d[route.chaser.at]<=r)route.chaserSeen=2;}
@@ -40,5 +41,7 @@ function moveChaser(){const c=route.chaser;if(!c)return;if(c.rest>0){c.rest--;re
 function openRoute(){if(route.nodes&&route.cur===route.exit&&!testMode){newSector(route.sector+1);if(route.sector>META.maxSector){META.maxSector=route.sector;saveMeta();}say('the lift drops into a new section of the station: '+BNAMES[route.sector%6].toLowerCase());}setTimeout(saveRun,0);ensureLayers();state='route';routeSel=0;menuOpen=false;mapOpen=false;mouse.l=false;mouse.r=false;sfx('lift');}
 // the lift ride between two junctions, keying its event and any landing it stops at
 let liftKey=null;
-function chooseRoute(j){tickInjuries();liftKey=['lift',route.sector,route.cur,j];route.cur=j;if(!(route.chaser&&route.chaser.at===j))moveChaser();depth++;const n=curNode();n.known=true;n.visited=true;learnLinks(j);if(route.chaserSeen>0)route.chaserSeen--;
+// express: an express shaft (pickRoute() has already taken the batteries); it never stops on the way
+function chooseRoute(j,express){tickInjuries();liftKey=['lift',route.sector,route.cur,j].concat(express?['x']:[]);route.cur=j;if(!(route.chaser&&route.chaser.at===j))moveChaser();depth++;const n=curNode();n.known=true;n.visited=true;learnLinks(j);if(route.chaserSeen>0)route.chaserSeen--;
+  if(express){if(route.chaserSeen>0)route.chaserSeen--;enterNode(n);return;}
   const tr=nextTransit!==null?nextTransit:seeded(liftKey,rollTransit);nextTransit=null;if(tr&&tr.type!=='none'&&!testMode)return seeded(liftKey,()=>startTransit(tr,n));enterNode(n);}

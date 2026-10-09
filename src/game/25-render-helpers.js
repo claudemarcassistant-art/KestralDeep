@@ -38,6 +38,7 @@ function drawItem(it){
     case 'sigil':{const c=CORES[it.core].col,g=0.5+0.5*Math.sin(T*4);ctx.globalAlpha=0.35*g;ctx.fillStyle=c;circ(x,y,6);ctx.globalAlpha=1;F(c,x-1,y-4,2,8);F(c,x-4,y-1,8,2);F('#fff',x,y,1,1);break;}
     case 'tool':qIcon(it.tool,x,y);break;
     case 'knives':F('#15110a',x-4,y-1,9,3);F('#c8ccc4',x-3,y,5,1);F('#5a3e22',x+2,y-1,2,3);break;
+    case 'clearpack':F('#15110a',x-4,y-3,9,7);F('#c8a868',x-3,y-2,7,5);F('#e8c070',x-3,y-3,3,1);F('#e8c070',x-1,y-1,3,3);break;
     case 'file':F('#15110a',x-4,y-3,9,7);F('#c8a868',x-3,y-2,7,5);F('#a88af0',x-3,y-3,3,1);F('#8a7048',x-2,y,5,1);break;
     case 'raw':{const c=RAW[it.raw].col;F('#15110a',x-3,y-2,6,5);F(c,x-2,y-1,4,3);F('rgba(255,255,255,0.35)',x-2,y-1,2,1);break;}
     case 'food':{if(!FOOD[it.food])fixLoot(it);const c=FOOD[it.food].col;F('#15110a',x-3,y-3,7,6);F(c,x-2,y-2,5,4);F('#e8e0c0',x-2,y-2,5,1);break;}

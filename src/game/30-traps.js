@@ -40,7 +40,7 @@ function wireTrap(t){const R=TRAP_CFG.panelRange;
 // levelMods.traps (test lift): 'off' = none, 'on' = at any depth and at least one of each type.
 function genTraps(start,exitR){const C=TRAP_CFG,mode=levelMods.traps||'normal';
   if(mode==='off'||mode==='normal'&&depth<C.minDepth)return;
-  const inR=(x,y,r,m)=>x>=r.x-m&&x<r.x+r.w+m&&y>=r.y-m&&y<r.y+r.h+m,special=[...vaults,...secrets,...ventRooms,...hatchRooms,...modules,...plateDoors.filter(p=>p.room).map(p=>p.room)],cor=[],rm=[];
+  const inR=(x,y,r,m)=>x>=r.x-m&&x<r.x+r.w+m&&y>=r.y-m&&y<r.y+r.h+m,special=[...vaults,...secrets,...ventRooms,...hatchRooms,...modules,...plateDoors.filter(p=>p.room).map(p=>p.room),...(archive?[archive.room]:[])],cor=[],rm=[];
   for(let y=2;y<MH-2;y++)for(let x=2;x<MW-2;x++){const i=y*MW+x;
     if(map[i]!==0||liq[i]>=2||chasm[i]||molten[i]||hz[i]||kind[i]===3||kind[i]===4)continue;
     if(inR(x,y,start,2)||exitR&&inR(x,y,exitR,1)||Math.abs(x-exitT.x)+Math.abs(y-exitT.y)<4||special.some(r=>inR(x,y,r,0)))continue;

@@ -27,6 +27,7 @@ function hud(){
     if(p.guard<(p.guardMax||40)-0.5){txt('guard',6,ry-2,'#6f7a6a');F('#101820',40,ry,54,2);F('#bfe4ff',40,ry,Math.round(54*p.guard/(p.guardMax||40)),2);ry-=8;}
     for(const [k,n,c] of [['frz','cold','#9fd8ff'],['brn','burn','#ff8a3a'],['slk','slick','#b09060'],['rad','rads','#c9a8ff'],['stk','sticky','#c8d070'],['psn','poison','#8fcf40'],['shk','shock','#8fc3ff'],['stn','stun','#e8dcb0'],['wet','wet','#4a9ad0']]){const v=p.st[k];if(v<1)continue;
     txt(k==='frz'&&p.frozenT>0?'frozen':n,6,ry-2,c);F('#141817',40,ry,54,3);F(c,40,ry,Math.round(54*v/100),3);ry-=9;}}
+  if(archive&&archive.unstT>0)txt('POWER FAILS IN '+Math.ceil(archive.unstT)+'s',W/2+20,H-64,Math.sin(T*6)>0?'#ff8a5a':'#c06040','center');
   if(p.frozenT>0)txt('FROZEN',W/2+20,H-54,'#cfe8ff','center');else if(p.dazeT>0)txt('DAZED',W/2+20,H-54,'#e8dcb0','center');
   if(p.cloakT>0){txt('CLOAKED '+Math.ceil(p.cloakT)+'s',W/2+20,H-64,'#9fc3ff','center');const a=0.05+0.03*Math.sin(T*4);F(`rgba(120,170,255,${a})`,0,0,W,3);F(`rgba(120,170,255,${a})`,0,H-3,W,3);}
   if(p.stimT>0)txt('stim '+Math.ceil(p.stimT)+'s',102,H-56,'#9fe0b0');

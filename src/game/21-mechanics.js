@@ -7,7 +7,7 @@ function critFx(e,d){if(player&&player.rs)player.rs.crits=(player.rs.crits||0)+1
 function layWeb(cx,cy,ang,n){const px=-Math.sin(ang),py=Math.cos(ang);let made=0;for(let k=0;k<n;k++){const o=k-(n-1)/2,x=Math.floor((cx+px*o*TS)/TS),y=Math.floor((cy+py*o*TS)/TS);if(x<0||y<0||x>=MW||y>=MH||solid(x,y)||chasm[y*MW+x]||liq[y*MW+x]>=3)continue;webs[y*MW+x]=1;made++;}return made;}
 function tearWeb(i){webs[i]=0;const x=(i%MW)*TS+6,y=((i/MW)|0)*TS+6;for(let k=0;k<6;k++)parts.push({x:x+rr(-5,5),y:y+rr(-5,5),vx:rr(-20,20),vy:rr(-20,20),t:0.4,m:0.4,c:'#d8dcd4',s:1});}
 let secT=0,secBeep=0,trips=[];
-function raiseAlarm(x,y,n,why){secT=Math.max(secT,6);secBeep=0;shake=Math.max(shake,4);say(why==='backup'?'a guard radios for backup. the alarm is going off':'BIOMETRIC MATCH. the alarm is going off');alertAdd(15);
+function raiseAlarm(x,y,n,why){secT=Math.max(secT,6);secBeep=0;shake=Math.max(shake,4);say(why==='backup'?'a guard radios for backup. the alarm is going off':why==='vault'?'LOCKDOWN. security is on its way':'BIOMETRIC MATCH. the alarm is going off');alertAdd(15);
   const P=player,cand=[];for(let k=0;k<200&&cand.length<n;k++){const r=randomRoom();if(!r)break;const t=freeTile(r);if(!t)continue;const wx=t.tx*TS+6,wy=t.ty*TS+6,dd=Math.hypot(wx-P.x,wy-P.y);if(dd<90||dd>260)continue;cand.push([wx,wy]);}
   for(let k=0;k<600&&cand.length<n;k++){const tx=rnd(MW),ty=rnd(MH),i=ty*MW+tx;if(map[i]!==0||chasm[i]||molten[i]===1||liq[i]>=3)continue;const wx=tx*TS+6,wy=ty*TS+6,dd=Math.hypot(wx-P.x,wy-P.y);if(dd<90||dd>260)continue;cand.push([wx,wy]);}
   for(const [wx,wy] of cand){const e=mkEnemy('guard',wx,wy);e.alert=true;e.called=true;enemies.push(e);for(let k=0;k<8;k++)parts.push({x:wx,y:wy,vx:rr(-30,30),vy:rr(-30,30),t:0.4,m:0.4,c:'#5a8ac0',s:1});}}

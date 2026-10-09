@@ -41,7 +41,7 @@ function render(){
     if(slime[ty*MW+tx])drawSlime(tx,ty,slime[ty*MW+tx],slimeK[ty*MW+tx]);
     const l=ice[ty*MW+tx]?0:liq[ty*MW+tx];if(l>=2){const ph=T*1.6+tx*0.9+ty*1.7;ctx.fillStyle=`rgba(170,220,225,${l===3?0.22:0.3})`;
       ctx.fillRect(tx*TS-camX+((Math.sin(ph)*3+5)|0),ty*TS-camY+((Math.cos(ph*0.8)*3+5)|0),2,1);}}
-  drawTraps();drawPlateDoors();drawIncense();
+  drawTraps();drawPlateDoors();drawIncense();drawArchive();
   for(const pn of panels){if(!seen[pn.ty*MW+pn.tx])continue;const x=pn.tx*TS-camX+2,y=pn.ty*TS-camY+3;
     if(x<-12||y<-12||x>W||y>H)continue;
     const base=pn.state==='dead'?'#141414':pn.state==='done'?'#16402a':pn.reward==='traps'?'#381812':pn.hack?'#10302c':'#141c2a';

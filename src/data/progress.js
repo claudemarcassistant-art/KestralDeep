@@ -19,7 +19,8 @@ const ACH=[
   {id:'cook',name:'Line cook',desc:'Cook 5 dishes.',pts:2,test:()=>(player.rs.cooked||0)>=5},
   {id:'fed',name:'Well fed',desc:'Reach food level 3.',pts:2,test:()=>(player.foodLv||0)>=3},
   {id:'files',name:'Archivist',desc:'Have 6 crew files.',pts:2,test:()=>player.found&&player.found.length>=6},
-  {id:'arcade',name:'Arcade regular',desc:'Win 3 arcade games.',pts:1,test:()=>(player.rs.arcade||0)>=3}];
+  {id:'arcade',name:'Arcade regular',desc:'Win 3 arcade games.',pts:1,test:()=>(player.rs.arcade||0)>=3},
+  {id:'vaults',name:'Vault breaker',desc:'Open a vault in 3 different sectors in one run.',pts:4,test:()=>new Set(player.vaultSecs||[]).size>=3}];
 const AP_TRADES=[{label:'1 clearance',cost:2,act:()=>{player.clear++;return '+1 clearance';}},
   {label:'a random tonic',cost:4,act:()=>{const ks=Object.keys(SUBS);gainTonic(ks[rnd(ks.length)]);return 'a tonic';}},
   {label:'an unfound crew file',cost:6,ok:()=>!!FILES.find(f=>!hasFile(f.id)&&f.kind!=='classified'),act:()=>{const L=FILES.filter(f=>!hasFile(f.id)&&f.kind!=='classified');gainFile(L[rnd(L.length)].id);return 'a crew file';}}];

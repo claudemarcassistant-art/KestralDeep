@@ -9,7 +9,7 @@ function startLevelScore(){
   pot+=(liftState==='idle'||(cond&&cond.obj==='both')?400+(1+(depth>=4?1:0))*200:0)+vaults.length*60+(secrets.length+ventRooms.length+hatchRooms.length)*250+panels.filter(q=>q.hack).length*150+vendors.length*150+lvl.par*4*0.5+150*AREA;
   lvl.pot=Math.max(300*AREA,pot);
 }
-function liveLevelScore(){if(!lvl)return 0;return lvl.killPts+lvl.ambush*25+lvl.hacks*150+lvl.items*10+lvl.finds*100+lvl.chests*75+lvl.rare*150+lvl.doors*60+lvl.secrets*250;}
+function liveLevelScore(){if(!lvl)return 0;return (lvl.vault?VAULT_CFG.score:0)+lvl.killPts+lvl.ambush*25+lvl.hacks*150+lvl.items*10+lvl.finds*100+lvl.chests*75+lvl.rare*150+lvl.doors*60+lvl.secrets*250;}
 function finishLevel(){
   if(bossRef&&!bossRef.dead&&route&&route.chaser){route.chaser.hp=bossRef.hp;route.chaser.rest=2;}bossRef=null;
   if(player&&player.rs&&lvl&&!testMode&&!stopMode){if(!lvl.dmg&&depth>=2)player.rs.clean=true;if(depth>=3&&!alertWaves)player.rs.quiet=true;}
@@ -19,7 +19,7 @@ function finishLevel(){
   const lines=[
     ['Enemies put down',L.kills,L.killPts],['Ambushes',L.ambush,L.ambush*25],['Panels and machines hacked',L.hacks,L.hacks*150],
     ['Supplies picked up',L.items,L.items*10],['Gear and chips found',L.finds,L.finds*100],['Chests opened',L.chests+L.rare,L.chests*75+L.rare*150],
-    ['Doors unlocked',L.doors,L.doors*60],['Secrets found',L.secrets,L.secrets*250],
+    ['Doors unlocked',L.doors,L.doors*60],['Secrets found',L.secrets,L.secrets*250],['Vault cracked',L.vault?'yes':'',L.vault?VAULT_CFG.score:0],
     ['Time '+fmtT(L.t)+'  (par '+fmtT(L.par)+')','',time],['Lift held',liftDefended?'yes':'',liftDefended?400:0],['Breaches sealed',coresKilled||'',coresKilled*200],['Waves weathered',waves&&waves.wave?waves.wave:'',waves?waves.wave*150:0],['Waves drawn by noise',alertWaves||'',alertWaves*100],['Clean run (under 10 damage)',clean?'yes':'no',clean]];
   const total=Math.round(lines.reduce((a,l)=>a+l[2],0)*scoreMul()),ratio=total/scoreMul()/L.pot,g=GRADES.find(q=>ratio>=q[1]);
   const P=player,iv=P.inv;let reward='';
@@ -59,7 +59,7 @@ function rollCond(type){if(!['station','flooded','cache'].includes(type))return 
   const haunt=depth>=3&&Math.random()<0.08,lowg=depth>=3&&Math.random()<0.08;
   return {light,haz:haz==='none'?null:haz,obj,ev,haunt,lowg,size:wpick(DECK_SIZE_ODDS.normal)};}
 const OBJNAME={arena:'arena',keycard:'lift keycard',defend:'hold the lift',both:'keycard, hold the lift'};
-function condText(c){if(!c)return '';return [COND_LIGHT[c.light],c.haz?COND_HAZ[c.haz]:'',OBJNAME[c.obj]||'',c.ev==='waves'?'incoming waves':'',c.haunt?'haunted':'',c.lowg?'low gravity':'',c.size&&c.size!=='m'?DECK_SIZES[c.size].name:''].filter(Boolean).join(', ');}
+function condText(c){if(!c)return '';return [c.vault?vaultDangerText(c.vault):'',COND_LIGHT[c.light],c.haz?COND_HAZ[c.haz]:'',OBJNAME[c.obj]||'',c.ev==='waves'?'incoming waves':'',c.haunt?'haunted':'',c.lowg?'low gravity':'',c.size&&c.size!=='m'?DECK_SIZES[c.size].name:''].filter(Boolean).join(', ');}
 let lamps=[],furn=new Uint8Array(MW*MH),molten=new Uint8Array(MW*MH),webs=new Uint8Array(MW*MH),chasm=new Uint8Array(MW*MH),liq=new Uint8Array(MW*MH),testMode=false,route=null,routeSel=0,levelMods={},nextMods={},nodeUI=null,nodeSel=0,titleSel=0,levelLabel='',testLabels=[];
 let map,kind,seen,secretHp,openDoor,rooms,vaults=[],secrets=[],exitT,depth=1,player,S=null,curPal=PAL[0];
 let enemies=[],bullets=[],items=[],parts=[],charges=[],flares=[],texts=[],lights=[],chests=[];

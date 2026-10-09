@@ -189,7 +189,7 @@ function findInteract(){
 }
 function interact(){
   const it=findInteract();if(!it){const st=player.arms[player.armSet];if(st.off==='tank'&&fillTank())return;if(curGun())startReload(false);else if(st.off==='tank'){say('stand in water, oil or sludge to fill the tank, or carry a full flask');sfx('deny');}return;}
-  if(it.k==='panel'){startHack(it.pn);return;}
+  if(it.k==='panel'){if(vaultPanelBlocked(it.pn))return;startHack(it.pn);return;}
   if(it.k==='mdoor'){const i=it.ty*MW+it.tx,m=map[i],inside=doorInside(it.md);
     if(m===0){map[i]=6;openDoor[i]=0;paintArea(it.tx,it.ty);sfx('door');flowT=0;return;}
     if(m===6){if(inside){map[i]=7;paintArea(it.tx,it.ty);sfx('click');say('door locked. nothing gets in');return;}map[i]=0;openDoor[i]=1;paintArea(it.tx,it.ty);sfx('door');flowT=0;return;}
@@ -245,14 +245,14 @@ function floodRegion(){
   sfx('steam');
 }
 function startHack(pn){hackUI={pn,round:0,need:3,misses:0,pos:0,dir:1,flash:0,ok:0,barW:200};newHackWindow();mouse.l=false;mouse.r=false;sfx('map');}
-function newHackWindow(){const h=hackUI;h.ww=Math.max(14,(46-h.round*10)*(1+S.hack));h.win=rr(0,h.barW-h.ww);h.speed=(130+h.round*55)*(1-S.hack*0.3);}
+function newHackWindow(){const h=hackUI;h.ww=Math.max(14,(46-h.round*10)*(1+S.hack))*(h.pn.hard?VAULT_CFG.hackMul:1);h.win=rr(0,h.barW-h.ww);h.speed=(130+h.round*55)*(1-S.hack*0.3);}
 function hackTry(){const h=hackUI;if(!h)return;
   if(h.pos>=h.win&&h.pos<=h.win+h.ww){h.round++;h.ok=0.2;
     if(h.round>=h.need){const r=HACKR[h.pn.reward];h.pn.state='done';hackUI=null;sfx('hackwin');if(lvl)lvl.hacks++;say(r.act(h.pn));return;}
     sfx('hackok');newHackWindow();}
   else{h.misses++;h.flash=0.35;sfx('zap');alertAdd(perk('ductrat')?6:12);shake=Math.max(shake,5);hurtPlayer(9,true);addStatus('shk',30);
     if(!hackUI)return;
-    if(h.misses>=2){h.pn.state='dead';hackUI=null;if(h.pn.reward==='traps')trapsSetOff(h.pn);else say('the panel shorts out in a shower of sparks');}}}
+    if(h.misses>=2){h.pn.state='dead';hackUI=null;if(h.pn.reward==='traps')trapsSetOff(h.pn);else if(h.pn.reward==='vault')vaultFried(h.pn);else say('the panel shorts out in a shower of sparks');}}}
 function updateHack(dt){const h=hackUI;h.pos+=h.dir*h.speed*dt;if(h.pos>h.barW){h.pos=h.barW;h.dir=-1;}if(h.pos<0){h.pos=0;h.dir=1;}h.flash-=dt;h.ok-=dt;}
 function drawHack(){
   const h=hackUI,px=(W-240)/2|0,py=(H-96)/2|0;
@@ -419,7 +419,7 @@ function explode(x,y){puff(x,y,'smoke',16);
   lights.push({x,y,r:120,t:0.3,m:0.3,c:'255,150,60'});
   for(let i=0;i<40;i++){const a=Math.random()*6.283,s=rr(30,200);parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:rr(.2,.7),m:.7,c:i%3?'#f0a040':'#ffe2a0',s:rnd(2)+1});}
   for(let i=0;i<16;i++){const a=Math.random()*6.283,s=rr(10,40);parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:1.2,m:1.2,c:'#3a3d3b',s:3});}
-  splat(x,y,'#0b0d0c',50,Rr*0.5);clearSlimeAround(x,y,Rr);igniteOilAround(x,y,Rr);for(const pl of plants)if(!pl.burst&&Math.hypot(pl.x-x,pl.y-y)<Rr)burstPlant(pl);for(const f of fans)if(!f.dead&&Math.hypot(f.x-x,f.y-y)<Rr)hitFan(f,99);{const tx0=Math.floor(x/TS),ty0=Math.floor(y/TS);for(let yy=ty0-4;yy<=ty0+4;yy++)for(let xx=tx0-4;xx<=tx0+4;xx++)if(xx>=0&&yy>=0&&xx<MW&&yy<MH&&Math.hypot(xx*TS+6-x,yy*TS+6-y)<Rr)ice[yy*MW+xx]=0;}
+  archiveBlast(x,y,Rr);splat(x,y,'#0b0d0c',50,Rr*0.5);clearSlimeAround(x,y,Rr);igniteOilAround(x,y,Rr);for(const pl of plants)if(!pl.burst&&Math.hypot(pl.x-x,pl.y-y)<Rr)burstPlant(pl);for(const f of fans)if(!f.dead&&Math.hypot(f.x-x,f.y-y)<Rr)hitFan(f,99);{const tx0=Math.floor(x/TS),ty0=Math.floor(y/TS);for(let yy=ty0-4;yy<=ty0+4;yy++)for(let xx=tx0-4;xx<=tx0+4;xx++)if(xx>=0&&yy>=0&&xx<MW&&yy<MH&&Math.hypot(xx*TS+6-x,yy*TS+6-y)<Rr)ice[yy*MW+xx]=0;}
   for(const c of cores)if(!c.dead&&Math.hypot(c.x-x,c.y-y)<Rr+6)hitCore(c,18);
   for(const bb of barrels)if(!bb.dead&&Math.hypot(bb.x-x,bb.y-y)<Rr+4){if(bb.crate){pushBarrel(bb,bb.x-x,bb.y-y,260);breakCrate(bb);continue;}bb.fuse=bb.fuse>=0?Math.min(bb.fuse,0.15):0.15;pushBarrel(bb,bb.x-x,bb.y-y,260);}
   for(const e of enemies){const d=Math.hypot(e.x-x,e.y-y);if(d<Rr+e.r&&hasLOS(x,y,e.x,e.y))damageEnemy(e,16*(perk('boom')?1.25:1)*(1-d/(Rr+e.r)*0.5),e.x-x,e.y-y,220);}

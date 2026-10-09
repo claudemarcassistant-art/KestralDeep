@@ -30,6 +30,7 @@ src/
     npcs.js                 NPCs
     progress.js             deck grades, run stats, achievements, point trades, challenge modifiers
     herbs.js                herbs, herbal preparations (poultices, incense, draughts)
+    route.js                express shafts, vault junctions and archive vaults
     status.js               frozen status and cryo grenade tuning, active reload
     traps.js                trap types, trap tuning, trap control panel text, plate doors, crates, item weight
     versions.js             in-game version history
@@ -70,6 +71,7 @@ src/
     32-spacebar.js          spacebar styles: kick and repulse
     33-cold.js              creature cold meters, frozen player and creatures, cryo clouds
     34-herbs.js             herb generation, herbalism, poultices, incense, draughts, timed buffs
+    35-vaults.js            express shafts, vault junctions, archive vaults and their dangers
 scripts/build.mjs  the build
 docs/specs/        change request batches
 ```
