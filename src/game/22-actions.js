@@ -172,6 +172,7 @@ function throwFlare(){
 }
 function findInteract(){
   const p=player;let best=null,bd=18;
+  {const h=crawlAt();if(h){const c=h.c[h.end],cx=c.tx*TS+6,cy=c.ty*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<bd){bd=d;best={k:'crawl',h,x:cx,y:cy};}}}
   if(testMode&&testConsole){const cx=testConsole.tx*TS+6,cy=testConsole.ty*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<bd){bd=d;best={k:'console',x:cx,y:cy};}}
   if(liftState==='idle'){const cx=exitT.x*TS+6,cy=exitT.y*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<16){bd=d;best={k:'lift',x:cx,y:cy};}}
   for(const h of hatches){let cx=h.tx*TS+6,cy=h.ty*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<Math.min(bd,12)){bd=d;best={k:'hatch',h,x:cx,y:cy};}
@@ -189,6 +190,7 @@ function findInteract(){
 }
 function interact(){
   const it=findInteract();if(!it){const st=player.arms[player.armSet];if(st.off==='tank'&&fillTank())return;if(curGun())startReload(false);else if(st.off==='tank'){say('stand in water, oil or sludge to fill the tank, or carry a full flask');sfx('deny');}return;}
+  if(it.k==='crawl'){askCrawl(it.h);return;}
   if(it.k==='panel'){if(vaultPanelBlocked(it.pn))return;startHack(it.pn);return;}
   if(it.k==='mdoor'){const i=it.ty*MW+it.tx,m=map[i],inside=doorInside(it.md);
     if(m===0){map[i]=6;openDoor[i]=0;paintArea(it.tx,it.ty);sfx('door');flowT=0;return;}
@@ -401,7 +403,7 @@ function hurtPlayer(d,quiet,src){
   if(player&&state==='play'&&!(player.iframeT>0)&&!testMode||player&&testDeck){const P=player,st=P.st||{},cause=st.brn>=100?'burn':st.shk>=100?'nerve':st.psn>=100?'blood':st.frz>=100?'frost':null;
     if(P.hp<maxHp()*0.25||cause){P.injAcc=(P.injAcc||0)+d;if(P.injAcc>=30){P.injAcc=0;if(Math.random()<0.6)giveInjury(cause);}}}
   if(player&&player.astral&&!quiet)endAstral('your body is hit. you snap back');
-  if(state!=='play'||player.iframeT>0)return;if(!quiet||src)comboBreak();d*=frozenMeleeMul(src);d*=1-S.dr;d*=1-0.05*U('tough');
+  if(state!=='play'||player.iframeT>0)return;if(!quiet||src){comboBreak();player.lastHitT=T;}d*=frozenMeleeMul(src);d*=1-S.dr;d*=1-0.05*U('tough');
   if(perk('secondwind')&&!player.windUsed&&player.hp-d<20&&player.hp-d>0){player.windUsed=true;setTimeout(()=>{if(state==='play'){player.hp=Math.min(maxHp(),player.hp+30);float(player.x,player.y-10,'second wind','#9fe0b0');sfx('learn');}},0);}
   if(!quiet){const p=player;
     if(p.blocking&&p.guard>0&&(!src||Math.abs(angDiff(Math.atan2(src.y-p.y,src.x-p.x),p.ang))<1.3)){const a=Math.min(p.guard,d);p.guard-=a;d-=a;p.guardDelay=1;sfx('thud');

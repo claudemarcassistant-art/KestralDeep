@@ -65,6 +65,7 @@ case 'zap':nz(0.2,'highpass',2500,0.4);tone(0.2,'sawtooth',900,120,0.15);break;
   case 'crackle':nz(0.35,'highpass',4200,0.1);break;
   case 'icecrack':nz(0.12,'highpass',3000,0.22);later(60,()=>nz(0.2,'bandpass',1800,0.16));tone(0.08,'square',900,300,0.04);break;
   case 'qreload':tone(0.03,'square',1600,1500,0.07);later(40,()=>tone(0.04,'square',2100,1900,0.06));break;
+  case 'crawl':nz(0.5,'lowpass',400,0.18);later(250,()=>nz(0.4,'lowpass',350,0.15));later(550,()=>nz(0.3,'bandpass',600,0.12));break;
   case 'clank':nz(0.12,'lowpass',500,0.25);tone(0.15,'triangle',140,90,0.08);break;
   case 'arc':nz(0.5,'bandpass',2600,0.4);tone(0.4,'sawtooth',140,60,0.12);break;
   case 'barrelhit':tone(0.06,'square',320,260,0.06);break;

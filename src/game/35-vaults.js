@@ -46,7 +46,7 @@ function genArchiveVault(start){archive=null;if(!(cond&&cond.vault))return;const
     for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++){map[y*MW+x]=1;kind[y*MW+x]=0;}}}
 // stock the vault, place its lock panel and any guardian (end of populate(), still seeded)
 function fillArchive(){const A=archive;if(!A)return;const r=A.room,C=VAULT_CFG;panels.push(A.panel);
-  subSeed(()=>{const n=1+(Math.random()<0.5?1:0),got=[];for(let k=0;k<n;k++){let id=null;for(let t=0;t<6&&!id;t++){const f=randomFileId();if(f&&!got.includes(f))id=f;}
+  subSeed(()=>{const n=1+(Math.random()<0.5?1:0),got=items.filter(i=>i.type==='file').map(i=>i.file);for(let k=0;k<n;k++){let id=null;for(let t=0;t<6&&!id;t++){const f=randomFileId();if(f&&!got.includes(f))id=f;}
       if(id){got.push(id);addItem(r,'file',{file:id});}else addItem(r,'clearpack',{amt:2});}});
   addChest(r,'rare');for(const t of C.stash)addItem(r,t);
   if(vaultDanger('guarded')){const ox=A.tx+A.dir[0]*2,oy=A.ty+A.dir[1]*2,ok=!solid(ox,oy),x=(ok?ox:A.tx+A.dir[0])*TS+6,y=(ok?oy:A.ty+A.dir[1])*TS+6;

@@ -3,7 +3,7 @@
 // places them during deck generation (inside the deck's seeded scope), updateTraps() runs them, drawTraps() draws
 // plates, wires, wall nozzles, rubble, darts and falling-debris shadows on the floor layer. Some traps are wired to a
 // trap control panel: an ordinary hack panel whose reward is 'traps' (see HACKR.traps and hackTry()).
-let traps=[],darts=[],trapJets=[],falls=[],rubbleL=[];
+let traps=[],darts=[],trapJets=[],gasJets=[],falls=[],rubbleL=[];
 let rubble=new Uint8Array(MW*MH);
 const trapTile=t=>t.ty*MW+t.tx;
 const tileIdx=o=>Math.floor(o.y/TS)*MW+Math.floor(o.x/TS);
@@ -46,10 +46,10 @@ function genTraps(start,exitR){const C=TRAP_CFG,mode=levelMods.traps||'normal';
     if(inR(x,y,start,2)||exitR&&inR(x,y,exitR,1)||Math.abs(x-exitT.x)+Math.abs(y-exitT.y)<4||special.some(r=>inR(x,y,r,0)))continue;
     if(plateDoors.some(p=>Math.abs(p.px-x)+Math.abs(p.py-y)<3||Math.abs(p.tx-x)+Math.abs(p.ty-y)<3))continue;
     (rooms.some(r=>inR(x,y,r,0))?rm:cor).push([x,y]);}
-  const forced=mode==='on'?['spike','flame','dart','debris']:[],n=Math.max(forced.length,aN(C.perDeck[0]+rnd(C.perDeck[1]-C.perDeck[0]+1)));
+  const forced=mode==='on'?['spike','flame','dart','debris','gas']:[],n=Math.max(forced.length,aN(C.perDeck[0]+rnd(C.perDeck[1]-C.perDeck[0]+1)));
   for(let k=0,tries=0;k<n&&tries<n*40;tries++){const L=Math.random()<C.corridorShare&&cor.length?cor:rm.length?rm:cor;if(!L.length)break;
     const [x,y]=L[rnd(L.length)];if(traps.some(t=>Math.abs(t.tx-x)+Math.abs(t.ty-y)<C.spacing))continue;
-    let t=mkTrap(x,y,forced[k]||wpick(TRAP_WEIGHTS));if(!t){if(forced[k])continue;t=mkTrap(x,y,Math.random()<0.5?'spike':'debris');}
+    let t=mkTrap(x,y,forced[k]||wpick(trapWeightsAt(x,y)));if(!t){if(forced[k])continue;t=mkTrap(x,y,Math.random()<0.5?'spike':'debris');}
     traps.push(t);k++;}
   for(const t of traps)if(Math.random()<C.wired)wireTrap(t);
   if(mode==='on'&&!traps.some(t=>t.panel))for(const t of traps)if(wireTrap(t))break;}
@@ -57,16 +57,17 @@ function genTraps(start,exitR){const C=TRAP_CFG,mode=levelMods.traps||'normal';
 // ---- running
 function updateTraps(dt){const C=TRAP_CFG,p=player;
   for(const t of traps){if(t.spikeT>0)t.spikeT-=dt;if(t.glint>0)t.glint-=dt;
-    if(t.state==='click'){t.t-=dt;if(t.t<=0){t.state='cool';t.t=C.rearm;if(trapLive(t))fireTrap(t);}continue;}
+    if(t.state==='click'){t.t-=dt;if(t.t<=0){t.state='cool';t.t=TRAP_TYPES[t.type].rearm||C.rearm;if(trapLive(t))fireTrap(t);}continue;}
     if(t.state==='cool'){t.t-=dt;if(t.t<=0)t.state='armed';continue;}
     if(trapLive(t)&&weightAt(t.tx,t.ty)>=C.weight){t.state='click';t.t=C.click;t.found=true;sfx('plate');}}
   // sharp eyes: plates glint when you are close
-  if(p&&!p.astral&&subPts('perc')>=C.glintPerc)for(const t of traps)if(!t.found&&seen[trapTile(t)]&&Math.hypot(t.tx*TS+6-p.x,t.ty*TS+6-p.y)<C.glintR){t.found=true;t.glint=1.5;float(t.tx*TS+6,t.ty*TS,'pressure plate','#e0a080');}
+  if(p&&!p.astral&&subPts('perc')>=C.glintPerc)for(const t of traps)if(!t.found&&seen[trapTile(t)]&&Math.hypot(t.tx*TS+6-p.x,t.ty*TS+6-p.y)<C.glintR*(TRAP_TYPES[t.type].glintMul||1)){t.found=true;t.glint=1.5;float(t.tx*TS+6,t.ty*TS,'pressure plate','#e0a080');}
   // flame jets: the flamethrower's own flames, marked so they also burn the player (see updateFlames)
   for(const j of trapJets){const t=j.t;j.left-=dt;j.pHit-=dt;if(!trapLive(t)){j.left=0;continue;}const [dx,dy]=t.dir,ox=(t.tx+dx)*TS+6-dx*7,oy=(t.ty+dy)*TS+6-dy*7,a0=Math.atan2(-dy,-dx);
     for(j.acc+=dt;j.acc>0.03;j.acc-=0.03)for(let k=0;k<2;k++){const a=a0+rr(-0.16,0.16),sp=rr(104,126);flames.push({x:ox,y:oy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,t:0.42,m:0.42,hit:new Set(),trap:true,jet:j});}
     j.smoke+=dt;if(j.smoke>0.3){j.smoke=0;puff(ox-dx*18,oy-dy*18,'smoke',2,j);}}
   trapJets=trapJets.filter(j=>j.left>0);
+  updateGasJets(dt);
   // darts
   {const D=TRAP_TYPES.dart;for(const d of darts){d.life-=dt;const nx=d.x+d.vx*dt,ny=d.y+d.vy*dt;if(solidAt(nx,ny)){d.life=0;parts.push({x:d.x,y:d.y,vx:rr(-20,20),vy:rr(-20,20),t:0.2,m:0.2,c:'#b8b09a',s:1});continue;}d.x=nx;d.y=ny;
     if(p&&Math.hypot(p.x-d.x,p.y-d.y)<p.r+2){d.life=0;hurtPlayer(D.dmg,false);addStatus('psn',D.psn);continue;}
@@ -93,12 +94,13 @@ function fireTrap(t){const p=player,i=trapTile(t),cx=t.tx*TS+6,cy=t.ty*TS+6;t.fo
   else if(t.type==='dart'){const D=TRAP_TYPES.dart,[dx,dy]=t.dir,px=-dy,py=dx;
     for(let k=-1;k<=1;k++){const sx=(t.tx+dx+px*k)*TS+6-dx*7,sy=(t.ty+dy+py*k)*TS+6-dy*7;if(solidAt(sx,sy))continue;darts.push({x:sx,y:sy,vx:-dx*D.speed,vy:-dy*D.speed,life:0.7});}
     sfx('dart');}
-  else if(t.type==='debris'){const B=TRAP_TYPES.debris;falls.push({x:t.tx+t.area[0],y:t.ty+t.area[1],t:B.delay,m:B.delay});sfx('rumble');}}
+  else if(t.type==='debris'){const B=TRAP_TYPES.debris;falls.push({x:t.tx+t.area[0],y:t.ty+t.area[1],t:B.delay,m:B.delay});sfx('rumble');}
+  else if(t.type==='gas')fireGas(t);}
 // sonar pulse and signal scanner
 function revealTraps(x,y,r){let n=0;for(const t of traps)if(!t.found&&Math.hypot(t.tx*TS+6-x,t.ty*TS+6-y)<r){t.found=true;t.glint=1.5;n++;}return n;}
 // trap control panels: a successful hack locks the wired plates down; a failed one sets them all off at once
 function trapsLockDown(pn){for(const t of pn.traps)t.off=true;sfx('door');return (pn.traps.length>1?'the plates':'the plate')+' on this circuit lock down';}
-function trapsSetOff(pn){for(const t of pn.traps)if(!t.off){t.found=true;if(trapLive(t))fireTrap(t);t.state='cool';t.t=TRAP_CFG.rearm;}alertAdd(8);say('the panel shorts and every plate on its circuit fires');}
+function trapsSetOff(pn){for(const t of pn.traps)if(!t.off){t.found=true;if(trapLive(t))fireTrap(t);t.state='cool';t.t=TRAP_TYPES[t.type].rearm||TRAP_CFG.rearm;}alertAdd(8);say('the panel shorts and every plate on its circuit fires');}
 
 // ---- drawing (floor layer, under the fog)
 function drawTraps(){
@@ -113,7 +115,7 @@ function drawTraps(){
     if(t.dir&&seen[(t.ty+t.dir[1])*MW+t.tx+t.dir[0]]){const [dx,dy]=t.dir,wx=x+6+dx*6,wy=y+6+dy*6;F(t.type==='flame'?'#3a2416':'#1c2220',wx-(dy?2:1),wy-(dx?2:1),dy?4:2,dx?4:2);}
     if(!seen[i])continue;const live=trapLive(t);
     F('rgba(214,218,204,0.07)',x+1,y+1,TS-2,TS-2);
-    const rv=t.found?'rgba(225,200,160,0.6)':'rgba(190,195,180,0.22)';F(rv,x+2,y+2,1,1);F(rv,x+TS-3,y+2,1,1);F(rv,x+2,y+TS-3,1,1);F(rv,x+TS-3,y+TS-3,1,1);
+    const rv=t.type==='gas'?(t.found?'rgba(170,220,120,0.7)':'rgba(160,205,120,0.32)'):t.found?'rgba(225,200,160,0.6)':'rgba(190,195,180,0.22)';F(rv,x+2,y+2,1,1);F(rv,x+TS-3,y+2,1,1);F(rv,x+2,y+TS-3,1,1);F(rv,x+TS-3,y+TS-3,1,1);
     if(t.found){ctx.strokeStyle=live?'rgba(217,120,70,0.45)':'rgba(120,120,110,0.35)';ctx.lineWidth=1;ctx.strokeRect(x+1.5,y+1.5,TS-3,TS-3);}
     if(!live)F('rgba(0,0,0,0.35)',x+1,y+1,TS-2,TS-2);
     if(t.state==='click')F(`rgba(255,90,60,${0.25+0.25*Math.sin(T*40)})`,x+3,y+3,TS-6,TS-6);
@@ -121,3 +123,21 @@ function drawTraps(){
     if(t.glint>0&&Math.sin(T*12)>0)F('rgba(255,250,220,0.9)',x+2+Math.floor(T*16)%8,y+2,1,1);}
   for(const f of falls){const k=1-f.t/f.m,x=f.x*TS-camX,y=f.y*TS-camY;ctx.fillStyle=`rgba(0,0,0,${0.15+0.45*k})`;ctx.beginPath();ctx.ellipse(x+TS,y+TS,TS*(0.5+0.5*k),TS*(0.4+0.45*k),0,0,6.283);ctx.fill();}
   for(const d of darts){const a=Math.atan2(d.vy,d.vx),x=d.x-camX,y=d.y-camY;ctx.strokeStyle='#d8d0b0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x-Math.cos(a)*3,y-Math.sin(a)*3);ctx.lineTo(x+Math.cos(a)*2,y+Math.sin(a)*2);ctx.stroke();}}
+
+// ---- poison gas trap: nozzles around the plate feed toxic clouds for TRAP_TYPES.gas.dur seconds
+function trapWeightsAt(x,y){const B=GAS_TRAP_BIAS;let m=1;if(cond&&cond.haz==='toxic')m*=B.toxicDeck;
+  if(modules.some(md=>B.modules.includes(md.type)&&Math.abs(md.cx-x)+Math.abs(md.cy-y)<=B.near))m*=B.nearModule;
+  return m===1?TRAP_WEIGHTS:TRAP_WEIGHTS.map(([k,w])=>[k,k==='gas'?w*m:w]);}
+function fireGas(t){const G=TRAP_TYPES.gas,pts=[[t.tx,t.ty]],c=[];
+  for(let y=t.ty-G.spread;y<=t.ty+G.spread;y++)for(let x=t.tx-G.spread;x<=t.tx+G.spread;x++){if((x===t.tx&&y===t.ty)||solid(x,y))continue;const wall=D4.some(([dx,dy])=>solid(x+dx,y+dy));c.push([x,y,wall]);}
+  c.sort(()=>Math.random()-0.5);c.sort((a,b)=>b[2]-a[2]);for(const q of c){if(pts.length>=G.points)break;if(pts.some(p=>Math.abs(p[0]-q[0])+Math.abs(p[1]-q[1])<2))continue;pts.push([q[0],q[1]]);}
+  gasJets.push({t,left:G.dur,pts:pts.map(([x,y])=>({x:x*TS+6,y:y*TS+6}))});sfx('hiss');noise(t.tx*TS+6,t.ty*TS+6,90);}
+function updateGasJets(dt){const G=TRAP_TYPES.gas;for(const j of gasJets){if(!trapLive(j.t)){j.left=0;continue;}j.left-=dt;
+    for(const s of j.pts){const c=puff(s.x+rr(-2,2),s.y+rr(-2,2),'toxic',G.feed*dt,s);if(c)c.rmax=Math.min(c.rmax,G.cloudR);if(Math.random()<dt*14)parts.push({x:s.x+rr(-3,3),y:s.y+rr(-3,3),vx:rr(-20,20),vy:rr(-25,5),t:0.5,m:0.5,c:'#a8c848',s:1});}
+    if(j.left<=0)for(const s of j.pts)for(const c of clouds)if(c.src===s)c.src=null;}
+  gasJets=gasJets.filter(j=>j.left>0);}
+
+// ---- toxic floor vents: run at the end of genLevel()/genArena(), inside the deck's seeded scope
+function genToxicVents(){const C=TOXIC_VENT_CFG,pr=cond&&cond.haz==='toxic'?C.toxicDeck:C.other;for(const v of vents)if(Math.random()<pr){v.toxic=true;v.cold=false;}}
+function drawToxicVents(){for(const v of vents){if(!v.toxic||!seen[v.ty*MW+v.tx])continue;const x=v.tx*TS-camX,y=v.ty*TS-camY;if(x<-TS||y<-TS||x>W||y>H)continue;
+  F('rgba(120,170,40,0.28)',x+1,y+1,TS-2,TS-2);for(let k=0;k<3;k++)F('rgba(170,215,80,0.55)',x+2,y+3+k*3,TS-4,1);}}

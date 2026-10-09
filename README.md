@@ -30,9 +30,9 @@ src/
     npcs.js                 NPCs
     progress.js             deck grades, run stats, achievements, point trades, challenge modifiers
     herbs.js                herbs, herbal preparations (poultices, incense, draughts)
-    route.js                express shafts, vault junctions and archive vaults
+    route.js                express shafts, vault junctions and archive vaults, deck secured, crawlways
     status.js               frozen status and cryo grenade tuning, active reload
-    traps.js                trap types, trap tuning, trap control panel text, plate doors, crates, item weight
+    traps.js                trap types, trap tuning, trap control panel text, toxic vents, plate doors, crates, item weight
     versions.js             in-game version history
     weapons.js              armaments, gun stats, magazines, crits, charge and combo timing
     world.js                sectors, biome layouts, palettes, route nodes, water depths, room modules, deck conditions, hazard text, deck sizes
@@ -66,12 +66,13 @@ src/
     27-menus.js             pack, workbench, perks, files, map, codex and title menus
     28-render-world.js      world rendering, lighting, fog
     29-loop.js              main loop
-    30-traps.js             pressure plate traps and trap control panels
+    30-traps.js             pressure plate traps (incl. gas), trap control panels, toxic floor vents
     31-plate-doors.js       plate doors, crates, item weight
     32-spacebar.js          spacebar styles: kick and repulse
     33-cold.js              creature cold meters, frozen player and creatures, cryo clouds
     34-herbs.js             herb generation, herbalism, poultices, incense, draughts, timed buffs
     35-vaults.js            express shafts, vault junctions, archive vaults and their dangers
+    36-backtrack.js         deck secured walk-back to the lift, ceiling crawlways, time passing
 scripts/build.mjs  the build
 docs/specs/        change request batches
 ```

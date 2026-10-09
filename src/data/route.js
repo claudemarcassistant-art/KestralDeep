@@ -24,3 +24,17 @@ const VAULT_DANGERS={
   lockdown:{name:'lockdown',desc:'Opening the vault trips a lockdown: the klaxon sounds and two waves of security guards come for you.'},
   unstable:{name:'unstable',desc:'Opening the vault starts a 60 second countdown before the deck power fails and the lights go out, and the disturbance jumps to 75%.'}};
 const VAULT_DESC='One or two junctions in every sector hold an archive vault, marked on the sector map by a faint gold signal from the start, though not how to reach it. They sit off the direct route and are always large decks. The vault is a sealed room behind an armoured door far from the arrival lift. Hack the lock beside the door (a harder hack than usual): fail, and the panel burns out, so only an explosion close to the door will open it. Inside: one or two crew files you have not found (2 clearance each if you have them all), a rare chest, ammo, a medkit and scrap. Every vault deck has a danger, named once you know the junction: guarded, elite garrison, lockdown or unstable. Cracking a vault scores a large bonus.';
+// Less backtracking: "deck secured" walk-back and ceiling crawlways
+const SECURE_CFG={
+  check:0.5,           // seconds between checks
+  walkSpeed:70,        // px per second used to work out how long the walk back takes
+  key:'KeyG',keyName:'G',
+  fade:1.4};
+const CRAWL_CFG={
+  perDeck:{s:[0,0],m:[0,1],l:[1,2]}, // crawlways per deck, by size (m: 0 or 1, l: 1 or 2)
+  minApart:0.34,       // the two hatches at least this share of the deck's width apart
+  nearExit:10,         // tiles: on a deck with one crawlway, one hatch sits this close to the exit lift if it can
+  speed:30,            // px per second crawling, for the time that passes
+  dangerR:120,hurtWindow:4,fade:1.1};
+const SECURE_DESC='A deck is secured once you have found the exit lift and nothing hostile that can reach you is left: rooted plants, creatures sealed behind doors and creatures that cannot leave the water do not count. No wave, alarm or arena lock can be pending, and the sector hunter cannot be on the deck. Then the station map (M) offers a walk back to the lift (G): you skip the walk, but the time it would take still passes (food, buffs, statuses), and anything left on the floor stays behind. The offer vanishes the moment the deck stops being secure.';
+const CRAWL_DESC='Some medium and large decks have ceiling crawlways: two vent hatches with short ladders, far apart and joined by a crawlspace above the deck. Press R at a hatch and confirm to climb through to the other end; time passes as you crawl. Nothing can follow you, but you cannot climb with an aware creature close by or if you were hurt in the last few seconds. The station map shows hatches once seen, and the line between them once you have seen both.';

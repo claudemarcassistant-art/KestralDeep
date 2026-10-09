@@ -8,6 +8,7 @@ const DECKOPT=[
   {k:'size',label:'Size',vals:['random','small','medium','large']},
   {k:'traps',label:'Traps',vals:['normal','off','on']},
   {k:'pdoor',label:'Plate door',vals:['normal','off','on']},
+  {k:'secure',label:'Secured',vals:['no','yes']},
   {k:'vault',label:'Vault deck',vals:['off','on','guarded','elite','lockdown','unstable']},
   {k:'light',label:'Lighting',vals:['random','normal','lit','dark']},
   {k:'haz',label:'Hazard',vals:['random','none','fog','steam','fire','toxic','anomaly','electrical','volatile','overgrowth','sprinklers','chasm','molten']},
@@ -15,7 +16,7 @@ const DECKOPT=[
   {k:'waves',label:'Incoming waves',vals:['off','on']},
   {k:'haunt',label:'Haunted',vals:['off','on']},
   {k:'lowg',label:'Low gravity',vals:['off','on']}];
-const deckCfg={seed:'',depth:1,biome:'auto',type:'station',size:'random',traps:'normal',pdoor:'normal',vault:'off',light:'random',haz:'random',obj:'random',waves:'off',haunt:'off',lowg:'off'};
+const deckCfg={seed:'',depth:1,biome:'auto',type:'station',size:'random',traps:'normal',pdoor:'normal',vault:'off',secure:'no',light:'random',haz:'random',obj:'random',waves:'off',haunt:'off',lowg:'off'};
 const deckRows=()=>[...DECKOPT.map(o=>({opt:o})),{seedRow:true},{act:'go',label:'Go to this deck'},{act:'rand',label:'Go to a random deck'},{act:'stay',label:'Stay here'}];
 function cycleDeck(o,d){const v=o.vals,i=v.indexOf(deckCfg[o.k]);deckCfg[o.k]=v[(i+d+v.length)%v.length];sfx('click');}
 // the seed of the test deck in play, so a deck can be rebuilt: blank seed = a new random one each time
@@ -31,7 +32,9 @@ function launchTestDeck0(rand){const c=deckCfg,type=rand?wpick([['station',6],['
   if(!rand&&c.pdoor!=='normal')levelMods.pdoor=c.pdoor;
   // vault deck: on = a random danger, or a named one
   if(!rand&&c.vault!=='off'){const ks=Object.keys(VAULT_DANGERS);cond.vault={d:[c.vault==='on'?ks[rnd(ks.length)]:c.vault]};}
-  testDeck=true;deckUI=null;hazOff=false;levelLabel='TEST DECK';enterLevel();}
+  testDeck=true;deckUI=null;hazOff=false;levelLabel='TEST DECK';enterLevel();
+  // secured: no creatures, and the exit lift already seen, so the deck counts as secured at once
+  if(!rand&&c.secure==='yes'){enemies=enemies.filter(e=>ET[e.type].plant&&!ET[e.type].guard);for(let y=exitT.y-3;y<=exitT.y+3;y++)for(let x=exitT.x-3;x<=exitT.x+3;x++)if(x>=0&&y>=0&&x<MW&&y<MH)seen[y*MW+x]=1;}}
 function returnToTest(){testDeck=false;biomeOverride=null;levelMods={};cond={light:'normal',haz:null};hazOff=false;levelLabel='TEST RANGE';genTest();placeTestNpcs();player.liftCfgLock=true;say('back in the test range');}
 function deckChoose(i,d){const r=deckRows()[i];if(!r)return;if(r.seedRow){editText(deckCfg.seed,20,v=>{deckCfg.seed=v;});return;}if(r.opt)return cycleDeck(r.opt,d||1);if(r.act==='go')launchTestDeck(false);else if(r.act==='rand')launchTestDeck(true);else deckUI=null;}
 function drawDeckUI(){const R=deckRows(),pw=250,rh=11,ph=34+R.length*rh+18,px=(W-pw)>>1,py=Math.max(4,(H-ph)>>1);

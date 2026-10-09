@@ -69,7 +69,8 @@ function onPress(code){
   if(code==='KeyU'&&(state==='play')){if(menuOpen&&menuTab===5&&fileMode===1)menuOpen=false;else{menuOpen=true;menuTab=5;fileMode=1;}mapOpen=false;mouse.l=false;mouse.r=false;return;}
   if(code==='Escape'){if(menuOpen&&eqPopup){eqPopup=null;return;}menuOpen=false;mapOpen=false;return;}
   if(menuOpen){menuKey(code);return;}
-  if(mapOpen)return;
+  if(mapOpen){if(code===SECURE_CFG.key&&deckSecured)walkBack();return;}
+  if(crawlAsk&&state==='play'){crawlKey(code);return;}
   if(player&&player.astral){if(code==='KeyQ'||code==='Escape'){endAstral('you snap back into your body');}else if(code.startsWith('Digit')){const n0=+code.slice(5);if(n0>=3)setHot(n0-1);}else if(code==='KeyE'||code==='KeyF'){}return;}
   const n=code.startsWith('Digit')?+code.slice(5):-1;
   if(n===1||n===2)setHot(n-1);

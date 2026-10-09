@@ -60,7 +60,7 @@ function genHazards(start){
   if(cond.haz==='anomaly'){const n=aN(2+(depth>=5?1:0));for(let k=0;k<n;k++){const s=spot();if(!s)continue;anoms.push({x:s[0]*TS+6,y:s[1]*TS+6,vx:rr(-14,14),vy:rr(-14,14),ph:Math.random()*6});}}
 }
 const HACKR={
-  coolant:{label:'coolant override',ok:()=>vents.length+risers.length>0,act:()=>{for(const v of vents){v.cold=true;freezeAround(v.x,v.y,18);}for(const r of risers){r.cold=true;freezeAround(r.x+Math.cos(r.ang)*20,r.y+Math.sin(r.ang)*20,20);}return 'coolant rerouted. every vent on the deck runs freezing';}},
+  coolant:{label:'coolant override',ok:()=>vents.length+risers.length>0,act:()=>{for(const v of vents){v.cold=true;v.toxic=false;freezeAround(v.x,v.y,18);}for(const r of risers){r.cold=true;freezeAround(r.x+Math.cos(r.ang)*20,r.y+Math.sin(r.ang)*20,20);}return 'coolant rerouted. every vent on the deck runs freezing';}},
   sprinklers:{label:'fire suppression',ok:()=>true,act:()=>{startSprinklers(30);return 'fire suppression engaged';}},
   routes:{label:'lift route logs',ok:()=>true,act:()=>{revealNear(2);return 'lift logs pulled: the next two junctions and their conditions';}},
   vend:{label:'vending override',ok:()=>true,act:v=>{const got=[];for(const o of v.stock)if(!o.sold){o.sold=true;got.push(o.give());}v.state='done';

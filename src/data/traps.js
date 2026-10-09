@@ -8,9 +8,15 @@ const TRAP_TYPES={
   dart:{name:'Dart trap',powered:true,n:3,dmg:3,psn:14,tox:1.5,speed:260,
     desc:'A plate wired to a launcher in the wall. It fires three darts across the plate and the tiles either side: 3 damage each and a little poison. The darts hit creatures too. Stops when the deck power is cut.'},
   debris:{name:'Falling debris',powered:false,delay:0.8,dmg:14,daze:0.8,dazeE:1,rubble:30,
-    desc:'A plate that drops part of the ceiling. A shadow grows over a 2 by 2 patch for a moment, then rubble falls: 14 damage and a brief daze. The rubble slows movement like a web and crumbles away after 30 seconds. Mechanical: cutting the power does not stop it.'}};
+    desc:'A plate that drops part of the ceiling. A shadow grows over a 2 by 2 patch for a moment, then rubble falls: 14 damage and a brief daze. The rubble slows movement like a web and crumbles away after 30 seconds. Mechanical: cutting the power does not stop it.'},
+  gas:{name:'Gas trap',powered:true,dur:5,rearm:20,points:4,spread:2,feed:22,cloudR:32,glintMul:1.4,
+    desc:'A plate wired to hidden nozzles in the floor and nearby walls. They hiss and pour out poison gas for about 5 seconds, enough to fill a room; the cloud then lingers and thins like any poison cloud, and fans blow it. Anyone inside builds up poison and can barely see. Re-arms after 20 seconds. A faint green tint on its rivets is the only sign. Stops when the deck power is cut.'}};
+// toxic floor vents: share of floor vents that erupt poison instead of steam or cold air
+const TOXIC_VENT_CFG={toxicDeck:0.5,other:0.1,jetPsn:30,jetDmg:0.6,feed:14};
 // weights pick the trap type; a flame or dart trap needs a wall beside its plate, otherwise it becomes a spike or debris trap
-const TRAP_WEIGHTS=[['spike',3],['flame',2],['dart',2],['debris',2]];
+const TRAP_WEIGHTS=[['spike',3],['flame',2],['dart',2],['debris',2],['gas',1.5]];
+// the gas trap is likelier on toxic-spill decks and near laboratories and custodial closets
+const GAS_TRAP_BIAS={toxicDeck:4,nearModule:4,modules:['lab','custodial'],near:8};
 const TRAP_CFG={
   minDepth:2,          // no traps on depth 1
   perDeck:[2,5],       // plates on a Medium deck, scaled by deck area

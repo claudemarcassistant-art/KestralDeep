@@ -41,7 +41,7 @@ function render(){
     if(slime[ty*MW+tx])drawSlime(tx,ty,slime[ty*MW+tx],slimeK[ty*MW+tx]);
     const l=ice[ty*MW+tx]?0:liq[ty*MW+tx];if(l>=2){const ph=T*1.6+tx*0.9+ty*1.7;ctx.fillStyle=`rgba(170,220,225,${l===3?0.22:0.3})`;
       ctx.fillRect(tx*TS-camX+((Math.sin(ph)*3+5)|0),ty*TS-camY+((Math.cos(ph*0.8)*3+5)|0),2,1);}}
-  drawTraps();drawPlateDoors();drawIncense();drawArchive();
+  drawTraps();drawToxicVents();drawCrawls();drawPlateDoors();drawIncense();drawArchive();
   for(const pn of panels){if(!seen[pn.ty*MW+pn.tx])continue;const x=pn.tx*TS-camX+2,y=pn.ty*TS-camY+3;
     if(x<-12||y<-12||x>W||y>H)continue;
     const base=pn.state==='dead'?'#141414':pn.state==='done'?'#16402a':pn.reward==='traps'?'#381812':pn.hack?'#10302c':'#141c2a';
@@ -55,7 +55,7 @@ function render(){
     else if(hh===2&&Math.random()<0.03)parts.push({x:tx*TS+2+rnd(8),y:ty*TS+2+rnd(8),vx:0,vy:-6,t:0.6,m:0.6,c:'#b8e060',s:1});}
   drawFireBatch();
   drawMists();
-  for(const v of vents){if(!seen[v.ty*MW+v.tx]||hazOff)continue;if(v.phase==='warn'&&Math.random()<0.4)parts.push({x:v.x+rr(-3,3),y:v.y,vx:rr(-5,5),vy:rr(-20,-8),t:0.5,m:0.5,c:'#c9cfc2',s:1});}
+  for(const v of vents){if(!seen[v.ty*MW+v.tx]||hazOff)continue;if(v.phase==='warn'&&Math.random()<0.4)parts.push({x:v.x+rr(-3,3),y:v.y,vx:rr(-5,5),vy:rr(-20,-8),t:0.5,m:0.5,c:v.toxic?'#a8c848':'#c9cfc2',s:1});}
   for(const q of spawnQ){const x=Math.round(q.x-camX),y=Math.round(q.y-camY);if(q.kind==='drop'){const k=1-q.t/0.9;ctx.fillStyle=`rgba(0,0,0,${0.2+0.4*k})`;ctx.beginPath();ctx.ellipse(x,y+3,2+k*5,1+k*2,0,0,6.283);ctx.fill();}
     else if(q.kind==='floor'){for(let k=0;k<3;k++)F('#0a0c0b',x-4+rnd(8),y-4+rnd(8),2,1);}}
   for(const c of cores){if(c.dead)continue;const x=Math.round(c.x-camX),y=Math.round(c.y-camY);if(x<-20||y<-20||x>W+20||y>H+20)continue;
@@ -153,7 +153,7 @@ function render(){
     for(let j=1;j<=3;j++){const gx=r.x-camX+Math.cos(r.ang)*j*12,gy=r.y-camY+Math.sin(r.ang)*j*12,rad=6+j*5,lg=ctx.createRadialGradient(gx,gy,0,gx,gy,rad);
       const cc=r.cold?'190,225,255':'220,228,228';lg.addColorStop(0,`rgba(${cc},${0.35*k})`);lg.addColorStop(1,`rgba(${cc},0)`);ctx.fillStyle=lg;ctx.fillRect(gx-rad,gy-rad,rad*2,rad*2);}}
   for(const v of vents){if(v.phase!=='burst'||hazOff)continue;const x=v.x-camX,y=v.y-camY,k=Math.min(1,v.t/0.4);
-    for(let j=0;j<3;j++){const gy=y-6-j*9-((T*30)%9),r=12+j*5,lg=ctx.createRadialGradient(x,gy,0,x,gy,r);lg.addColorStop(0,`rgba(210,220,220,${0.4*k})`);lg.addColorStop(1,'rgba(210,220,220,0)');ctx.fillStyle=lg;ctx.fillRect(x-r,gy-r,r*2,r*2);}}
+    for(let j=0;j<3;j++){const gy=y-6-j*9-((T*30)%9),r=12+j*5,lg=ctx.createRadialGradient(x,gy,0,x,gy,r);const vc=v.toxic?'150,200,70':'210,220,220';lg.addColorStop(0,`rgba(${vc},${0.4*k})`);lg.addColorStop(1,`rgba(${vc},0)`);ctx.fillStyle=lg;ctx.fillRect(x-r,gy-r,r*2,r*2);}}
   if((cond.haz==='fog'||cond.haz==='steam')&&!hazOff){const fa=cond.haz==='fog'?0.2:0.08;
     for(let k=0;k<7;k++){const r=70+(k%3)*20,x=((k*131-camX*0.9+T*(6+k*2))%(W+2*r)+W+2*r)%(W+2*r)-r,y=((k*83-camY*0.9+T*(k%2?3:-3))%(H+2*r)+H+2*r)%(H+2*r)-r;
       const lg=ctx.createRadialGradient(x,y,0,x,y,r);lg.addColorStop(0,`rgba(140,150,150,${fa})`);lg.addColorStop(1,'rgba(140,150,150,0)');ctx.fillStyle=lg;ctx.fillRect(x-r,y-r,r*2,r*2);}}
@@ -186,6 +186,7 @@ function render(){
   if(diceUI)drawDiceUI();
   if(arcadeUI)drawArcade();
   if(hackUI)drawHack();
+  if(state==='play')drawFadeAndAsk();
   if(state==='dead'){
     F(`rgba(4,5,6,${Math.min(0.85,deadT)})`,0,0,W,H);
     txt('SIGNAL LOST',W/2,H/2-34,'#b84a3e','center',16);

@@ -54,6 +54,7 @@ function genTest(){
   hz=new Uint8Array(MW*MH);fires=[];vents=[];anoms=[];
   for(let y=21;y<=23;y++){for(let x=22;x<=24;x++)hz[y*MW+x]=1;for(let x=26;x<=28;x++)hz[y*MW+x]=2;}
   fires.push({x:23*TS+6,y:22*TS+6,ph:0});hz[18*MW+25]=3;vents.push({tx:25,ty:18,x:25*TS+6,y:18*TS+6,t:2,phase:'idle'});
+  hz[19*MW+21]=3;vents.push({tx:21,ty:19,x:21*TS+6,y:19*TS+6,t:3,phase:'idle',toxic:true});
   anoms.push({x:35*TS+6,y:13*TS+6,vx:0,vy:0,ph:0,fixed:true});
   const vr={x:8,y:27,w:6,h:5,cx:10,cy:29,ex:10,ey:26,known:false,open:false,vent:true};carve(vr,3);map[26*MW+10]=4;ventRooms=[vr];
   const hrm={x:30,y:36,w:8,h:6,cx:34,cy:39};carve(hrm,4);hatchRooms=[hrm];hatches=[{tx:13,ty:17,lx:31,ly:39,room:hrm,found:false}];
@@ -70,7 +71,9 @@ function genTest(){
   // traps in the small arena room: flame, dart and spike wired to a panel on the north wall, debris on its own
   for(const [x,y,ty] of [[4,35,'flame'],[4,38,'dart'],[8,35,'spike'],[11,35,'debris']]){const t=mkTrap(x,y,ty);if(t){t.found=true;traps.push(t);}}
   {const tp={tx:6,ty:33,hack:true,reward:'traps',state:'idle',ph:0,traps:[]};panels.push(tp);for(const t of traps.slice(0,3)){tp.traps.push(t);t.panel=tp;}}
+  {const g=mkTrap(26,24,'gas');g.found=true;traps.push(g);}
   vendors=[mkVendor(32,3),mkVendor(39,3)];
+  crawls=[{a:{tx:36,ty:4},b:{tx:4,ty:24},len:Math.hypot(32,20)*TS*1.25}];
   plateDoors.push({tx:8,ty:43,px:8,py:41,dir:[0,-1],kind:'vault',room:pr,state:'closed',t:0,hinted:false});barrels.push(mkCrate(6,40,true),mkCrate(10,41,false));
   for(const [x,y] of [[10,39],[11,39],[11,38]])put(x,y,'scrap',{amt:2});chests.push({tx:8,ty:45,x:8*TS+6,y:45*TS+6,tier:'rare',opened:false,ls:(Math.random()*4294967296)>>>0});put(7,45,'medkit',{amt:1});
   fixtures.push({tx:34,ty:3,kind:'grinder',wall:true,spinT:0},{tx:24,ty:3,kind:'damper',wall:true,usedReset:false},{tx:9,ty:18,kind:'psychic',ph:0});
@@ -84,7 +87,7 @@ function genTest(){
   plants.push({x:13*TS+6,y:20*TS+6,type:'mend',burst:false,ph:0},{x:13*TS+6,y:22*TS+6,type:'sting',burst:false,ph:1});
   enemies.push(mkEnemy('snare',27*TS+6,16*TS+6));items.push({x:12*TS+6,y:21*TS+6,type:'herb',ph:0});levers.push({tx:6,ty:20,effect:'flood',reward:'loot',used:false});
   cond={light:'normal',haz:'test'};
-  testLabels=[{x:9,y:36.6,s:'TRAPS'},{x:38,y:7.6,s:'HERBS'},{x:5.5,y:15.4,s:'COLD RISER'},{x:8.5,y:47.6,s:'PLATE DOOR'},{x:14,y:4.6,s:'HACK PANELS'},{x:25,y:20.2,s:'HAZARDS'},{x:35,y:15.4,s:'ANOMALY'},{x:8,y:24.6,s:'LOOSE VENT (walk into it)'},{x:12,y:18.6,s:'HATCH'},{x:5,y:21.6,s:'LEVER'},{x:28.2,y:24.4,s:'COLD VENT'},{x:22,y:5.4,s:'FAN'},{x:13,y:23.6,s:'PLANTS'},{x:27,y:17.6,s:'SNAREVINE'},{x:18.5,y:25.2,s:'OIL'},{x:27,y:18.4,s:'LIVE CABLE'},{x:20.5,y:13.2,s:'BARRELS'},{x:28,y:5.4,s:'RISER'},{x:4.2,y:12,s:'RISER'},{x:6,y:5.2,s:'ARMORY'},{x:28,y:7.2,s:'DUMMIES'},{x:34,y:14,s:'WADE TEST'},{x:41.5,y:14,s:'DEEP'},{x:42,y:16.2,s:'FLOTSAM'},{x:23,y:24.8,s:'LOCKED VAULT'},{x:39,y:9,s:'HOLLOW WALL'},{x:8.5,y:21.6,s:'CHESTS'},{x:38.5,y:4.2,s:'LIFT (test decks)'},{x:33,y:5.4,s:'SALVAGER'},{x:23,y:5.4,s:'DAMPENER'},{x:8,y:19.6,s:'SENSITIVE'},{x:11,y:22.6,s:'CREATURE CONSOLE'},{x:15.2,y:26.8,s:'ARENA'},{x:6,y:33.2,s:'ARENA PEN'}];
+  testLabels=[{x:9,y:36.6,s:'TRAPS'},{x:36,y:5.6,s:'CRAWLWAY'},{x:5,y:23.4,s:'CRAWLWAY'},{x:26,y:25.6,s:'GAS TRAP'},{x:21,y:20.4,s:'TOXIC VENT'},{x:38,y:7.6,s:'HERBS'},{x:5.5,y:15.4,s:'COLD RISER'},{x:8.5,y:47.6,s:'PLATE DOOR'},{x:14,y:4.6,s:'HACK PANELS'},{x:25,y:20.2,s:'HAZARDS'},{x:35,y:15.4,s:'ANOMALY'},{x:8,y:24.6,s:'LOOSE VENT (walk into it)'},{x:12,y:18.6,s:'HATCH'},{x:5,y:21.6,s:'LEVER'},{x:28.2,y:24.4,s:'COLD VENT'},{x:22,y:5.4,s:'FAN'},{x:13,y:23.6,s:'PLANTS'},{x:27,y:17.6,s:'SNAREVINE'},{x:18.5,y:25.2,s:'OIL'},{x:27,y:18.4,s:'LIVE CABLE'},{x:20.5,y:13.2,s:'BARRELS'},{x:28,y:5.4,s:'RISER'},{x:4.2,y:12,s:'RISER'},{x:6,y:5.2,s:'ARMORY'},{x:28,y:7.2,s:'DUMMIES'},{x:34,y:14,s:'WADE TEST'},{x:41.5,y:14,s:'DEEP'},{x:42,y:16.2,s:'FLOTSAM'},{x:23,y:24.8,s:'LOCKED VAULT'},{x:39,y:9,s:'HOLLOW WALL'},{x:8.5,y:21.6,s:'CHESTS'},{x:38.5,y:4.2,s:'LIFT (test decks)'},{x:33,y:5.4,s:'SALVAGER'},{x:23,y:5.4,s:'DAMPENER'},{x:8,y:19.6,s:'SENSITIVE'},{x:11,y:22.6,s:'CREATURE CONSOLE'},{x:15.2,y:26.8,s:'ARENA'},{x:6,y:33.2,s:'ARENA PEN'}];
   player.x=8*TS+6;player.y=16*TS+6;
   resetLevelState();bfs(8,16,flow);ensureLayers();setupObjective(null,null,'open');startLevelScore();
 }
