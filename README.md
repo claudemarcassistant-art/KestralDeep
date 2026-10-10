@@ -23,7 +23,7 @@ src/
   data/           content and tuning tables (loaded first)
     character.js            crew files, substats, cores, skills, movement skills, psychic actions, sling, injuries, spacebar styles
     crafting.js             Workbench recipes and upgrades, grinder salvage yields
-    creatures.js            creature stats, bestiary order and text, kill points, threat costs, bosses
+    creatures.js            creature stats, bestiary order and text, kill points, threat costs, bosses, hunting memory, arena waves
     events.js               between-deck events, transit stop text
     food.js                 food, raw ingredients, cooking
     items.js                gear, quick items, tools, pickups, flasks, liquid tank, vending stock, resource text
@@ -73,6 +73,7 @@ src/
     34-herbs.js             herb generation, herbalism, poultices, incense, draughts, timed buffs
     35-vaults.js            express shafts, vault junctions, archive vaults and their dangers
     36-backtrack.js         deck secured walk-back to the lift, ceiling crawlways, time passing
+    37-pacing.js            how long creatures hunt you, muffled noise, arena waves
 scripts/build.mjs  the build
 docs/specs/        change request batches
 ```

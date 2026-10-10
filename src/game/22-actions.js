@@ -343,7 +343,7 @@ function envShift(){const opts=['flood','anomaly','blackout'];if(!(cond&&cond.lo
     setTimeout(()=>say('pipes burst somewhere below. water spreads across the deck'),30);}
   else if(k==='anomaly'){for(let j=0;j<2+rnd(2);j++){const r=randomRoom(),t=freeTile(r);if(t)anoms.push({x:t.tx*TS+6,y:t.ty*TS+6,vx:rr(-14,14),vy:rr(-14,14),ph:Math.random()*6});}setTimeout(()=>say('the air bends. gravity anomalies tear open on this deck'),30);}
   else{const big=rooms.filter(r=>!r.dark&&r.w*r.h>=20).sort(()=>Math.random()-0.5).slice(0,2);for(const r of big){r.dark=true;r.warned=false;}setTimeout(()=>say('the lights die in part of the deck'),30);}}
-function noise(x,y,rad){if(rad>=200)alertAdd((rad-180)/18);for(const e of enemies)if(Math.hypot(e.x-x,e.y-y)<rad)e.alert=true;}
+function noise(x,y,rad){if(rad>=200)alertAdd((rad-180)/18);for(const e of enemies){const dd=Math.hypot(e.x-x,e.y-y);if(dd>=rad||dd>=noiseReach(e,x,y,rad))continue;if(!e.alert)e.huntT=TRACK_CFG.noise;else e.huntT=Math.max(e.huntT||0,TRACK_CFG.noise);e.alert=true;}}
 function damageEnemy(e,dmg,dx,dy,kb,quiet){if(e&&e.hexT>0)dmg*=1.35;if(e)dmg*=frozenEnemyMul(e);if(runMods.glass)dmg*=1.4;
   if(e.dead)return;if(ET[e.type].ghost&&!ghostOK)return;
   if(e.caged&&!e.caged.open){for(let i=0;i<2;i++)parts.push({x:e.x+rr(-4,4),y:e.y+rr(-4,4),vx:rr(-30,30),vy:rr(-30,30),t:0.15,m:0.15,c:'#ffe7a0',s:1});return;}

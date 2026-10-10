@@ -24,7 +24,7 @@ function randomGear(){const own=ownedGear();let pool=Object.keys(GEAR).filter(k=
   return wpick(pool.map(k=>[k,GEAR[k].w]));}
 function populate(startR,exitR){
   enemies=[];items=[];chests=[];const got={};
-  {let budget=(4+depth*1.6)*AREA*(runMods.swarm?1.33:1)*(levelMods.enemyMul||1)*(vaultDanger('elite')?VAULT_CFG.eliteMul:1)*rr(0.9,1.1);const caps={brute:depth<3?0:1+Math.floor((depth-3)/3),guard:depth<4?0:1+Math.floor((depth-4)/3),charger:1+Math.floor(depth/4),grasper:1+Math.floor(depth/4)},cnt={};
+  {let budget=(4+depth*1.6)*AREA*(runMods.swarm?1.33:1)*(levelMods.enemyMul||1)*(vaultDanger('elite')?VAULT_CFG.eliteMul:1)*(THREAT_SIZE_MUL[deckSize]||1)*rr(0.9,1.1);const caps={brute:depth<3?0:1+Math.floor((depth-3)/3),guard:depth<4?0:1+Math.floor((depth-4)/3),charger:1+Math.floor(depth/4),grasper:1+Math.floor(depth/4)},cnt={};
     const pool=rooms.filter(r=>r!==startR);const wts=pool.map(r=>Math.max(1,r.w*r.h/12)+(r===exitR?2:0));let guard=0;
     while(budget>0.5&&pool.length&&guard++<200*AREA){let t=pickType();if(caps[t]!=null&&(cnt[t]||0)>=caps[t])t=depth>=3&&Math.random()<0.5?'crawler':'husk';const c=THREAT[t]||1.5;if(c>budget+0.5)t='husk';
       let x=Math.random()*wts.reduce((a,b)=>a+b,0),ri=0;while(x>wts[ri]&&ri<wts.length-1){x-=wts[ri];ri++;}const p=spotIn(pool[ri]);if(!p)continue;enemies.push(mkEnemy(t,p.x,p.y));cnt[t]=(cnt[t]||0)+1;budget-=THREAT[t]||1.5;

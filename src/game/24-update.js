@@ -79,7 +79,7 @@ function updatePlay(dt){
   if(S.regen){p.regenAcc+=S.regen*dt;while(p.regenAcc>=1){p.regenAcc--;if(p.hp<maxHp())p.hp=Math.min(maxHp(),p.hp+1);}}
   if(S.pinger&&markSecretsNear(p.x,p.y,70))say('your pinger clicks. a hollow wall nearby');
   sonarT-=dt;sonarRing+=dt;
-  updateHazards(dt);updateHazards2(dt);updateObjective(dt);updateWaves(dt);updateAlert(dt);updateActs(dt);updateBarrels(dt);updateMines(dt);updateReload(dt);updateSoaks(dt);if(p.slCd>0)p.slCd-=dt;if(p.actMode!=='sling'&&p.slChg>0){p.slChg=0;p.slFull=false;}updateMolten(dt);updateTraps(dt);updatePlateDoors(dt);updateLoose(dt);updateSpace(dt);updateEnemyCold(dt);updateHerbs(dt);updateArchive(dt);updateSecure(dt);updateFade(dt);updateAlarm(dt);checkAch(dt);updateFlames(dt);updateNades(dt);updateClouds(dt);if(p.jabT>0)p.jabT-=dt;if(p.combo>0){p.comboIdle=(p.comboIdle||0)+dt;if(p.comboIdle>1.8){p.combo=Math.max(0,p.combo-dt*(perk('secondnature')?0.85:1.7));if(p.combo<=0)p.comboShield=false;}}if(p.lashT>0)p.lashT-=dt;if(p.sledgeCd>0)p.sledgeCd-=dt;if(p.blinkCd>0)p.blinkCd-=dt;if(p.scanCd>0)p.scanCd-=dt;if(scanT>0)scanT-=dt;updateStatus(dt);
+  updateHazards(dt);updateHazards2(dt);updateObjective(dt);updateWaves(dt);updateAlert(dt);updateActs(dt);updateBarrels(dt);updateMines(dt);updateReload(dt);updateSoaks(dt);if(p.slCd>0)p.slCd-=dt;if(p.actMode!=='sling'&&p.slChg>0){p.slChg=0;p.slFull=false;}updateMolten(dt);updateTraps(dt);updatePlateDoors(dt);updateLoose(dt);updateSpace(dt);updateEnemyCold(dt);updateHerbs(dt);updateArchive(dt);updateSecure(dt);updateFade(dt);updateArenaWaves(dt);updateAlarm(dt);checkAch(dt);updateFlames(dt);updateNades(dt);updateClouds(dt);if(p.jabT>0)p.jabT-=dt;if(p.combo>0){p.comboIdle=(p.comboIdle||0)+dt;if(p.comboIdle>1.8){p.combo=Math.max(0,p.combo-dt*(perk('secondnature')?0.85:1.7));if(p.combo<=0)p.comboShield=false;}}if(p.lashT>0)p.lashT-=dt;if(p.sledgeCd>0)p.sledgeCd-=dt;if(p.blinkCd>0)p.blinkCd-=dt;if(p.scanCd>0)p.scanCd-=dt;if(scanT>0)scanT-=dt;updateStatus(dt);
   if(p.weapon==='ray'){if(p.aiming&&mouse.l&&!(p.dazeT>0)){if(p.reloadT>0){}else if(!p.charge&&magLeft('ray')<=0){useMag('ray');}else p.charge=Math.min(1.2,(p.charge||0)+dt);}
     else if(p.aiming&&(p.charge||0)>0.08){fireRay(p.charge);p.charge=0;}else p.charge=0;}
   else if(p.weapon&&p.aiming&&mouse.l&&p.cd<=0&&!(p.dazeT>0))fire();
@@ -154,6 +154,7 @@ function updatePlay(dt){
     const los=d<180&&hasLOS(e.x,e.y,p.x,p.y);
     if(p.cloakT>0&&!b.dummy)e.alert=false;
     if(!e.alert&&los&&d<(p.creeping?45:130)&&!(p.cloakT>0))e.alert=true;
+    trackTick(e,b,los,d,dt);
     if(b.snake){e.wig=(e.wig||0)+dt*9;e.retreat=(e.retreat||0)-dt;e.jukeT=(e.jukeT||0)-dt;let tx=0,ty=0,mx=0,my=0;
       if(e.alert){if(los&&d<140){tx=dx/d;ty=dy/d;}else{const tg=flowStep(e);if(tg){const gx=tg.x-e.x,gy=tg.y-e.y,gl=Math.hypot(gx,gy)||1;if(gl>0.5){tx=gx/gl;ty=gy/gl;}}}
         if(e.retreat>0){tx=-tx;ty=-ty;}

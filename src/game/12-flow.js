@@ -67,7 +67,7 @@ function queueSpawn(core){
   else if(near.length){const [tx,ty]=near[rnd(near.length)];spawnQ.push({kind,tx,ty,x:tx*TS+6,y:ty*TS+6,t:0.9});}
 }
 function doSpawn(q){
-  const e=mkEnemy(pickType(),q.x,q.y);e.alert=true;enemies.push(e);
+  const e=mkEnemy(pickType(),q.x,q.y);e.alert=true;if(q.arena)e.arena=true;else e.drawn=true;enemies.push(e);
   if(q.kind==='floor'){const px=q.tx*TS,py=q.ty*TS;mctx.fillStyle='#050606';mctx.fillRect(px+2,py+2,8,8);mctx.fillStyle='#3a423f';mctx.fillRect(px+1,py+2,2,1);mctx.fillRect(px+9,py+8,2,1);mctx.fillRect(px+4,py+10,3,1);
     for(let k=0;k<10;k++)parts.push({x:q.x,y:q.y,vx:rr(-60,60),vy:rr(-60,60),t:0.5,m:0.5,c:k%2?'#4a5450':'#8e978b',s:1});sfx('crumble');}
   else if(q.kind==='wall'){const px=q.tx*TS,py=q.ty*TS;mctx.fillStyle='#030404';mctx.fillRect(px+2,py+3,8,TS-3);mctx.fillStyle='#6b5220';mctx.fillRect(px+1,py+2,1,TS-2);mctx.fillRect(px+10,py+2,1,TS-2);
@@ -93,7 +93,7 @@ function updateWaves(dt){
 }
 function updateObjective(dt){
   const p=player;liftMsgT-=dt;
-  if(liftState==='arena'&&!spawnQ.length&&!arenaFoes().length){liftState='open';say('the arena is clear. the lift unlocks');if(Math.random()<0.35){const ks=Object.keys(SUBS);items.push({x:exitT.x*TS+6,y:(exitT.y+1)*TS+6,type:'tonic',sub:ks[rnd(ks.length)],ph:0});say('something was left by the lift');}sfx('hackwin');shake=Math.max(shake,2);}
+  if(liftState==='arena'&&!spawnQ.length&&!arenaFoes().length&&(!arenaW||arenaW.done)){liftState='open';say('the arena is clear. the lift unlocks');if(Math.random()<0.35){const ks=Object.keys(SUBS);items.push({x:exitT.x*TS+6,y:(exitT.y+1)*TS+6,type:'tonic',sub:ks[rnd(ks.length)],ph:0});say('something was left by the lift');}sfx('hackwin');shake=Math.max(shake,2);}
   for(const q of spawnQ){q.t-=dt;
     if(q.kind==='floor'&&Math.random()<0.4)parts.push({x:q.x+rr(-4,4),y:q.y+rr(-4,4),vx:0,vy:rr(-15,-5),t:0.3,m:0.3,c:'#6a726c',s:1});
     if(q.kind==='wall'&&Math.random()<0.4)parts.push({x:q.x+rr(-4,4),y:q.y-8,vx:rr(-20,20),vy:rr(-10,20),t:0.2,m:0.2,c:'#ffe7a0',s:1});
@@ -123,6 +123,6 @@ function enterLevel(){
   const arenaLvl=cond&&cond.obj==='arena';const {start,exitR,arena}=arenaLvl?genArena():genLevel();
   player.x=start.cx*TS+TS/2;player.y=start.cy*TS+TS/2;arrival=makeArrivalCab(start);if(arrival){player.x=arrival.cx*TS+6;player.y=arrival.cy*TS+6;}
   if(perk('cartog'))for(let y=exitR.y-1;y<=exitR.y+exitR.h;y++)for(let x=exitR.x-1;x<=exitR.x+exitR.w;x++)if(x>=0&&y>=0&&x<MW&&y<MH)seen[y*MW+x]=1;
-  resetLevelState();populate(start,exitR);if(!arrival)enemies=enemies.filter(e=>ET[e.type].plant||Math.hypot(e.x-player.x,e.y-player.y)>130);if(arenaLvl){const mini=depth>=3&&!bossPending&&Math.random()<0.5;const n=Math.max(1,aN((mini?1:3)+Math.floor(depth/2)+rnd(3)));for(let k=0;k<n;k++){const q=spotIn(arena);if(q)enemies.push(mkEnemy(pickType(),q.x,q.y));}
-    if(mini){const t=freeTile(arena);if(t){const bi=(biomeOverride!=null?biomeOverride:(depth-1))%6,e=mkEnemy('warden',t.tx*TS+6,t.ty*TS+6);e.boss=bi;e.hp=e.mhp=36+depth*4;e.mini=true;enemies.push(e);bossRef=e;setTimeout(()=>{bannerBoss=3;say('a '+BOSSES[bi].name.toLowerCase()+' holds this arena');},60);}}}bfs(start.cx,start.cy,flow);ensureLayers();setupObjective(start,exitR);startLevelScore();
+  resetLevelState();populate(start,exitR);if(!arrival)enemies=enemies.filter(e=>ET[e.type].plant||Math.hypot(e.x-player.x,e.y-player.y)>130);arenaW=null;if(arenaLvl){const mini=depth>=3&&!bossPending&&Math.random()<0.5;const n0=Math.max(1,aN((mini?1:3)+Math.floor(depth/2)+rnd(3))),n=arenaStart(arena,n0,mini);for(let k=0;k<n;k++){const q=spotIn(arena);if(q){const e=mkEnemy(pickType(),q.x,q.y);e.arena=true;enemies.push(e);}}
+    if(mini){const t=freeTile(arena);if(t){const bi=(biomeOverride!=null?biomeOverride:(depth-1))%6,e=mkEnemy('warden',t.tx*TS+6,t.ty*TS+6);e.boss=bi;e.hp=e.mhp=36+depth*4;e.mini=true;e.arena=true;enemies.push(e);bossRef=e;arenaW.boss=e;arenaW.left=Infinity;setTimeout(()=>{bannerBoss=3;say('a '+BOSSES[bi].name.toLowerCase()+' holds this arena');},60);}}}bfs(start.cx,start.cy,flow);ensureLayers();setupObjective(start,exitR);startLevelScore();
 }

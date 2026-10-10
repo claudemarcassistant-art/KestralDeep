@@ -52,3 +52,17 @@ const BEASTINFO={
   lurker:{name:'Lurker',lore:'Something big living in the deepest water, and it cannot leave it. It stays submerged, where bullets skip off the surface, and shows only a ripple. When you come close it rises and bites, then stays up a moment before diving. Stay out of the deep water, or wait for it to surface. Explosions reach it underwater.',move:'deep and waist-deep water only',attack:'rising bite'},
   brute:{name:'Brute',lore:'A husk that kept growing. Soaks a magazine, hits hard enough to crack plating, and barely moves when shoved. Deeper decks only.',move:'slow',attack:'heavy slam'}
 };
+// How long creatures keep hunting you (balance pass, v0.87). An alerted creature that cannot see you counts down its
+// memory and then goes back to wandering; seeing you again refreshes it. Bosses, arena creatures and guards during an
+// alarm never give up.
+const TRACK_CFG={
+  see:180,             // px: seeing you within this range refreshes the memory
+  memory:8,            // seconds a creature keeps hunting after losing sight of you
+  noise:5,             // seconds of interest from hearing a noise
+  wave:30,called:20,   // disturbance waves and guards called by an alarm hunt longer
+  leash:30,leashDecay:3, // beyond this walking distance (tiles), or with no way to you, memory runs out 3x faster
+  throughWall:0.5};    // noise heard through walls carries this share of its range
+// threat budget by deck size: large decks were crowded, so they get 20% fewer creatures than their area alone would give
+const THREAT_SIZE_MUL={s:1,m:1,l:0.8};
+// arenas: a smaller first group, then waves. With a biome mini-boss the waves keep coming until it dies.
+const ARENA_WAVES={startShare:0.4,minStart:2,firstDelay:8,every:15,size:[2,3],perDepth:1/3,noBoss:3,cap:8};

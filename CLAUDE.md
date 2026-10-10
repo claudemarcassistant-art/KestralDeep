@@ -2,14 +2,14 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v0.86**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v0.87**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
 - **Source lives in `src/`** and is built into **one self-contained HTML file**, `dist/index.html` (about 640 KB). No dependencies, no external assets. All art is drawn procedurally on a canvas; all sound is synthesised with the Web Audio API. The only network request is the optional Silkscreen font from Google Fonts in `src/boot.js` (the game falls back to a built-in font if it fails).
   - `src/index.html` is the page template; the build fills in `{{styles}}` (`src/styles.css`), `{{boot}}` (`src/boot.js`: font loader and the red error overlay) and `{{game}}`.
   - `src/data/*.js` are the content and tuning tables (creatures, weapons, items, recipes, food, crew files, achievements, NPCs, world, events, versions). Balance changes usually only touch these.
-  - `src/game/NN-name.js` are 36 game files, split by system. `README.md` lists what each file holds.
+  - `src/game/NN-name.js` are 37 game files, split by system. `README.md` lists what each file holds.
   - `scripts/build.mjs` is the build (plain Node 20+, no npm install needed).
 - **Play or test:** `npm run dev` serves http://localhost:5173 and rebuilds on every save (refresh the page). `npm run build` writes `dist/index.html`, which can also be opened straight from disk in Chrome or Edge.
 - **Playable link:** https://claudemarcassistant-art.github.io/KestralDeep/ . Every push to `main` is built and deployed by `.github/workflows/pages.yml`; other branches and pull requests are built only, which catches syntax errors.
@@ -37,7 +37,7 @@ Current version: **v0.86**. The game was built iteratively in claude.ai chats up
 2. ~~Split the code into files with a build step~~ Done, by section (see above), and the data tables gathered into `src/data/`. Play-tested after each step: title screen, new run, saving and continuing, route map to the next deck or stop, test range, arcade, Codex, Version history, pack menu; no errors.
 3. **Batch 1** (`docs/specs/batch-1.md`): four sessions, done one at a time; the owner playtests and says "continue" between them. All four sessions are done: 1 (deck sizes, v0.79), 2 (run seeds, v0.80), 3 (traps and trap panels, v0.81), 4 (plate doors, crates, item weight, spacebar styles, v0.82).
 4. **Batch 2** (`docs/specs/batch-2.md`): four sessions, same workflow. All four sessions are done: 1 (frozen status, cryo grenade, active reload, v0.83), 2 (herbs and herbalism, v0.84), 3 (express shafts and vault junctions, v0.85), 4 (poison gas traps, toxic vents, deck secured walk-back, ceiling crawlways, v0.86).
-5. **Balance pass** (the owner will play test runs and report findings). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
+5. **Balance pass** (the owner plays test runs and reports findings). First round done in v0.87: creature memory, muffled noise, fewer creatures on Large decks, arena waves (see "Pacing" below). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
 
 ## Working conventions
 
@@ -54,7 +54,7 @@ Current version: **v0.86**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v0.86)
+## Architecture overview (as of v0.87)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -126,6 +126,12 @@ Current version: **v0.86**. The game was built iteratively in claude.ai chats up
 - **Crawlways:** `genCrawls(start,exitR)` at the end of `genLevel()` (seeded; not on arenas or landings): 0 on small decks, 0-1 on medium, 1-2 on large, each a pair of floor tiles against a wall, at least a third of the deck's width apart, reachable from the start, outside the start room, vaults, hidden rooms, modules and plate-door rooms; with one crawlway, one end is near the exit lift when it can be (15 of 15 in tests). `crawls` is reset in `resetHidden()`. `findInteract()` offers `{k:'crawl'}` within 12 px; R asks (`crawlAsk`, drawn by `drawFadeAndAsk()`), and `onPress()` hands the next key to `crawlKey()`: R climbs through (time passes at 30 px/s along 1.25x the straight-line distance), anything else cancels. `crawlRefusal()` blocks it when hurt in the last 4 s (`player.lastHitT`, set in `hurtPlayer()` for non-quiet hits) or with an aware hostile within 120 px. Station map: hatches once seen, a dashed line once both are seen.
 - **Test range and lift:** a crawlway between (36,4) and (4,24) in the main hall; the test lift's Secured option removes the creatures and reveals the exit lift so the deck counts as secured at once.
 
+**Pacing (v0.87, balance pass):** code in `src/game/37-pacing.js`, numbers in `TRACK_CFG`, `THREAT_SIZE_MUL`, `ARENA_WAVES` (`src/data/creatures.js`). The owner found play felt like bombardment on crowded decks and in arenas; measured, at depth 6 a ten-room walk left ~8 creatures permanently hunting (they never dropped `alert`, and `flow` reaches the whole deck).
+- **Memory:** `trackTick()` runs in the enemy loop right after the sight check. An alerted creature gets `huntT` (8 s; 5 s from a noise; 30 s for disturbance-wave spawns `e.drawn`; 20 s for alarm-called guards `e.called`), refreshed whenever it sees you within 180 px; out of sight it counts down (3x faster beyond 30 walking tiles or with no path), then `alert=false` and a grey "?". Wardens, arena creatures (`e.arena`) and guards during an alarm (`secT>0`) never give up. After the change the same walk leaves ~2.5 hunting.
+- **Noise:** `noise()` uses `noiseReach()`: half range without line of sight.
+- **Counts:** the threat budget in `populate()` is multiplied by `THREAT_SIZE_MUL[deckSize]` (Large 0.8, owner's choice).
+- **Arena waves (owner's design):** `enterLevel()` places only `arenaStart()`'s share of the arena creatures (40%, at least 2) and sets `arenaW`; `updateArenaWaves()` queues a wave every 15 s (first after 8 s) through `queueSpawn()` (`spawnQ` entries marked `arena`), size 2-3 plus depth/3 scaled by area, skipped while the arena already holds `cap` (8 x AREA). With a mini-boss (`arenaW.boss`) waves continue until it dies; without one there are 3. The lift unlocks only when `arenaW.done` and the arena is clear.
+
 **Run structure:** each biome is a sector map of 12-15 junctions (`route.nodes`) with the exit 3-4 jumps away. Shafts are hidden until ridden or revealed by intel (`route.lk`). A biome hunter boss can roam the sector (`route.chaser`). Each sector has 1-2 arena decks. The player arrives on each deck sealed in a lift cab and opens the doors with R.
 
 **Player systems:** health with injuries (lost max health shown greyed out) and ghost health from food levels; stamina; status meters (`player.st`); armament sets (`player.arms`, main and off hand, two-handed weapons fill both); hotbar of quick items; crew files and clearance training substats and the Body/Spirit/Mind cores; abilities on E and F; switchable movement skills; skill sets (Psychic and Sling) that swap the item slots for an action bar; melee combos; crits; charged attacks with a perfect-release window; gun magazines and reloads.
@@ -146,7 +152,7 @@ Current version: **v0.86**. The game was built iteratively in claude.ai chats up
 |---|---|
 | `character.js` | `SKILLS`, `ACTS`, `SLING`, `FT()`, `FILES`, `MOVES`, `CORES`, `SUBS`, `FILESUB`, `INJ`, `SPACE_STYLES` |
 | `crafting.js` | `RECIPES` (with `upgRecipe()`, `ROMAN`), `UPGS`, grinder yields `GEARY`, `ARMY`, `CONY`, `AMMOY` |
-| `creatures.js` | `ET`, `BOSSES`, `KILLPTS`, `THREAT`, `BEASTS`, `BEASTINFO` |
+| `creatures.js` | `ET`, `BOSSES`, `KILLPTS`, `THREAT`, `BEASTS`, `BEASTINFO`, `TRACK_CFG`, `THREAT_SIZE_MUL`, `ARENA_WAVES` |
 | `events.js` | `TEXTEV`, `ROOMDESC` |
 | `food.js` | `FOOD`, `RAW`, `COOK` |
 | `items.js` | `IT`, `QUICK`, `FLASKCOL`, `TANKMAX`, `GEAR`, `VEND_POOL`, `TOOLS`, `RESDESC`, `CXRES` |
@@ -192,6 +198,7 @@ Current version: **v0.86**. The game was built iteratively in claude.ai chats up
 | herbs: `genOvergrownHerbs()`, `genGreenhouseHerbs()`, `makePrep()`, `usePrep()`, `drinkDraught()`, `updateHerbs()`, incense, `drawHerbalism()` (in `20-progress-screens.js`) | `34-herbs.js` |
 | express shafts and vaults: `genExpress()`, `genVaultJunctions()`, `routeOpts()`, `pickRoute()`, `genArchiveVault()`, `fillArchive()`, `openArchive()`, `archiveBlast()` | `35-vaults.js` |
 | deck secured and crawlways: `checkSecure()`, `walkBack()`, `passTime()`, `genCrawls()`, `crawlKey()`, `drawFadeAndAsk()` | `36-backtrack.js` |
+| pacing: `trackTick()`, `noiseReach()`, arena waves (`arenaStart()`, `updateArenaWaves()`) | `37-pacing.js` |
 | reloads: `startReload()`, `updateReload()`, `finishReload()`, `activeReloadPress()` | `22-actions.js` |
 
 To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "const NAME=" src/data/*.js`.
@@ -215,7 +222,7 @@ To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "con
 - Several arcade cabinets in one place take their games from `arcPicks(n)` (distinct games), not independent random picks.
 - Any new chest needs a loot seed `ls:(Math.random()*4294967296)>>>0` where it is created (inside generation), or its contents will not repeat on the same seed. `addChest()` does this for you.
 - When checking that generation repeats, take the fingerprint in the same instant the deck is built: the game loop keeps running between test steps, and creatures move and fires spread.
-- `30-traps.js` to `36-backtrack.js` load after `29-loop.js`. `35-vaults.js` also adds `HACKR.vault` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
+- `30-traps.js` to `37-pacing.js` load after `29-loop.js`. `35-vaults.js` also adds `HACKR.vault` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
 - `newTest()`, `newGame()` and `loadRun()` replace the `player` object (`initPlayer()`), so tests must re-read `player` after calling them.
 - Before v0.81, `genArena()` did not reset `panels` or `vendors`, so arena decks kept the previous deck's hack panels and vending machines at stale positions. Every generator that builds a full deck must reset every per-deck list (`resetHidden()` covers most; panels and vendors are reset by `genPanels()`/`genVending()` or by hand).
 - `populate()` starts with `items=[]`, so items placed earlier in `genLevel()` are lost; anything generation wants on the floor goes in during or after `populate()` (see `fillPlateRooms()`).
