@@ -2,7 +2,7 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v0.92**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v0.93**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
@@ -54,7 +54,7 @@ Current version: **v0.92**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v0.92)
+## Architecture overview (as of v0.93)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -143,7 +143,7 @@ Current version: **v0.92**. The game was built iteratively in claude.ai chats up
 
 **Menus:** the pack menu (TAB) has tabs in this order: Pack, Equip, Craft, Food, Stats, Files, Progress (`menuTab` 0-6). Files has sub-views Crew files, Upgrades & perks, Skills, Work orders (`fileMode` 0-3). Progress has Bestiary, Run stats (`progMode` 0-1). **Achievements are called work orders in all player-facing text (owner's decision, v0.91)**; the code still uses `ACH`, `player.ach`, `META.ach`, `checkAch()` and `drawAch()` (now drawn by `drawFilesTab()`), and point trades (`apSel`, `apTrade()`) are keyed in the Work orders view. The list scrolls with the wheel (`woScroll`). Crew file work orders (v0.92) use `filesAttuned()` and `filesInvested()` (03-equipment.js), which read the current tiers, so resetting a file can take them back below a threshold but an order once done stays done.
 
-**Smoke grenade (v0.92):** numbers in `SMOKE_NADE_CFG` (`src/data/items.js`). `updateNades()` puffs small, thin smoke clouds along the flight (`trailRmax`, `trailDens`), and `landNade()` pushes an emitter with its own `rmax` and `rate`; `puff()` takes an optional `rmax` that raises a cloud's cap. Smoke only shrouds the player's view: creatures still see through it.
+**Smoke grenade (v0.92):** numbers in `SMOKE_NADE_CFG` (`src/data/items.js`). `updateNades()` puffs small, thin smoke clouds along the flight (`trailRmax`, `trailDens`), and `landNade()` pushes an emitter with its own `rmax` and `rate`; `puff()` takes an optional `rmax` that raises a cloud's cap. **Smoke blinds creatures (v0.93):** `seesPlayer(e)` (`37-pacing.js`) is `hasLOS()` plus `!smokeBlocks()`, which is true when the line from the creature to the player passes within `core` x radius of a smoke cloud at least `dens` thick (`SMOKE_BLIND`, `src/data/status.js`), unless they are within `near` px. Every creature-to-player sight check in the enemy loop uses it (the guards' cone check adds `smokeBlocks()` itself), and `trackTick()` runs the hunt memory `memMul` (3x) faster while smoke hides the player. Plain `hasLOS()` is left alone because blasts and other physics use it toward the player too. New creature sight checks should use `seesPlayer(e)`.
 
 **Hands and Bones** (the gambler's dice game, `18-dice-options.js`): both sides start with `DICE_HP` (`src/data/npcs.js`, 9 since v0.92; 12 averaged ~8.5 rounds, 9 averages ~6.3).
 
@@ -169,7 +169,7 @@ Current version: **v0.92**. The game was built iteratively in claude.ai chats up
 | `weapons.js` | `WORDER`, `ARM`, `FIST`, `IMPLEMENTS`, `WPN`, `WCRIT`, `MAGS`, `CHARGE`, `COMBO_T` |
 | `herbs.js` | `HERBS`, `HERB_WHERE`, `HERB_WEIGHTS`, `HERB_CFG`, `HERBAL`, `DRAUGHTS` |
 | `route.js` | `EXPRESS_CFG`, `EXPRESS_DESC`, `VAULT_CFG`, `VAULT_DANGERS`, `VAULT_DESC`, `SECURE_CFG`, `CRAWL_CFG`, `SECURE_DESC`, `CRAWL_DESC` |
-| `status.js` | `FREEZE_CFG`, `ACTIVE_RELOAD` |
+| `status.js` | `FREEZE_CFG`, `ACTIVE_RELOAD`, `SMOKE_BLIND` |
 | `traps.js` | `TRAP_TYPES`, `TRAP_WEIGHTS`, `TRAP_CFG`, `TRAP_PANEL_DESC`, `PLATE_DOOR_CFG`, `CRATE_CFG`, `ITEM_WEIGHT`, `PLATE_DOOR_DESC`, `GAS_TRAP_BIAS`, `TOXIC_VENT_CFG` |
 | `world.js` | `SECTORS`, `BNAMES`, `PAL`, `COND_LIGHT`, `COND_HAZ`, `MODS`, `ROOMNAMES`, `HAZDESC`, `LIQ`/`LIQNAME`, `BIOME`, `NODE`, `HIDDEN_TYPES`, `DECK_SIZES`, `DECK_SIZE_ODDS` |
 
@@ -205,7 +205,7 @@ Current version: **v0.92**. The game was built iteratively in claude.ai chats up
 | herbs: `genOvergrownHerbs()`, `genGreenhouseHerbs()`, `makePrep()`, `usePrep()`, `drinkDraught()`, `updateHerbs()`, incense, `drawHerbalism()` (in `20-progress-screens.js`) | `34-herbs.js` |
 | express shafts and vaults: `genExpress()`, `genVaultJunctions()`, `routeOpts()`, `pickRoute()`, `genArchiveVault()`, `fillArchive()`, `openArchive()`, `archiveBlast()` | `35-vaults.js` |
 | deck secured and crawlways: `checkSecure()`, `walkBack()`, `passTime()`, `genCrawls()`, `crawlKey()`, `drawFadeAndAsk()`, `clearLiftArea()`, `drawLiftPad()` | `36-backtrack.js` |
-| pacing: `trackTick()`, `noiseReach()`, arena waves (`arenaStart()`, `updateArenaWaves()`), ghost movement (`ghostMove()`) | `37-pacing.js` |
+| pacing: `trackTick()`, `noiseReach()`, arena waves (`arenaStart()`, `updateArenaWaves()`), ghost movement (`ghostMove()`), smoke sight (`smokeBlocks()`, `seesPlayer()`) | `37-pacing.js` |
 | reloads: `startReload()`, `updateReload()`, `finishReload()`, `activeReloadPress()` | `22-actions.js` |
 
 To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "const NAME=" src/data/*.js`.
@@ -219,6 +219,7 @@ To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "con
 
 - The enemy update loop handles most creature types in their own branch that ends with `continue`; generic AI only runs for types without one. Plants, wall plants, guards, wasps, spiders and frogs all have custom branches.
 - Creature attacks (globs, tongues, seeds, charges, stings) also hit other creatures. Touching does not.
+- Creature sight of the player goes through `seesPlayer(e)` (line of sight and smoke), not bare `hasLOS(e.x,e.y,p.x,p.y)`.
 - `alarmT` belongs to the lift-defence objective; the security alarm uses `secT`.
 - `hurtPlayer(d, quiet, src)`: `quiet` is used for hazard ticks and self-inflicted costs; non-quiet hits break combos and astral projection.
 - The pack menu runs live by default, so player input must be ignored while it is open (movement and mouse attacks are already gated on `menuOpen`).

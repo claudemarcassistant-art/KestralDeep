@@ -16,3 +16,8 @@ const ACTIVE_RELOAD={
   w:0.12,dexW:0.01,maxW:0.20, // marker width; Dexterity adds 1% of the bar per point
   fumble:1.5,            // a mistimed press makes the remaining time 50% longer
   flash:0.35};
+
+// Smoke blinds creatures harder than it blinds you (v0.93): a creature cannot see you when the line between you
+// passes through the core of a smoke cloud (within core x its radius) at least dens thick, unless it is within near px.
+// While it cannot see you for smoke, a hunting creature forgets you memMul times faster.
+const SMOKE_BLIND={dens:0.3,core:0.8,near:16,memMul:3};
