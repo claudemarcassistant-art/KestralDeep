@@ -32,3 +32,6 @@ const NPCS={
       ['map the lift routes from here',3,()=>{revealNear(2);say('the inspector sketches the next junctions on your route map');}],
       ['case notes',0,()=>{const left=enemies.filter(e=>!e.dead&&!ET[e.type].dummy).length;say('"'+left+' creatures still breathing on this deck, and '+items.length+' things lying around."');}]]}};
 const NPC_IDS=Object.keys(NPCS);
+
+// Hands and Bones (the gambler's dice game): health each side starts with. 12 took ~8.5 rounds; 9 takes ~6.3, still an even game.
+const DICE_HP=9;

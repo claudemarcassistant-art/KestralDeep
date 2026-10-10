@@ -219,6 +219,9 @@ function unlearnFile(f){const P=player,t=fileTier(f.id);if(!t)return;let spent=0
   P.files[f.id]=0;P.clear+=Math.max(0,spent-1);refreshStats();return spent-1;}
 function fileTier(id){return player&&player.files&&player.files[id]||0;}
 function perk(k){if(!player||!player.files)return false;for(const f of FILES){const t=fileTier(f.id);for(let i=0;i<t;i++)if(f.tiers[i].perk===k)return true;}return false;}
+// clearance currently invested in crew files, and tiers attuned (work orders)
+function filesInvested(){let s=0;for(const f of FILES)for(let t=0;t<fileTier(f.id);t++)s+=f.tiers[t].cost;return s;}
+function filesAttuned(){return FILES.reduce((a,f)=>a+fileTier(f.id),0);}
 function attuneFile(f){const P=player,t=fileTier(f.id);if(!hasFile(f.id))return;if(!reqMet(f)){say('needs '+FILEBY[f.req.id].name.toLowerCase()+' tier '+f.req.t+' first');sfx('click');return;}if(t>=f.tiers.length){say(f.name.toLowerCase()+' is fully attuned');sfx('click');return;}const tr=f.tiers[t];
   if(P.clear<tr.cost){say('not enough clearance ('+tr.cost+' needed)');sfx('deny');return;}P.clear-=tr.cost;P.files[f.id]=t+1;
   if(tr.skill&&!P.skills.includes(tr.skill)){P.skills.push(tr.skill);if(P.skillIdx<0||P.skills.length===1)P.skillIdx=P.skills.length-1;else if(P.skillIdx2<0)P.skillIdx2=P.skills.length-1;}

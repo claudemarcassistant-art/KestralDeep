@@ -30,7 +30,7 @@ const RECIPES=[
   {cat:'Supplies',name:'Molotov',desc:'Thrown bottle that bursts into a burning oil spill.',need:{cloth:1,powder:1,scrap:1},make:()=>{player.inv.molotov=(player.inv.molotov||0)+1;return '+1 molotov';}},
   {cat:'Supplies',name:'Gas grenade',desc:'Thrown canister that releases a poison cloud.',need:{pipe:1,powder:1,cloth:1},make:()=>{player.inv.gasnade=(player.inv.gasnade||0)+1;return '+1 gas grenade';}},
   {cat:'Supplies',name:'Cryo grenade',desc:'Thrown canister that bursts into a freezing cloud.',need:{battery:1,pipe:1,cloth:1},make:()=>{player.inv.cryonade=(player.inv.cryonade||0)+1;return '+1 cryo grenade';}},
-  {cat:'Supplies',name:'Smoke grenade',desc:'Thrown canister that lays a thick smoke screen.',need:{pipe:1,powder:1,scrap:1},make:()=>{player.inv.smokenade=(player.inv.smokenade||0)+1;return '+1 smoke grenade';}},
+  {cat:'Supplies',name:'Smoke grenade',desc:'Thrown canister that trails smoke and lays a wide smoke screen.',need:{pipe:1,powder:1,scrap:1},make:()=>{player.inv.smokenade=(player.inv.smokenade||0)+1;return '+1 smoke grenade';}},
   {cat:'Supplies',name:'Pipe charge',desc:'Thrown explosive (Q). Also breaks hidden walls.',need:{pipe:1,powder:1},make:()=>{player.inv.charge++;return '+1 pipe charge';}},
   {cat:'Supplies',name:'Flares x2',desc:'Thrown light (F). Lights around corners and draws unaware enemies to it.',need:{powder:1,cloth:1},make:()=>{player.inv.flare+=2;return '+2 flares';}},
   {cat:'Supplies',name:'Trauma kit',desc:'Two medkits bound into one big heal that also clears poison, burns and shock.',need:{medkit:2,cloth:1},make:()=>{player.inv.trauma=(player.inv.trauma||0)+1;return '+1 trauma kit';}},

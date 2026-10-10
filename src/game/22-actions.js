@@ -154,10 +154,11 @@ function throwNade(k){const P=player;if(P.liq===4){say('you cannot throw while s
 function landNade(n){const tx=Math.floor(n.x/TS),ty=Math.floor(n.y/TS);n.dead=true;if(chasm[ty*MW+tx]){items.push({x:n.x,y:n.y,type:n.kind,ph:0,fall:0.7,fallM:0.7,fx:1});sfx('fall');return;}
   if(n.kind==='molotov'){sfx('slosh');spillOil(tx,ty,1,3);igniteOil(tx,ty);for(let k=0;k<14;k++)parts.push({x:n.x,y:n.y,vx:rr(-60,60),vy:rr(-60,60),t:0.4,m:0.4,c:k%2?'#ffb050':'#9adfe8',s:1});noise(n.x,n.y,120);}
   else if(n.kind==='cryonade'){sfx('hiss');sfx('crackle');emitters.push({x:n.x,y:n.y,t:FREEZE_CFG.cryo.t,kind:'cryo'});for(let k=0;k<16;k++)parts.push({x:n.x,y:n.y,vx:rr(-70,70),vy:rr(-70,70),t:0.45,m:0.45,c:k%2?'#e8f6ff':'#9fd8ff',s:1});noise(n.x,n.y,90);}
-  else{sfx('hiss');emitters.push({x:n.x,y:n.y,t:n.kind==='gasnade'?4.5:6,kind:n.kind==='gasnade'?'toxic':'smoke'});}}
-function updateNades(dt){for(const n of nades){n.t-=dt;n.spin+=dt*14;const nx=n.x+n.vx*dt,ny=n.y+n.vy*dt;if(solidAt(nx,ny)){n.vx*=-0.3;n.vy*=-0.3;landNade(n);continue;}n.x=nx;n.y=ny;
+  else if(n.kind==='smokenade'){sfx('hiss');const S=SMOKE_NADE_CFG;emitters.push({x:n.x,y:n.y,t:S.t,kind:'smoke',rmax:S.rmax,rate:S.rate});}
+  else{sfx('hiss');emitters.push({x:n.x,y:n.y,t:4.5,kind:'toxic'});}}
+function updateNades(dt){for(const n of nades){n.t-=dt;n.spin+=dt*14;if(n.kind==='smokenade'){const S=SMOKE_NADE_CFG;n.tr=(n.tr||0)+dt;if(n.tr>=S.trailEvery){n.tr=0;const c=puff(n.x,n.y,'smoke',S.trailAmt,null,S.trailRmax);if(c)c.dens=Math.min(c.dens,S.trailDens);}}const nx=n.x+n.vx*dt,ny=n.y+n.vy*dt;if(solidAt(nx,ny)){n.vx*=-0.3;n.vy*=-0.3;landNade(n);continue;}n.x=nx;n.y=ny;
     if(enemies.some(e=>!e.dead&&!ET[e.type].ghost&&Math.hypot(e.x-n.x,e.y-n.y)<e.r+2)||n.t<=0)landNade(n);}nades=nades.filter(n=>!n.dead);
-  for(const m of emitters){m.t-=dt;puff(m.x+rr(-3,3),m.y+rr(-3,3),m.kind,22*dt,m);if(m.kind==='cryo')cryoEmitterTick(m,dt);if(Math.random()<dt*20)parts.push({x:m.x,y:m.y,vx:rr(-20,20),vy:rr(-30,-5),t:0.4,m:0.4,c:m.kind==='toxic'?'#a8c848':m.kind==='cryo'?'#dff2ff':'#6a6a70',s:1});}
+  for(const m of emitters){m.t-=dt;puff(m.x+rr(-3,3),m.y+rr(-3,3),m.kind,(m.rate||22)*dt,m,m.rmax);if(m.kind==='cryo')cryoEmitterTick(m,dt);if(Math.random()<dt*20)parts.push({x:m.x,y:m.y,vx:rr(-20,20),vy:rr(-30,-5),t:0.4,m:0.4,c:m.kind==='toxic'?'#a8c848':m.kind==='cryo'?'#dff2ff':'#6a6a70',s:1});}
   for(const m of emitters)if(m.t<=0){for(const c of clouds)if(c.src===m)c.src=null;}emitters=emitters.filter(m=>m.t>0);}
 function throwCharge(){
   if(player.liq===4){say('you cannot throw while swimming');sfx('click');return;}

@@ -28,7 +28,7 @@ addEventListener('pointerup',e=>{if(e.button===0)mouse.l=false;if(e.button===2)m
 addEventListener('wheel',e=>{
   if(state==='title'&&histOpen){histScroll+=e.deltaY>0?1:-1;return;}
   if(state!=='play'&&!(menuOpen&&(state==='route'||state==='node')))return;const d=e.deltaY>0?1:-1;
-  if(menuOpen){mouse.moved=false;if(menuTab===2)wbSel+=d;else if(menuTab===5&&fileMode===1)upSel=Math.max(0,upSel+d);else if(menuTab===1){}else if(menuTab===0)pkSel=Math.max(0,pkSel+d);else if(menuTab===5&&fileMode===3){}else if(menuTab===5&&fileMode!==1){if(fileMode===0)flSel=Math.max(0,Math.min(FILES.filter(f=>hasFile(f.id)).length-1,flSel+d));else skSel=Math.max(0,Math.min(skillList().length-1,skSel+d));}else if(menuTab===3)fdSel=Math.max(0,Math.min(foodList().length-1,fdSel+d));else bxSel=Math.max(0,Math.min(BEASTS.length-1,bxSel+d));return;}
+  if(menuOpen){mouse.moved=false;if(menuTab===2)wbSel+=d;else if(menuTab===5&&fileMode===1)upSel=Math.max(0,upSel+d);else if(menuTab===1){}else if(menuTab===0)pkSel=Math.max(0,pkSel+d);else if(menuTab===5&&fileMode===3){woScroll+=d;}else if(menuTab===5&&fileMode!==1){if(fileMode===0)flSel=Math.max(0,Math.min(FILES.filter(f=>hasFile(f.id)).length-1,flSel+d));else skSel=Math.max(0,Math.min(skillList().length-1,skSel+d));}else if(menuTab===3)fdSel=Math.max(0,Math.min(foodList().length-1,fdSel+d));else bxSel=Math.max(0,Math.min(BEASTS.length-1,bxSel+d));return;}
   if(!mapOpen){const n=hotCount();setHot((player.hotSel+d+n)%n);}},{passive:true});
 function onPress(code){
   initAudio();

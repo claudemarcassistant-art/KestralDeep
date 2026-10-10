@@ -1,6 +1,6 @@
 // ---- Hands and Bones: roshambo decides who attacks, dice decide how hard
 function startDice(bet){if(player.inv.scrap<bet)return;player.inv.scrap-=bet;choiceUI=null;
-  diceUI={bet,hp:[12,12],phase:'roll1',r1:[0,0],r2:[0,0],pick:-1,npc:-1,msg:'Both of you roll your bones.',t:0,hunch:-1};diceRoll1();}
+  diceUI={bet,hp:[DICE_HP,DICE_HP],phase:'roll1',r1:[0,0],r2:[0,0],pick:-1,npc:-1,msg:'Both of you roll your bones.',t:0,hunch:-1};diceRoll1();}
 const d6=()=>1+rnd(6),HANDS=['rock','paper','scissors'];
 function diceRoll1(){const d=diceUI;d.r1=[d6()+d6(),d6()+d6()];d.phase='rps';d.pick=-1;d.npc=rnd(3);d.hunch=Math.random()<0.5?(Math.random()<0.65?d.npc:rnd(3)):-1;
   d.msg='You rolled '+d.r1[0]+', she rolled '+d.r1[1]+'. Throw a hand: 1 rock, 2 paper, 3 scissors.';sfx('click');}
@@ -14,7 +14,7 @@ function diceNext(){const d=diceUI;if(d.phase==='result')diceRoll1();else if(d.p
 function drawDie(x,y,v){F('#e8e0d0',x,y,11,11);F('#15110a',x,y+10,11,1);const P={1:[[5,5]],2:[[2,2],[8,8]],3:[[2,2],[5,5],[8,8]],4:[[2,2],[8,2],[2,8],[8,8]],5:[[2,2],[8,2],[5,5],[2,8],[8,8]],6:[[2,2],[8,2],[2,5],[8,5],[2,8],[8,8]]};for(const [a,b] of P[v]||[])F('#1a1410',x+a,y+b,2,2);}
 function drawDiceUI(){const d=diceUI,pw=260,ph=150,px=(W-pw)>>1,py=(H-ph)>>1;
   F('rgba(4,5,6,0.65)',0,0,W,H);box(px,py,pw,ph,'#0a0c0b','#3a2a4a');F('#c9a8ff',px,py,pw,2);txt('Hands and Bones',px+10,py+7,'#c9a8ff');txt('stake '+d.bet+' scrap',px+pw-10,py+7,'#8e978b','right');
-  [['You',0,px+20],['The sensitive',1,px+pw/2+10]].forEach(([n,i,x])=>{txt(n,x,py+22,i?'#c9a8ff':AMBER);for(let k=0;k<12;k++)F(k<d.hp[i]?(i?'#c9a8ff':AMBER):'#1f2524',x+k*8,py+33,6,4);
+  [['You',0,px+20],['The sensitive',1,px+pw/2+10]].forEach(([n,i,x])=>{txt(n,x,py+22,i?'#c9a8ff':AMBER);for(let k=0;k<DICE_HP;k++)F(k<d.hp[i]?(i?'#c9a8ff':AMBER):'#1f2524',x+k*8,py+33,6,4);
     txt('first '+d.r1[i],x,py+44,'#b9c0b3');if(d.phase!=='rps')txt('second '+d.r2[i],x+50,py+44,'#b9c0b3');
     if(d.phase!=='rps'){const hi=i?d.npc:d.pick;if(hi>=0)txt(HANDS[hi],x,py+56,'#e3e6dc');}});
   const x0=px+pw/2-26;drawDie(x0,py+72,Math.min(6,Math.max(1,Math.ceil(d.r1[0]/2))));drawDie(x0+15,py+72,Math.min(6,Math.max(1,d.r1[0]-Math.ceil(d.r1[0]/2))));

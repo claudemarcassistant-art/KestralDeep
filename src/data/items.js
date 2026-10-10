@@ -11,7 +11,7 @@ const QUICK={
   mine:{name:'Proximity mine',desc:'Set it at your feet. It arms after a second and blows when a creature steps close. You will not set it off, but you can be caught in the blast.',n:()=>player.inv.mine||0,use:()=>placeMine()},
   molotov:{name:'Molotov',desc:'Thrown bottle. Shatters into a burning oil spill.',n:()=>player.inv.molotov||0,use:()=>throwNade('molotov')},
   gasnade:{name:'Gas grenade',desc:'Thrown canister that hisses out a spreading poison cloud for a few seconds.',n:()=>player.inv.gasnade||0,use:()=>throwNade('gasnade')},
-  smokenade:{name:'Smoke grenade',desc:'Thrown canister that pours out a thick smoke screen. Anyone inside can barely see, you included.',n:()=>player.inv.smokenade||0,use:()=>throwNade('smokenade')},
+  smokenade:{name:'Smoke grenade',desc:'Thrown canister that trails smoke as it flies and pours out a wide smoke screen where it lands, for about 9 seconds. Anyone inside can barely see, you included.',n:()=>player.inv.smokenade||0,use:()=>throwNade('smokenade')},
   cryonade:{name:'Cryo grenade',desc:'Thrown canister that bursts into a freezing white cloud for 3 seconds. Anything that stays inside fills up with cold and freezes solid; water under it turns to ice.',n:()=>player.inv.cryonade||0,use:()=>throwNade('cryonade')},
   medpatch:{name:'Med patch',desc:'Heals 25 hp.',n:()=>player.inv.medpatch||0,use:()=>{const p=player;if(p.hp>=maxHp()){say('already at full health');return;}p.inv.medpatch--;p.hp=Math.min(maxHp(),p.hp+Math.round(25*(1+0.2*U('medic'))*(perk('fielddress')?1.5:1)));sfx('stim');float(p.x,p.y-6,'+25 hp','#7fd08e');}},
   surgery:{name:'Surgery kit',desc:'Treats your worst injury on the spot.',n:()=>player.inv.surgery||0,use:()=>{const P=player;if(!P.injuries||!P.injuries.length){say('nothing to operate on');sfx('deny');return;}P.inv.surgery--;cureInjury(false);sfx('stim');}},
@@ -78,3 +78,7 @@ const TOOLS={
   scanner:{name:'Signal scanner',desc:'Left click sends a pulse. For a few seconds it shows which directions hold creatures, and how many.'}};
 const RESDESC={rounds:'Sidearm ammo.',shells:'Scattergun ammo.',nails:'Nailer ammo.',bolts:'Bolt driver ammo.',cells:'Ray gun ammo.',scrap:'Salvage. Crafting, and currency for machines and traders.',powder:'Charges, shells, stims and flares.',pipe:'Weapons, bolts and charges.',battery:'Electronics, cells and weapons.',cloth:'Patches, flares and antitox.',key:'Opens locked doors, vaults and chests.',liftcard:'Unlocks this deck\'s lift.'};
 const CXRES={scrap:'The station\'s currency, and the base of most recipes.',powder:'Gunpowder, for ammo, charges and grenades.',pipe:'Lengths of pipe for weapons and tools.',battery:'Power cells for gear, hacks and the android.',cloth:'Rags and webbing for bandages and kit.',key:'Opens locked doors and chests.',rounds:'Sidearm, SMG and sling ammo.',shells:'Scattergun ammo.',nails:'Nailer ammo.',bolts:'Bolt driver and bow ammo.',cells:'Ray gun ammo, and chainsaw power.',fuel:'Flamethrower fuel.',knives:'Throwing knives are their own ammo.'};
+
+// Smoke grenade: the canister pours a big cloud where it lands (t seconds, cloud up to rmax px, fed at rate per second)
+// and trails thin smoke along its flight (a puff every trailEvery s, each up to trailRmax px, density trailDens).
+const SMOKE_NADE_CFG={t:9,rmax:80,rate:46,trailEvery:0.035,trailAmt:6,trailRmax:22,trailDens:0.4};

@@ -159,10 +159,10 @@ function updateBarrels(dt){const R=4.5;
 function mkRiser(tx,ty,dir,cold){const R0=mkRiser0(tx,ty,dir);R0.cold=cold==null?Math.random()<0.25:cold;if(!R0.cold)R0.toxic=typeof cond!=='undefined'&&cond&&cond.haz==='toxic'?Math.random()<0.6:Math.random()<0.1;return R0;}
 let clouds=[];
 const CLOUD={steam:{col:'230,236,234',a:0.3},toxic:{col:'150,195,60',a:0.32},smoke:{col:'34,34,38',a:0.5},cryo:{col:'205,232,255',a:0.34},incense:{col:'205,210,200',a:0.16}};
-function puff(x,y,kind,amt,src){let c=src?clouds.find(q=>q.src===src):null;if(c&&c.kind!==kind)c=null;
+function puff(x,y,kind,amt,src,rmax){let c=src?clouds.find(q=>q.src===src):null;if(c&&c.kind!==kind)c=null;
   if(!c)c=clouds.find(q=>q.kind===kind&&!q.src&&Math.hypot(q.x-x,q.y-y)<q.r*0.6);
-  if(c){c.r=Math.min(c.rmax,c.r+amt);c.dens=Math.min(1,c.dens+amt*0.04);c.fed=true;if(src)c.src=src;return c;}
-  if(clouds.length>80)return null;c={x,y,r:5+amt,rmax:kind==='smoke'?34:kind==='incense'?20:48,kind,dens:0.55,vx:rr(-5,5),vy:rr(-5,5),src:src||null,fed:true,blobs:mkBlobs()};clouds.push(c);return c;}
+  if(c){if(rmax)c.rmax=Math.max(c.rmax,rmax);c.r=Math.min(c.rmax,c.r+amt);c.dens=Math.min(1,c.dens+amt*0.04);c.fed=true;if(src)c.src=src;return c;}
+  if(clouds.length>80)return null;c={x,y,r:5+amt,rmax:rmax||(kind==='smoke'?34:kind==='incense'?20:48),kind,dens:0.55,vx:rr(-5,5),vy:rr(-5,5),src:src||null,fed:true,blobs:mkBlobs()};clouds.push(c);return c;}
 function mkBlobs(){const n=4+rnd(3),B=[{ox:0,oy:0,rs:0.62,ph:Math.random()*6,dx:0,dy:0}];for(let k=1;k<n;k++){const a=Math.random()*6.283,d=rr(0.3,0.7);B.push({ox:Math.cos(a)*d,oy:Math.sin(a)*d,rs:rr(0.32,0.55),ph:Math.random()*6,dx:rr(-0.05,0.05),dy:rr(-0.05,0.05)});}return B;}
 function blobPos(c,b){const w=Math.sin(T*0.7+b.ph)*0.08;return [c.x+(b.ox+w)*c.r,c.y+(b.oy+Math.cos(T*0.6+b.ph)*0.08)*c.r,Math.max(3,b.rs*c.r*(1+0.08*Math.sin(T*1.1+b.ph)))];}
 function updateClouds(dt){const p=player;let smoke=0,shroud=0;

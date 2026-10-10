@@ -20,7 +20,11 @@ const ACH=[
   {id:'fed',name:'Well fed',desc:'Reach food level 3.',pts:2,test:()=>(player.foodLv||0)>=3},
   {id:'files',name:'Archivist',desc:'Have 6 crew files.',pts:2,test:()=>player.found&&player.found.length>=6},
   {id:'arcade',name:'Arcade regular',desc:'Win 3 arcade games.',pts:1,test:()=>(player.rs.arcade||0)>=3},
-  {id:'vaults',name:'Vault breaker',desc:'Open a vault in 3 different sectors in one run.',pts:4,test:()=>new Set(player.vaultSecs||[]).size>=3}];
+  {id:'vaults',name:'Vault breaker',desc:'Open a vault in 3 different sectors in one run.',pts:4,test:()=>new Set(player.vaultSecs||[]).size>=3},
+  {id:'attune1',name:'Signed off',desc:'Attune your first crew file tier.',pts:1,test:()=>filesAttuned()>=1},
+  {id:'cross',name:'Cross-trained',desc:'Attune at least one tier in 4 different crew files.',pts:2,test:()=>FILES.filter(f=>fileTier(f.id)>0).length>=4},
+  {id:'spec',name:'Specialist',desc:'Fully attune a crew file.',pts:2,test:()=>FILES.some(f=>fileTier(f.id)>=f.tiers.length)},
+  {id:'career',name:'Career track',desc:'Have 20 clearance invested in crew files.',pts:3,test:()=>filesInvested()>=20}];
 const AP_TRADES=[{label:'1 clearance',cost:2,act:()=>{player.clear++;return '+1 clearance';}},
   {label:'a random tonic',cost:4,act:()=>{const ks=Object.keys(SUBS);gainTonic(ks[rnd(ks.length)]);return 'a tonic';}},
   {label:'an unfound crew file',cost:6,ok:()=>!!FILES.find(f=>!hasFile(f.id)&&f.kind!=='classified'),act:()=>{const L=FILES.filter(f=>!hasFile(f.id)&&f.kind!=='classified');gainFile(L[rnd(L.length)].id);return 'a crew file';}}];
