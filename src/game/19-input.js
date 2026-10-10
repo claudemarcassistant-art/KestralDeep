@@ -28,7 +28,7 @@ addEventListener('pointerup',e=>{if(e.button===0)mouse.l=false;if(e.button===2)m
 addEventListener('wheel',e=>{
   if(state==='title'&&histOpen){histScroll+=e.deltaY>0?1:-1;return;}
   if(state!=='play'&&!(menuOpen&&(state==='route'||state==='node')))return;const d=e.deltaY>0?1:-1;
-  if(menuOpen){mouse.moved=false;if(menuTab===2)wbSel+=d;else if(menuTab===5&&fileMode===1)upSel=Math.max(0,upSel+d);else if(menuTab===1){}else if(menuTab===0)pkSel=Math.max(0,pkSel+d);else if(menuTab===5&&fileMode!==1){if(fileMode===0)flSel=Math.max(0,Math.min(FILES.filter(f=>hasFile(f.id)).length-1,flSel+d));else skSel=Math.max(0,Math.min(skillList().length-1,skSel+d));}else if(menuTab===3)fdSel=Math.max(0,Math.min(foodList().length-1,fdSel+d));else bxSel=Math.max(0,Math.min(BEASTS.length-1,bxSel+d));return;}
+  if(menuOpen){mouse.moved=false;if(menuTab===2)wbSel+=d;else if(menuTab===5&&fileMode===1)upSel=Math.max(0,upSel+d);else if(menuTab===1){}else if(menuTab===0)pkSel=Math.max(0,pkSel+d);else if(menuTab===5&&fileMode===3){}else if(menuTab===5&&fileMode!==1){if(fileMode===0)flSel=Math.max(0,Math.min(FILES.filter(f=>hasFile(f.id)).length-1,flSel+d));else skSel=Math.max(0,Math.min(skillList().length-1,skSel+d));}else if(menuTab===3)fdSel=Math.max(0,Math.min(foodList().length-1,fdSel+d));else bxSel=Math.max(0,Math.min(BEASTS.length-1,bxSel+d));return;}
   if(!mapOpen){const n=hotCount();setHot((player.hotSel+d+n)%n);}},{passive:true});
 function onPress(code){
   initAudio();
@@ -102,15 +102,14 @@ function menuKey(code){
   }else if(menuTab===0){const R=packRows().filter(r=>!r.hdr);if(up)pkSel=Math.max(0,pkSel-1);if(down)pkSel=Math.min(R.length-1,pkSel+1);
     if(code==='KeyF'&&R[pkSel]){useFromMenu(R[pkSel]);return;}
     if(go&&R[pkSel]&&R[pkSel].act)R[pkSel].act();const n=code.startsWith('Digit')?+code.slice(5):-1;if(n>=3&&n<=9&&R[pkSel]&&R[pkSel].kind==='quick')assignQuick(R[pkSel].id,n-3);
-  }else if(menuTab===5&&(code==='KeyA'||code==='KeyD'||code==='ArrowLeft'||code==='ArrowRight')){fileMode=(fileMode+(code==='KeyA'||code==='ArrowLeft'?2:1))%3;sfx('click');
+  }else if(menuTab===5&&(code==='KeyA'||code==='KeyD'||code==='ArrowLeft'||code==='ArrowRight')){fileMode=(fileMode+(code==='KeyA'||code==='ArrowLeft'?3:1))%4;sfx('click');
   }else if(menuTab===5&&fileMode===0){const FL=FILES.filter(f=>hasFile(f.id));if(up)flSel=Math.max(0,flSel-1);if(down)flSel=Math.min(FL.length-1,flSel+1);if(go&&FL[flSel])attuneFile(FL[flSel]);
-  }else if(menuTab===5&&fileMode===3){if(up)prScroll=Math.max(0,prScroll-20);if(down)prScroll+=20;
+  }else if(menuTab===5&&fileMode===3){const n=AP_TRADES.length;if(up)apSel=(apSel+n-1)%n;if(down)apSel=(apSel+1)%n;if(go)apTrade(AP_TRADES[apSel]);
   }else if(menuTab===5){
     const L=skillList();if(up)skSel=Math.max(0,skSel-1);if(down)skSel=Math.min(L.length-1,skSel+1);
     if(go&&L[skSel])bindSkill(L[skSel]);
   }else if(menuTab===3&&fdMode===1&&code==='KeyX'){cookOnly=!cookOnly;fdSel=0;sfx('click');
   }else if(menuTab===3){if(code==='KeyA'||code==='KeyD'||code==='ArrowLeft'||code==='ArrowRight'){fdMode=(fdMode+(code==='KeyA'||code==='ArrowLeft'?2:1))%3;fdSel=0;sfx('click');return;}const L=foodList();if(up)fdSel=Math.max(0,fdSel-1);if(down)fdSel=Math.min(L.length-1,fdSel+1);if(go&&L[fdSel])useFoodRow(L[fdSel]);}
-  else if(code==='KeyA'||code==='KeyD'||code==='ArrowLeft'||code==='ArrowRight'){progMode=(progMode+(code==='KeyA'||code==='ArrowLeft'?2:1))%3;sfx('click');}
-  else if(progMode===2){const n=AP_TRADES.length;if(up)apSel=(apSel+n-1)%n;if(down)apSel=(apSel+1)%n;if(go)apTrade(AP_TRADES[apSel]);}
+  else if(code==='KeyA'||code==='KeyD'||code==='ArrowLeft'||code==='ArrowRight'){progMode=1-progMode;sfx('click');}
   else{if(up)bxSel=Math.max(0,bxSel-1);if(down)bxSel=Math.min(BEASTS.length-1,bxSel+1);}
 }

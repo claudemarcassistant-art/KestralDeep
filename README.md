@@ -28,7 +28,7 @@ src/
     food.js                 food, raw ingredients, cooking
     items.js                gear, quick items, tools, pickups, flasks, liquid tank, vending stock, resource text
     npcs.js                 NPCs
-    progress.js             deck grades, run stats, achievements, point trades, challenge modifiers
+    progress.js             deck grades, run stats, work orders (achievements), point trades, challenge modifiers
     herbs.js                herbs, herbal preparations (poultices, incense, draughts)
     route.js                express shafts, vault junctions and archive vaults, deck secured, crawlways
     status.js               frozen status and cryo grenade tuning, active reload
@@ -56,7 +56,7 @@ src/
     17-devices-npcs.js      test-deck picker, grinder, freezers, cameras, breakers, stasis pods, NPCs
     18-dice-options.js      Hands and Bones dice game, options, spawn console
     19-input.js             browser events, key and menu dispatch
-    20-progress-screens.js  food pouch, bestiary, run stats, achievements
+    20-progress-screens.js  food pouch, bestiary, run stats, work orders (shown in the Files tab)
     21-mechanics.js         skill binding, crits, webs, trip alarms, weapon switching
     22-actions.js           guns and reloading, melee, dash, psychic powers, combo
     23-vision.js            line of sight, shadows, astral projection

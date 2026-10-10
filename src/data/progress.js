@@ -1,10 +1,10 @@
-// Progress: deck grades, run stats, achievements, point trades, challenge modifiers.
+// Progress: deck grades, run stats, work orders (ACH), point trades, challenge modifiers.
 const GRADES=[['S',0.8,'#ffd070'],['A',0.6,'#9fe0b0'],['B',0.4,'#8fc3d9'],['C',0.2,'#c9cfc2'],['D',0,'#b8665a']];
-const MODS_RUN=[{id:'glass',name:'Glass cannon',desc:'Half max health, but everything you do hits 40% harder.',unlock:'Earn the Sharpshooter achievement.',ok:()=>META.ach.crits},
-  {id:'dark',name:'Lights out',desc:'Every deck is dark.',unlock:'Earn the Ghost of the deck achievement.',ok:()=>META.ach.quiet},
+const MODS_RUN=[{id:'glass',name:'Glass cannon',desc:'Half max health, but everything you do hits 40% harder.',unlock:'Complete the Sharpshooter work order.',ok:()=>META.ach.crits},
+  {id:'dark',name:'Lights out',desc:'Every deck is dark.',unlock:'Complete the Ghost of the deck work order.',ok:()=>META.ach.quiet},
   {id:'hunted',name:'Hunted',desc:'A hunter stalks you from the very first sector.',unlock:'Kill a sector hunter.',ok:()=>META.hunters>0},
-  {id:'lean',name:'Lean times',desc:'Far fewer supplies lying around.',unlock:'Earn the Deep diver achievement.',ok:()=>META.ach.deep},
-  {id:'swarm',name:'Swarming',desc:'Each deck holds about a third more creatures.',unlock:'Earn the Exterminator achievement.',ok:()=>META.ach.exterm}];
+  {id:'lean',name:'Lean times',desc:'Far fewer supplies lying around.',unlock:'Complete the Deep diver work order.',ok:()=>META.ach.deep},
+  {id:'swarm',name:'Swarming',desc:'Each deck holds about a third more creatures.',unlock:'Complete the Exterminator work order.',ok:()=>META.ach.exterm}];
 const LVLSTAT=['kills','hacks','items','chests','rare','doors','secrets','dmg'];
 const ACH=[
   {id:'blood',name:'First blood',desc:'Take out a creature.',pts:1,test:()=>runStat('kills')>=1},

@@ -2,13 +2,13 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v0.90**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v0.91**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
 - **Source lives in `src/`** and is built into **one self-contained HTML file**, `dist/index.html` (about 640 KB). No dependencies, no external assets. All art is drawn procedurally on a canvas; all sound is synthesised with the Web Audio API. The only network request is the optional Silkscreen font from Google Fonts in `src/boot.js` (the game falls back to a built-in font if it fails).
   - `src/index.html` is the page template; the build fills in `{{styles}}` (`src/styles.css`), `{{boot}}` (`src/boot.js`: font loader and the red error overlay) and `{{game}}`.
-  - `src/data/*.js` are the content and tuning tables (creatures, weapons, items, recipes, food, crew files, achievements, NPCs, world, events, versions). Balance changes usually only touch these.
+  - `src/data/*.js` are the content and tuning tables (creatures, weapons, items, recipes, food, crew files, work orders, NPCs, world, events, versions). Balance changes usually only touch these.
   - `src/game/NN-name.js` are 37 game files, split by system. `README.md` lists what each file holds.
   - `scripts/build.mjs` is the build (plain Node 20+, no npm install needed).
 - **Play or test:** `npm run dev` serves http://localhost:5173 and rebuilds on every save (refresh the page). `npm run build` writes `dist/index.html`, which can also be opened straight from disk in Chrome or Edge.
@@ -54,7 +54,7 @@ Current version: **v0.90**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v0.90)
+## Architecture overview (as of v0.91)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -117,7 +117,7 @@ Current version: **v0.90**. The game was built iteratively in claude.ai chats up
 **Vault junctions and archive vaults (v0.85):** also `35-vaults.js`, numbers in `VAULT_CFG`, `VAULT_DANGERS` (`src/data/route.js`).
 - **Sector map:** `genVaultJunctions()` (end of `genSector()`) picks 1-2 station or flooded junctions that are not the start, the exit, an arena or on any shortest start-to-exit route, weighted toward distance from that route and dead ends. It sets `cond.vault={d:[dangers]}` and `cond.size='l'`; from sector 3 there is a 40% chance of a second danger. A faint gold diamond marks them from the start; `condText()` names the danger once the junction is known; `cond.vault.opened` is set when cracked.
 - **Deck:** `genArchiveVault(start)` runs in `genLevel()` before `genPlateDoors()`. It `attach()`es a 5x4 room (4x3 if nothing fits) whose door stays a wall tile, at least 35% of the deck's width or height from the arrival lift by walking distance (relaxed if needed; 90 of 90 test decks got one). `archive` holds `{room,tx,ty,dir,panel,open,burnt,guard,wave2,unstT}` and is reset in `resetHidden()`. `fillArchive()` (end of `populate()`) pushes the lock panel (`reward:'vault'`, `hard:true`, so `newHackWindow()` narrows it to 60%), adds 1-2 unfound files (`subSeed()`; a `clearpack` item worth 2 clearance when none are left), a rare chest and a stash, and the guardian for `guarded` decks (an arena-style warden mini-boss, `e.vaultGuard`).
-- **Opening:** `HACKR.vault` (hack success) or `archiveBlast()` from `explode()` (within the blast radius + 16 px of the door) call `openArchive()`: door tile to floor, `lvl.vault` (600 on the deck report and live score), `player.vaultSecs` (Vault breaker achievement: 3 sectors), and the danger trigger. Two misses burn the panel (`vaultFried()`); `vaultPanelBlocked()` refuses the hack while the guardian lives.
+- **Opening:** `HACKR.vault` (hack success) or `archiveBlast()` from `explode()` (within the blast radius + 16 px of the door) call `openArchive()`: door tile to floor, `lvl.vault` (600 on the deck report and live score), `player.vaultSecs` (Vault breaker work order: 3 sectors), and the danger trigger. Two misses burn the panel (`vaultFried()`); `vaultPanelBlocked()` refuses the hack while the guardian lives.
 - **Dangers:** `guarded` (above), `elite` (threat budget x1.4 in `populate()`, plus `eliteHeavy()`), `lockdown` (`raiseAlarm(...,'vault')` now and again 12 s later; called guards cannot call more), `unstable` (disturbance to 75 at once, `setPower(false)` after 60 s, HUD countdown).
 - Drawn by `drawArchive()` (in `render()`) and `drawArchiveMap()` (station map, gold outline once the door is seen). **Test lift:** a Vault deck option (off, on with a random danger, or a named danger).
 
@@ -139,11 +139,11 @@ Current version: **v0.90**. The game was built iteratively in claude.ai chats up
 
 **Player systems:** health with injuries (lost max health shown greyed out) and ghost health from food levels; stamina; status meters (`player.st`); armament sets (`player.arms`, main and off hand, two-handed weapons fill both); hotbar of quick items; crew files and clearance training substats and the Body/Spirit/Mind cores; abilities on E and F; switchable movement skills; skill sets (Psychic and Sling) that swap the item slots for an action bar; melee combos; crits; charged attacks with a perfect-release window; gun magazines and reloads.
 
-**Key data tables:** `ET`, `BEASTS`, `BEASTINFO`, `KILLPTS`, `THREAT`, `ARM` (armaments), `WPN` (gun stats), `MAGS`, `WCRIT`, `GEAR`, `QUICK` (quick items), `IT` (pickups), `RECIPES` (Workbench), `COOK`, `FOOD`, `RAW`, `FILES` (crew files, tiers built with `FT()`), `FILESUB`, `SKILLS`, `MOVES`, `ACTS` (psychic actions), `SLING`, `INJ`, `ACH`, `AP_TRADES`, `NPCS`, `MODS` (room modules), `BOSSES`, `SECTORS`, `BNAMES`, `COND_HAZ`, `HAZDESC`, `TEXTEV` (between-deck events), `MODS_RUN` (challenge modifiers).
+**Key data tables:** `ET`, `BEASTS`, `BEASTINFO`, `KILLPTS`, `THREAT`, `ARM` (armaments), `WPN` (gun stats), `MAGS`, `WCRIT`, `GEAR`, `QUICK` (quick items), `IT` (pickups), `RECIPES` (Workbench), `COOK`, `FOOD`, `RAW`, `FILES` (crew files, tiers built with `FT()`), `FILESUB`, `SKILLS`, `MOVES`, `ACTS` (psychic actions), `SLING`, `INJ`, `ACH` (work orders), `AP_TRADES`, `NPCS`, `MODS` (room modules), `BOSSES`, `SECTORS`, `BNAMES`, `COND_HAZ`, `HAZDESC`, `TEXTEV` (between-deck events), `MODS_RUN` (challenge modifiers).
 
-**Menus:** the pack menu (TAB) has tabs in this order: Pack, Equip, Craft, Food, Stats, Files, Progress (`menuTab` 0-6). Files has sub-views Crew files, Upgrades & perks, Skills. Progress has Bestiary, Run stats, Achievements.
+**Menus:** the pack menu (TAB) has tabs in this order: Pack, Equip, Craft, Food, Stats, Files, Progress (`menuTab` 0-6). Files has sub-views Crew files, Upgrades & perks, Skills, Work orders (`fileMode` 0-3). Progress has Bestiary, Run stats (`progMode` 0-1). **Achievements are called work orders in all player-facing text (owner's decision, v0.91)**; the code still uses `ACH`, `player.ach`, `META.ach`, `checkAch()` and `drawAch()` (now drawn by `drawFilesTab()`), and point trades (`apSel`, `apTrade()`) are keyed in the Work orders view.
 
-**Persistence (`localStorage`):** `kd_opts` (options), `kd_meta` (meta-progression: deepest sector reached, achievements earned, hunters killed, creatures seen, run setup), `kd_save` (the run in progress, written on the route map and cleared on death or a new game), plus the best score.
+**Persistence (`localStorage`):** `kd_opts` (options), `kd_meta` (meta-progression: deepest sector reached, work orders completed, hunters killed, creatures seen, run setup), `kd_save` (the run in progress, written on the route map and cleared on death or a new game), plus the best score.
 
 **Special areas:** the test range (title screen) has every crew file, NPC, a creature console and a deck builder (the test lift, with a Size option) for testing; the arcade has six original mini-games (`ARC`).
 
@@ -187,7 +187,7 @@ Current version: **v0.90**. The game was built iteratively in claude.ai chats up
 | grinder, devices, NPC behaviour | `17-devices-npcs.js` |
 | `OPTS` (options), text entry (`editText()`, `textEdit`) | `18-dice-options.js` |
 | key handling (`onPress`, `menuKey`) | `19-input.js` |
-| bestiary, run stats and achievements screens | `20-progress-screens.js` |
+| bestiary, run stats and work orders (`drawAch()`) screens | `20-progress-screens.js` |
 | `hurtPlayer()`, attacks, reloads | `22-actions.js` |
 | `updatePlay()` and the enemy update loop | `24-update.js` |
 | `drawEnemy()`, `drawPlayer()`, `txt()`, `ui()` | `25-render-helpers.js` |

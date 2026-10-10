@@ -55,9 +55,9 @@ function runStat(k){const P=player;return ((P.rs&&P.rs[k])||0)+(LVLSTAT.includes
 function apTrade(t){const P=player;if((P.ap||0)<t.cost||(t.ok&&!t.ok())){sfx('deny');return;}P.ap-=t.cost;const r=t.act();sfx('craft');say('traded '+t.cost+' points for '+r);}
 let achT=0;
 function checkAch(dt){const P=player;if(!P||!P.rs||testMode&&!testDeck)return;achT-=dt;if(achT>0)return;achT=0.5;P.rs.maxCombo=Math.max(P.rs.maxCombo||0,Math.floor(P.combo||0));
-  for(const a of ACH){if(P.ach[a.id])continue;if(a.test()){P.ach[a.id]=true;if(!META.ach[a.id]){META.ach[a.id]=true;saveMeta();}P.ap=(P.ap||0)+a.pts;say('achievement: '+a.name.toLowerCase()+'  (+'+a.pts+' points, spend them in Progress)');float(P.x,P.y-16,a.name,'#ffe070');sfx('hackwin');}}}
-function drawProgressTab(x,y,w,h){['Bestiary','Run stats','Achievements'].forEach((n,i)=>{const bx=x+8+i*84,act=progMode===i;ui(bx,y+2,80,11,{click:()=>{progMode=i;sfx('click');}});F(act?'#1c2220':'#0a0d0c',bx,y+2,80,11);F(act?AMBER:'#2a302e',bx,y+12,80,1);txt(n,bx+40,y+4,act?AMBER:'#8e978b','center');});
-  txt('A D switch view',x+w-8,y+4,'#3f4642','right');if(progMode===0)return drawBestiary(x,y+14,w,h-14);if(progMode===1)return drawRunStats(x,y+14,w,h-14);drawAch(x,y+14,w,h-14);}
+  for(const a of ACH){if(P.ach[a.id])continue;if(a.test()){P.ach[a.id]=true;if(!META.ach[a.id]){META.ach[a.id]=true;saveMeta();}P.ap=(P.ap||0)+a.pts;say('work order done: '+a.name.toLowerCase()+'  (+'+a.pts+' points, spend them in Files)');float(P.x,P.y-16,a.name,'#ffe070');sfx('hackwin');}}}
+function drawProgressTab(x,y,w,h){['Bestiary','Run stats'].forEach((n,i)=>{const bx=x+8+i*84,act=progMode===i;ui(bx,y+2,80,11,{click:()=>{progMode=i;sfx('click');}});F(act?'#1c2220':'#0a0d0c',bx,y+2,80,11);F(act?AMBER:'#2a302e',bx,y+12,80,1);txt(n,bx+40,y+4,act?AMBER:'#8e978b','center');});
+  txt('A D switch view',x+w-8,y+4,'#3f4642','right');if(progMode===0)return drawBestiary(x,y+14,w,h-14);drawRunStats(x,y+14,w,h-14);}
 function drawRunStats(x,y,w,h){const P=player,R=P.rs||{},rows=[
   ['Deepest deck',depth],['Creatures taken out',runStat('kills')],['Damage dealt',Math.round(R.dealt||0)],['Damage taken',Math.round(runStat('dmg'))],['Critical hits',R.crits||0],['Best combo',Math.max(R.maxCombo||0,Math.floor(P.combo||0))],
   ['Items picked up',runStat('items')],['Chests opened',runStat('chests')+runStat('rare')],['Secrets found',runStat('secrets')],['Hacks pulled off',runStat('hacks')],['Doors forced',runStat('doors')],
@@ -65,11 +65,11 @@ function drawRunStats(x,y,w,h){const P=player,R=P.rs||{},rows=[
   const half=Math.ceil(rows.length/2),cw=(w-36)/2;rows.forEach((r,i)=>{const col=i<half?0:1,yy=y+6+(i%half)*11,cx=x+12+col*(cw+12);txt(r[0],cx,yy,'#8e978b');txt(''+r[1],cx+cw,yy,'#e3e6dc','right');});}
 function drawAch(x,y,w,h){const P=player,lx=x+10,lw=w-152;txt('points '+(P.ap||0),lx,y+4,'#ffe070');
   let hv=null;ACH.forEach((a,i)=>{const yy=y+17+i*10,got=P.ach&&P.ach[a.id];if(ui(lx-2,yy-2,lw+4,10,{click:()=>{}}))hv=a;if(hv===a)F('#141917',lx-2,yy-2,lw+4,10);F(got?'#ffe070':'#2a302e',lx,yy+1,6,6);if(got)F('#0a0d0c',lx+2,yy+3,2,2);txt(a.name,lx+10,yy,got?'#e3e6dc':'#8e978b');txt(got?'done':'',lx+lw-22,yy,'#6f7a6a','right');txt('+'+a.pts,lx+lw,yy,got?'#ffe070':'#4f5a55','right');});
-  {const a=hv||ACH.find(q=>!(P.ach&&P.ach[q.id]))||ACH[0];F('#1f2524',lx,y+h-24,lw,1);txt(a.name,lx,y+h-20,AMBER);wrap(a.desc,lx,y+h-10,lw,9,'#b9c0b3');}
   const tx=x+w-132;F('#1f2524',tx-6,y+4,1,h-10);txt('Trade points',tx,y+4,AMBER);
   AP_TRADES.forEach((t,i)=>{const yy=y+18+i*24,ok=(P.ap||0)>=t.cost&&(!t.ok||t.ok()),sel=i===apSel;const hov=ui(tx,yy,122,20,{click:()=>{apSel=i;apTrade(t);}});if(hov&&mouse.moved)apSel=i;
     box(tx,yy,122,20,sel?'#1c2220':'#0e1211',ok?(sel?AMBER:'#6b5220'):'#2a302e');txt(t.label,tx+6,yy+3,ok?'#e3e6dc':'#5d655f');txt(t.cost+' points',tx+6,yy+11,ok?'#ffe070':'#4f5a55');});
-  wrap('Achievements last for this run. Points can be traded any time.',tx,y+94,122,9,'#4f5a55');}
+  wrap('Work orders last for this run. Points can be traded any time.',tx,y+94,122,9,'#4f5a55');
+  {const a=hv||ACH.find(q=>!(P.ach&&P.ach[q.id]))||ACH[0];F('#1f2524',tx,y+120,122,1);txt(a.name,tx,y+124,AMBER);wrap(a.desc,tx,y+134,122,9,'#b9c0b3');}}
 function drawBestiary(x,y,w,h){
   const lx=x+8,lw=150;bxSel=Math.max(0,Math.min(bxSel,BEASTS.length-1));
   const found=BEASTS.filter(b=>bestiary.seen[b]).length,totalK=BEASTS.reduce((a,b)=>a+(bestiary.kills[b]||0),0);
