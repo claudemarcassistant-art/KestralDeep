@@ -84,6 +84,7 @@ function hud(){
     else if(it.k==='liftgo')txt(stopMode?'R ride on':'R take the lift down',x,y-2,'#9fe0b0','center');
     else if(it.k==='liftshut')txt(liftState==='arena'?'lift sealed':liftState==='locked'?'lift locked: needs the keycard':'lift on its way',x,y-2,'#c08070','center');
     else if(it.k==='testlift')txt('R test lift',x,y-2,'#e8c070','center');
+    else if(it.k==='freight')txt('R ride the freight lift',x,y-2,'#e8c070','center');
     else if(it.k==='arcexit')txt('R leave the arcade',x,y-2,'#e8c070','center');
     else if(it.k==='hatch')txt('R climb down',x,y+6,'#c9b48a','center');
     else if(it.k==='ladder')txt('R climb up',x,y+4,'#c9b48a','center');

@@ -76,8 +76,9 @@ function render(){
   for(const v of vendors){if(!seen[v.ty*MW+v.tx])continue;const x=v.tx*TS-camX,y=v.ty*TS-camY;if(x<-16||y<-16||x>W+16||y>H+16)continue;drawVendor(v,x,y);}
   for(const lb of testLabels)if(seen[Math.floor(lb.y)*MW+Math.floor(lb.x)])txt(lb.s,Math.round(lb.x*TS-camX+(lb.c?0:0)),Math.round(lb.y*TS-camY),'#5d6a66',lb.c?'center':'left',lb.sz||8);
   const ex=exitT.x*TS-camX,ey=exitT.y*TS-camY,exSeen=seen[exitT.y*MW+exitT.x];
+  drawLiftPad(exitT.x,exitT.y);if(freightT)drawLiftPad(freightT.x,freightT.y);
   if(exSeen&&liftState!=='open'){const col=liftState==='locked'||liftState==='arena'?'#c04030':liftState==='idle'?AMBER:liftState==='alarm'?(Math.sin(T*10)>0?'#ff4030':'#601810'):'#7fe08e';
-    F(col,ex-1,ey-1,TS+2,1);F(col,ex-1,ey+TS,TS+2,1);F(col,ex-1,ey-1,1,TS+2);F(col,ex+TS,ey-1,1,TS+2);}
+    const bx=ex-TS-1,by=ey-TS-1,bs=TS*3+2;F(col,bx,by,bs,1);F(col,bx,by+bs-1,bs,1);F(col,bx,by,1,bs);F(col,bx+bs-1,by,1,bs);}
   if(exSeen){const pu=0.5+0.5*Math.sin(T*4);F('#2a2214',ex,ey,TS,TS);
     ctx.fillStyle=`rgba(217,164,65,${0.35+0.4*pu})`;for(let i=0;i<4;i++)ctx.fillRect(ex+1,ey+1+i*3,TS-2,1);
     F(AMBER,ex+5,ey+3,2,4);F(AMBER,ex+3,ey+6,6,1);F(AMBER,ex+4,ey+7,4,1);F(AMBER,ex+5,ey+8,2,1);}
@@ -88,8 +89,7 @@ function render(){
   drawSoftShadows();
   for(const h of hatches){if(seen[h.ty*MW+h.tx])drawHatch(h);if(seen[h.ly*MW+h.lx])drawLadder(h);}
   for(const f of fixtures)if(seen[f.ty*MW+f.tx])drawFixture(f);
-  if(freightT&&seen[freightT.y*MW+freightT.x]){const x=freightT.x*TS-camX,y=freightT.y*TS-camY,pu=0.5+0.5*Math.sin(T*3);F('#15110a',x-6,y-6,24,24);F('#3a3020',x-5,y-5,22,22);
-    for(let k=0;k<22;k+=3)F('#2a2014',x-5,y-5+k,22,1);for(let k=0;k<22;k++)if(((k)>>1)%2===0){F('#8a6a24',x-5+k,y-5,1,2);F('#8a6a24',x-5+k,y+15,1,2);}
+  if(freightT&&seen[freightT.y*MW+freightT.x]){const x=freightT.x*TS-camX,y=freightT.y*TS-camY,pu=0.5+0.5*Math.sin(T*3);F('#3a3020',x,y,TS,TS);for(let k=0;k<TS;k+=3)F('#2a2014',x,y+k,TS,1);
     F(`rgba(217,164,65,${0.5+0.4*pu})`,x+3,y,6,1);txt('F',x+6,y+2,AMBER,'center');}
   for(const pl of plants)if(!pl.burst&&seen[Math.floor(pl.y/TS)*MW+Math.floor(pl.x/TS)])drawPlant(pl);
   for(const l of levers)if(seen[l.ty*MW+l.tx])drawLever(l);

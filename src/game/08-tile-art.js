@@ -11,9 +11,6 @@ function paintMap(){
       if(h%4===0)for(let k=0;k<3;k++){const gx=px+1+((h>>>(k*4))%10),gy=py+3+((h>>>(k*4+2))%8);R('#3a7a2a',gx,gy,1,2);R('#5aa03a',gx,gy-1,1,1);}
       if(h%9===0){const fx=px+2+((h>>>7)%8),fy=py+2+((h>>>10)%8);R('#3a7a2a',fx,fy+1,1,2);R(['#e06a9a','#e0d050','#8a7ae0','#e08a3a'][(h>>>12)%4],fx,fy,1,1);}}
     else if(map[i]===1&&!solid(x,y+1)&&h%2===0){for(let k=0;k<TS;k++){const vx=px+3+((h>>>3)%6)+Math.round(Math.sin(k*0.8+h)*1.5);R('#2e5a1e',vx,py+k,1,1);if(k%4===0)R('#4a8a2a',vx+1,py+k,2,1);}}}
-  for(const [dx,dy] of D8){const nx=exitT.x+dx,ny=exitT.y+dy;if(solid(nx,ny))continue;const px=nx*TS,py=ny*TS;
-    for(let k=0;k<TS;k++){const on=((k+nx*TS+ny*TS)>>1)%2===0;const c=on?'#7a5c22':'#15130e';
-      if(dy===-1)R(c,px+k,py+TS-2,1,2);if(dy===1)R(c,px+k,py,1,2);if(dx===-1)R(c,px+TS-2,py+k,2,1);if(dx===1)R(c,px,py+k,2,1);}}
 }
 function paintArea(cx,cy){for(let y=cy-1;y<=cy+1;y++)for(let x=cx-1;x<=cx+1;x++)if(x>=0&&y>=0&&x<MW&&y<MH)paintTile(x,y);}
 function isoPuddle(px,py,h){

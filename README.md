@@ -72,7 +72,7 @@ src/
     33-cold.js              creature cold meters, frozen player and creatures, cryo clouds
     34-herbs.js             herb generation, herbalism, poultices, incense, draughts, timed buffs
     35-vaults.js            express shafts, vault junctions, archive vaults and their dangers
-    36-backtrack.js         deck secured walk-back to the lift, ceiling crawlways, time passing, keeping the lift area clear
+    36-backtrack.js         deck secured walk-back to the lift, ceiling crawlways, time passing, keeping the lift area clear, the 3x3 lift pads
     37-pacing.js            how long creatures hunt you, muffled noise, arena waves, ghost movement
 scripts/build.mjs  the build
 docs/specs/        change request batches

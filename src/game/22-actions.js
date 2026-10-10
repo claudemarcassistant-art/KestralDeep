@@ -171,7 +171,10 @@ function throwFlare(){
   flares.push({x:player.x,y:player.y,vx:Math.cos(player.ang)*170*(1+0.2*U('throw')),vy:Math.sin(player.ang)*170*(1+0.2*U('throw')),t:14,ph:Math.random()*6,pts:null,r:FLARE_R});
 }
 // the exit lift (and the test range's test lift and the arcade exit) is used with R, and wins over anything else in reach
-function exitLiftAt(){const p=player;if(!exitT||state!=='play'||!p)return null;const cx=exitT.x*TS+6,cy=exitT.y*TS+6;if(Math.hypot(cx-p.x,cy-p.y)>=16)return null;
+function onPad(c){const p=player;return c&&Math.max(Math.abs(Math.floor(p.x/TS)-c.x),Math.abs(Math.floor(p.y/TS)-c.y))<=1;}
+function exitLiftAt(){const p=player;if(!exitT||state!=='play'||!p)return null;
+  if(freightT&&onPad(freightT))return {k:'freight',x:freightT.x*TS+6,y:freightT.y*TS+6};
+  const cx=exitT.x*TS+6,cy=exitT.y*TS+6;if(!onPad(exitT))return null;
   if(testMode&&!testDeck&&!arcadeMode)return {k:'testlift',x:cx,y:cy};if(arcadeMode)return {k:'arcexit',x:cx,y:cy};
   if(liftState==='idle')return {k:'lift',x:cx,y:cy};return {k:liftState==='open'||liftState==='ready'?'liftgo':'liftshut',x:cx,y:cy};}
 function liftShutMsg(){return liftState==='arena'?'the lift is sealed until every creature here is dead ('+arenaFoes().length+' left)'+(arenaW&&!arenaW.done?'. more are still coming':''):liftState==='locked'?'the lift is locked out. find the lift keycard':'the lift is still on its way';}
@@ -196,6 +199,7 @@ function findInteract(){
 function interact(){
   const it=findInteract();if(!it){const st=player.arms[player.armSet];if(st.off==='tank'&&fillTank())return;if(curGun())startReload(false);else if(st.off==='tank'){say('stand in water, oil or sludge to fill the tank, or carry a full flask');sfx('deny');}return;}
   if(it.k==='liftgo'){finishLevel();return;}
+  if(it.k==='freight'){pendingSkip=2+rnd(2);say('the freight lift drops like a stone');finishLevel();return;}
   if(it.k==='liftshut'){say(liftShutMsg());sfx('deny');return;}
   if(it.k==='testlift'){deckUI={sel:0};mouse.l=false;mouse.r=false;sfx('map');return;}
   if(it.k==='arcexit'){state='title';arcadeMode=false;return;}

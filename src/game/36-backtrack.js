@@ -63,11 +63,15 @@ function drawFadeAndAsk(){if(fadeFx){const k=fadeFx.t/fadeFx.m,a=k>0.5?1:k*2;F(`
 // ---- keep the exit lift clear: R at the lift takes the lift, so nothing else usable may sit on or beside its tile.
 // Runs at the end of enterLevel() (after the objective, which can add a keycard panel). Moves hack panels, chests,
 // fixtures, vending machines, levers and hatches at least two tiles away (to the nearest valid spot), or drops a panel.
-function nearLift(x,y){return Math.max(Math.abs(x-exitT.x),Math.abs(y-exitT.y))<=1;}
-function wallSpotFrom(x0,y0,taken){for(let r=2;r<=8;r++)for(let y=y0-r;y<=y0+r;y++)for(let x=x0-r;x<=x0+r;x++){if(Math.max(Math.abs(x-x0),Math.abs(y-y0))!==r||x<1||y<1||x>=MW-1||y>=MH-2)continue;
-  if(nearLift(x,y)||Math.max(Math.abs(x-exitT.x),Math.abs(y-exitT.y))<2)continue;const i=y*MW+x;if(map[i]!==1||solid(x,y+1)||map[i-1]!==1||map[i+1]!==1)continue;if(taken(x,y))continue;return [x,y];}return null;}
-function floorSpotFrom(x0,y0,taken){for(let r=1;r<=8;r++)for(let y=y0-r;y<=y0+r;y++)for(let x=x0-r;x<=x0+r;x++){if(Math.max(Math.abs(x-x0),Math.abs(y-y0))!==r||x<1||y<1||x>=MW-1||y>=MH-1)continue;
-  if(Math.max(Math.abs(x-exitT.x),Math.abs(y-exitT.y))<2)continue;const i=y*MW+x;if(solid(x,y)||liq[i]>=2||chasm[i]||molten[i]||hz[i])continue;if(taken(x,y))continue;return [x,y];}return null;}
+// the lift pad is 3x3 and R anywhere on it means the lift, so the pad and the ring around it (a wall panel there is used
+// from the pad) stay clear; things moved go at least 3 tiles out. Covers the freight lift's pad too.
+const liftPads=()=>[exitT,freightT].filter(Boolean);
+function padDist(x,y){let d=99;for(const c of liftPads())d=Math.min(d,Math.max(Math.abs(x-c.x),Math.abs(y-c.y)));return d;}
+function nearLift(x,y){return padDist(x,y)<=2;}
+function wallSpotFrom(x0,y0,taken){for(let r=1;r<=10;r++)for(let y=y0-r;y<=y0+r;y++)for(let x=x0-r;x<=x0+r;x++){if(Math.max(Math.abs(x-x0),Math.abs(y-y0))!==r||x<1||y<1||x>=MW-1||y>=MH-2)continue;
+  if(padDist(x,y)<3)continue;const i=y*MW+x;if(map[i]!==1||solid(x,y+1)||map[i-1]!==1||map[i+1]!==1)continue;if(taken(x,y))continue;return [x,y];}return null;}
+function floorSpotFrom(x0,y0,taken){for(let r=1;r<=10;r++)for(let y=y0-r;y<=y0+r;y++)for(let x=x0-r;x<=x0+r;x++){if(Math.max(Math.abs(x-x0),Math.abs(y-y0))!==r||x<1||y<1||x>=MW-1||y>=MH-1)continue;
+  if(padDist(x,y)<3)continue;const i=y*MW+x;if(solid(x,y)||liq[i]>=2||chasm[i]||molten[i]||hz[i])continue;if(taken(x,y))continue;return [x,y];}return null;}
 function clearLiftArea(){if(!exitT)return;
   const wallUsed=(x,y)=>panels.some(q=>q.tx===x&&q.ty===y)||vendors.some(v=>v.tx===x&&v.ty===y)||fixtures.some(f=>f.tx===x&&f.ty===y)||risers.some(r=>r.tx===x&&r.ty===y);
   const floorUsed=(x,y)=>chests.some(c=>c.tx===x&&c.ty===y)||fixtures.some(f=>f.tx===x&&f.ty===y)||levers.some(l=>l.tx===x&&l.ty===y)||barrels.some(b=>!b.dead&&b.tx===x&&b.ty===y);
@@ -77,3 +81,7 @@ function clearLiftArea(){if(!exitT)return;
   for(const f of fixtures)if(f.kind!=='liftdoor'&&nearLift(f.tx,f.ty)){const s=f.wall?wallSpotFrom(f.tx,f.ty,wallUsed):floorSpotFrom(f.tx,f.ty,floorUsed);if(s){f.tx=s[0];f.ty=s[1];}}
   for(const l of levers)if(nearLift(l.tx,l.ty)){const s=floorSpotFrom(l.tx,l.ty,floorUsed);if(s){l.tx=s[0];l.ty=s[1];}}
   for(const h of hatches)if(nearLift(h.tx,h.ty)){const s=floorSpotFrom(h.tx,h.ty,floorUsed);if(s){h.tx=s[0];h.ty=s[1];}}}
+// the pad under a lift: a plated 3x3 floor with a striped rim (the lift graphic itself is drawn on the centre tile)
+function drawLiftPad(cx,cy){for(let ty=cy-1;ty<=cy+1;ty++)for(let tx=cx-1;tx<=cx+1;tx++){if(solid(tx,ty)||!seen[ty*MW+tx])continue;const x=tx*TS-camX,y=ty*TS-camY;if(x<-TS||y<-TS||x>W||y>H)continue;
+  F('#17190f',x,y,TS,TS);F('#262820',x+1,y+1,TS-2,TS-2);for(let k=2;k<TS-1;k+=3)F('#1e2018',x+1,y+k,TS-2,1);F('#4a4c40',x+1,y+1,1,1);F('#4a4c40',x+TS-2,y+1,1,1);F('#4a4c40',x+1,y+TS-2,1,1);F('#4a4c40',x+TS-2,y+TS-2,1,1);
+  for(let k=0;k<TS;k++){const c=((k+tx*TS+ty*TS)>>1)%2===0?'#8a6a24':'#15130e';if(ty===cy-1)F(c,x+k,y,1,2);if(ty===cy+1)F(c,x+k,y+TS-2,1,2);if(tx===cx-1)F(c,x,y+k,2,1);if(tx===cx+1)F(c,x+TS-2,y+k,2,1);}}}

@@ -126,8 +126,7 @@ function updatePlay(dt){
     if(perk('tether')&&!(it.noPick>0)&&!(it.pop>0)){const dx=p.x-it.x,dy=p.y-it.y,d=Math.hypot(dx,dy);if(d<95&&d>3){const sp=(60+(95-d)*1.6)*dt,nx=it.x+dx/d*sp,ny=it.y+dy/d*sp;if(!solidAt(nx,ny)){it.x=nx;it.y=ny;}if(Math.random()<dt*6)parts.push({x:it.x,y:it.y,vx:0,vy:0,t:0.3,m:0.3,c:'#a88af0',s:1});}}}
   items=items.filter(it=>!it.dead);
   updateFlasks(dt);
-  // the exit lift, the test lift and the arcade exit are used with R (exitLiftAt() in 22-actions.js); only the freight lift drops on contact
-  if(freightT&&Math.floor(p.x/TS)===freightT.x&&Math.floor(p.y/TS)===freightT.y){pendingSkip=2+rnd(2);say('the freight lift drops like a stone');finishLevel();return;}
+  // every lift (exit, freight, test lift, arcade exit) is used with R anywhere on its 3x3 pad: exitLiftAt() in 22-actions.js
 
   flowTick();
 
