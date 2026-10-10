@@ -262,17 +262,7 @@ function updatePlay(dt){
         const tg=flowStep(e);if(tg){const gx=tg.x-e.x,gy=tg.y-e.y,gl=Math.hypot(gx,gy)||1;if(gl>0.5){mx=gx/gl;my=gy/gl;}}}
       else{e.wt-=dt;if(e.wt<=0){e.wt=rr(1,3);const a=Math.random()*6.283,go=Math.random()<.5;e.wx=go?Math.cos(a):0;e.wy=go?Math.sin(a):0;}mx=e.wx;my=e.wy;}
       const sp=e.spd*LIQ[liqAt(e.x,e.y)]*(e.alert?1:0.5);move(e,(mx*sp+e.vx)*dt,(my*sp+e.vy)*dt);const f=Math.pow(kbFr(),dt);e.vx*=f;e.vy*=f;continue;}
-    if(b.ghost){e.dashT=(e.dashT||0)-dt;e.fleeT=(e.fleeT||0)-dt;e.ph+=dt;
-      const look=d<170&&!(p.cloakT>0)&&Math.abs(angDiff(Math.atan2(e.y-p.y,e.x-p.x),p.ang))<0.45;
-      if((look||perk('ward')&&d<70)&&e.fleeT<=0&&e.dashT<=0){e.fleeT=1.3;}
-      let vx=0,vy=0;
-      if(e.fleeT>0){vx=-dx/d*150;vy=-dy/d*150;}
-      else if(e.dashT>0){vx=e.dvx;vy=e.dvy;}
-      else if(d<55&&e.cd<=0&&!(p.cloakT>0)){e.dashT=0.45;e.dvx=dx/d*200;e.dvy=dy/d*200;e.cd=2.6;e.hitP=false;if(d<200)sfx('wail');}
-      else if(!(p.cloakT>0)){vx=dx/d*b.spd-dy/d*Math.sin(e.ph*2)*20;vy=dy/d*b.spd+dx/d*Math.sin(e.ph*2)*20;}
-      e.x=Math.max(TS,Math.min((MW-1)*TS,e.x+vx*dt));e.y=Math.max(TS,Math.min((MH-1)*TS,e.y+vy*dt));
-      if(e.dashT>0&&!e.hitP&&Math.hypot(p.x-e.x,p.y-e.y)<e.r+p.r+3&&perk('ward')){e.hitP=true;e.fleeT=1.5;float(p.x,p.y-6,'warded','#c8b8ff');}
-      if(e.dashT>0&&!e.hitP&&Math.hypot(p.x-e.x,p.y-e.y)<e.r+p.r+3){e.hitP=true;hurtPlayer(b.dmg,true);addStatus('rad',25);float(p.x,p.y-6,'chill','#d8e8f0');}
+    if(b.ghost){ghostMove(e,b,dx,dy,d,dt);
       continue;}
     if(b.grasper){e.st=e.st||'sub';e.stT=(e.stT||0)-dt;e.bcd=(e.bcd||0)-dt;e.tip=e.tip||{x:e.x,y:e.y};let mx=0,my=0,sp=e.spd;
       if(e.st==='sub'){e.tip.x=e.x;e.tip.y=e.y;

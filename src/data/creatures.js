@@ -13,7 +13,7 @@ const ET={
   wasp:{hp:2.5,spd:48,r:3,dmg:3,col:'#d8b030',atk:2.2,wasp:true,fly:true},
   drone:{hp:2,spd:62,r:3,dmg:0,col:'#7a868a',atk:1,drone:true,fly:true},
   grasper:{hp:12,spd:40,r:6,dmg:10,col:'#7a4a8a',atk:1.1,aquatic:true,swim:1,grasper:true},
-  ghost:{hp:6,spd:45,r:4,dmg:3,col:'#d8e8f0',atk:1,ghost:true,fly:true},
+  ghost:{hp:6,spd:30,r:4,dmg:3,col:'#d8e8f0',atk:1,ghost:true,fly:true},
   snare:{hp:10,spd:0,r:5,dmg:6,col:'#4a7a2a',atk:1,grasper:true,plant:true,biteP:10},
   pod:{hp:8,spd:0,r:5,dmg:3,col:'#8a4a9a',atk:2.6,plant:true,pod:true},
   trip:{hp:10,spd:0,r:5,dmg:2,col:'#3a6a22',atk:1,plant:true,trip:true},
@@ -47,7 +47,7 @@ const BEASTINFO={
   toxslug:{name:'Blight slug',lore:'A sludge slug that fed on the toxic spills. Its trail is still sticky, and it also poisons anything that wades through it. The bite poisons too.',move:'very slow, leaves toxic slime',attack:'poisoned bite'},
   snail:{name:'Plated snail',lore:'A huge snail with a shell of fused hull plating. Guns barely scratch the shell, and it pulls in tight when hurt. Explosions, rams and hazards get through fine. Leaves a sticky trail.',move:'crawls, leaves sticky slime',attack:'heavy bite, armored shell'},
   grasper:{name:'Grasper',lore:'A many-armed thing from the flooded depths that cannot leave deep water. It waits just under the surface near the edge, then lashes out a long tentacle to snatch anything within reach and haul it into the water, biting when it gets you close. Shoot the tentacle, shove it off, or dash free.',move:'deep and waist-deep water only',attack:'tentacle grab and drag, bite'},
-  ghost:{name:'Ghost',lore:'A pale shape that drifts through walls on haunted decks. Bullets, shoves and blasts pass straight through it. It dashes through you, leaving a chill of radiation, and flees the moment you look straight at it. Only radiation weapons hurt it, and an anomaly core destroys it outright.',move:'drifts through walls, flees your gaze',attack:'dash through, radiation'},
+  ghost:{name:'Ghost',lore:'A pale shape that drifts through walls on haunted decks. Bullets, shoves and blasts pass straight through it. It drifts toward you slowly and unevenly, then gathers itself and lunges straight through you, leaving a chill of radiation, and coasts on for a few seconds before it loops back around. It flees the moment you look straight at it. Only radiation weapons hurt it, and an anomaly core destroys it outright.',move:'drifts through walls, loops back after a lunge, flees your gaze',attack:'lunges through you, radiation'},
   snare:{name:'Snarevine',lore:'A rooted, toothy bloom from overgrown decks. It cannot move, but it lashes a slow green tendril to catch anything nearby and reel it in to its poisoned core. Shoot the vine, shove it or dash free, and keep your distance.',move:'rooted in place',attack:'vine grab and pull, poisoned bite'},
   lurker:{name:'Lurker',lore:'Something big living in the deepest water, and it cannot leave it. It stays submerged, where bullets skip off the surface, and shows only a ripple. When you come close it rises and bites, then stays up a moment before diving. Stay out of the deep water, or wait for it to surface. Explosions reach it underwater.',move:'deep and waist-deep water only',attack:'rising bite'},
   brute:{name:'Brute',lore:'A husk that kept growing. Soaks a magazine, hits hard enough to crack plating, and barely moves when shoved. Deeper decks only.',move:'slow',attack:'heavy slam'}
@@ -66,3 +66,11 @@ const TRACK_CFG={
 const THREAT_SIZE_MUL={s:1,m:1,l:0.8};
 // arenas: a smaller first group, then waves. With a biome mini-boss the waves keep coming until it dies.
 const ARENA_WAVES={startShare:0.4,minStart:2,firstDelay:8,every:15,size:[2,3],perDepth:1/3,noBoss:3,cap:8};
+// ghost movement (v0.88): floaty and erratic, a lunge through you when close, then a slow drift before it loops back
+const GHOST_CFG={
+  spd:30,accel:1.3,    // cruising speed (px/s) and how quickly it changes velocity (lower = floatier)
+  wobble:0.9,wobbleRate:1.4,speedVar:0.4, // wandering off line (rad), how fast that wanders, and speed variation
+  track:230,           // px: within this it comes for you; further off it just drifts about
+  lungeR:62,windup:0.35,lungeSpd:210,lungeT:0.45,cd:3.2, // lunge range, wind-up, speed, duration, cooldown
+  driftT:2.6,driftSpd:42,driftDecay:0.55, // after a lunge: seconds coasting on, starting speed, speed kept per second
+  fleeSpd:110,fleeAccel:3};

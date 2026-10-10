@@ -111,7 +111,7 @@ function drawEnemy(e){
       for(let k=0;k<3;k++){ctx.beginPath();let qx=x,qy=y;ctx.moveTo(qx,qy);for(let j=0;j<4;j++){qx+=rr(-8,8);qy+=rr(-8,8);ctx.lineTo(qx,qy);}ctx.stroke();}
       if(e.pz)for(const i of e.pz){if(Math.random()<0.5)continue;F(Math.random()<.5?'#e0f0ff':'#6fa8ff',(i%MW)*TS-camX+rnd(TS),((i/MW)|0)*TS-camY+rnd(TS),1,1);}}
   }else if(b.ghost){
-    const al=e.fleeT>0?0.3:0.6+0.15*Math.sin(T*5+e.ph);ctx.globalAlpha=e.portrait?0.9:al;
+    const al=e.fleeT>0?0.3:e.gst==='windup'?0.75+0.25*Math.sin(T*40):e.gst==='lunge'?0.9:e.gst==='drift'?0.45:0.6+0.15*Math.sin(T*5+e.ph);ctx.globalAlpha=e.portrait?0.9:al;
     ctx.fillStyle=e.flash>0?'#fff':col;ctx.beginPath();ctx.arc(x,y-2,4.5,Math.PI,0);ctx.lineTo(x+4.5,y+3);
     for(let k=0;k<4;k++){ctx.lineTo(x+4.5-(k+0.5)*2.25,y+3+(k%2?-1.5:1)+Math.sin(T*8+k)*0.6);}ctx.lineTo(x-4.5,y+3);ctx.closePath();ctx.fill();
     F('#1a2030',x-2,y-3,1,2);F('#1a2030',x+1,y-3,1,2);ctx.globalAlpha=1;

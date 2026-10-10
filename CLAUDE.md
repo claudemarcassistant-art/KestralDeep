@@ -2,7 +2,7 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v0.87**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v0.88**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
@@ -54,7 +54,7 @@ Current version: **v0.87**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v0.87)
+## Architecture overview (as of v0.88)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -130,6 +130,7 @@ Current version: **v0.87**. The game was built iteratively in claude.ai chats up
 - **Memory:** `trackTick()` runs in the enemy loop right after the sight check. An alerted creature gets `huntT` (8 s; 5 s from a noise; 30 s for disturbance-wave spawns `e.drawn`; 20 s for alarm-called guards `e.called`), refreshed whenever it sees you within 180 px; out of sight it counts down (3x faster beyond 30 walking tiles or with no path), then `alert=false` and a grey "?". Wardens, arena creatures (`e.arena`) and guards during an alarm (`secT>0`) never give up. After the change the same walk leaves ~2.5 hunting.
 - **Noise:** `noise()` uses `noiseReach()`: half range without line of sight.
 - **Counts:** the threat budget in `populate()` is multiplied by `THREAT_SIZE_MUL[deckSize]` (Large 0.8, owner's choice).
+- **Ghosts (owner's design, v0.88):** the ghost branch of the enemy loop calls `ghostMove()` (`37-pacing.js`, numbers in `GHOST_CFG`): velocity steering with low acceleration (`e.gvx`/`e.gvy`), states `e.gst` `float` (toward you within 230 px on a wandering heading `e.wob`, speed varying, about 22 px/s on average), `windup` (0.35 s shiver at ~60 px), `lunge` (210 px/s for 0.45 s, hits once), `drift` (coasts on along the lunge, slowing from 42 px/s, 2.6 s), then back to `float`, which curves it round in a loop. Looking straight at it still makes it flee. The enemy loop's `e.cd-=dt` times the 3.2 s lunge cooldown.
 - **Arena waves (owner's design):** `enterLevel()` places only `arenaStart()`'s share of the arena creatures (40%, at least 2) and sets `arenaW`; `updateArenaWaves()` queues a wave every 15 s (first after 8 s) through `queueSpawn()` (`spawnQ` entries marked `arena`), size 2-3 plus depth/3 scaled by area, skipped while the arena already holds `cap` (8 x AREA). With a mini-boss (`arenaW.boss`) waves continue until it dies; without one there are 3. The lift unlocks only when `arenaW.done` and the arena is clear.
 
 **Run structure:** each biome is a sector map of 12-15 junctions (`route.nodes`) with the exit 3-4 jumps away. Shafts are hidden until ridden or revealed by intel (`route.lk`). A biome hunter boss can roam the sector (`route.chaser`). Each sector has 1-2 arena decks. The player arrives on each deck sealed in a lift cab and opens the doors with R.
@@ -152,7 +153,7 @@ Current version: **v0.87**. The game was built iteratively in claude.ai chats up
 |---|---|
 | `character.js` | `SKILLS`, `ACTS`, `SLING`, `FT()`, `FILES`, `MOVES`, `CORES`, `SUBS`, `FILESUB`, `INJ`, `SPACE_STYLES` |
 | `crafting.js` | `RECIPES` (with `upgRecipe()`, `ROMAN`), `UPGS`, grinder yields `GEARY`, `ARMY`, `CONY`, `AMMOY` |
-| `creatures.js` | `ET`, `BOSSES`, `KILLPTS`, `THREAT`, `BEASTS`, `BEASTINFO`, `TRACK_CFG`, `THREAT_SIZE_MUL`, `ARENA_WAVES` |
+| `creatures.js` | `ET`, `BOSSES`, `KILLPTS`, `THREAT`, `BEASTS`, `BEASTINFO`, `TRACK_CFG`, `THREAT_SIZE_MUL`, `ARENA_WAVES`, `GHOST_CFG` |
 | `events.js` | `TEXTEV`, `ROOMDESC` |
 | `food.js` | `FOOD`, `RAW`, `COOK` |
 | `items.js` | `IT`, `QUICK`, `FLASKCOL`, `TANKMAX`, `GEAR`, `VEND_POOL`, `TOOLS`, `RESDESC`, `CXRES` |
@@ -198,7 +199,7 @@ Current version: **v0.87**. The game was built iteratively in claude.ai chats up
 | herbs: `genOvergrownHerbs()`, `genGreenhouseHerbs()`, `makePrep()`, `usePrep()`, `drinkDraught()`, `updateHerbs()`, incense, `drawHerbalism()` (in `20-progress-screens.js`) | `34-herbs.js` |
 | express shafts and vaults: `genExpress()`, `genVaultJunctions()`, `routeOpts()`, `pickRoute()`, `genArchiveVault()`, `fillArchive()`, `openArchive()`, `archiveBlast()` | `35-vaults.js` |
 | deck secured and crawlways: `checkSecure()`, `walkBack()`, `passTime()`, `genCrawls()`, `crawlKey()`, `drawFadeAndAsk()` | `36-backtrack.js` |
-| pacing: `trackTick()`, `noiseReach()`, arena waves (`arenaStart()`, `updateArenaWaves()`) | `37-pacing.js` |
+| pacing: `trackTick()`, `noiseReach()`, arena waves (`arenaStart()`, `updateArenaWaves()`), ghost movement (`ghostMove()`) | `37-pacing.js` |
 | reloads: `startReload()`, `updateReload()`, `finishReload()`, `activeReloadPress()` | `22-actions.js` |
 
 To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "const NAME=" src/data/*.js`.
