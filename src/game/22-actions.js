@@ -170,11 +170,16 @@ function throwFlare(){
   player.inv.flare--;sfx('flare');
   flares.push({x:player.x,y:player.y,vx:Math.cos(player.ang)*170*(1+0.2*U('throw')),vy:Math.sin(player.ang)*170*(1+0.2*U('throw')),t:14,ph:Math.random()*6,pts:null,r:FLARE_R});
 }
+// the exit lift (and the test range's test lift and the arcade exit) is used with R, and wins over anything else in reach
+function exitLiftAt(){const p=player;if(!exitT||state!=='play'||!p)return null;const cx=exitT.x*TS+6,cy=exitT.y*TS+6;if(Math.hypot(cx-p.x,cy-p.y)>=16)return null;
+  if(testMode&&!testDeck&&!arcadeMode)return {k:'testlift',x:cx,y:cy};if(arcadeMode)return {k:'arcexit',x:cx,y:cy};
+  if(liftState==='idle')return {k:'lift',x:cx,y:cy};return {k:liftState==='open'||liftState==='ready'?'liftgo':'liftshut',x:cx,y:cy};}
+function liftShutMsg(){return liftState==='arena'?'the lift is sealed until every creature here is dead ('+arenaFoes().length+' left)'+(arenaW&&!arenaW.done?'. more are still coming':''):liftState==='locked'?'the lift is locked out. find the lift keycard':'the lift is still on its way';}
 function findInteract(){
   const p=player;let best=null,bd=18;
+  {const ex=exitLiftAt();if(ex)return ex;}
   {const h=crawlAt();if(h){const c=h.c[h.end],cx=c.tx*TS+6,cy=c.ty*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<bd){bd=d;best={k:'crawl',h,x:cx,y:cy};}}}
   if(testMode&&testConsole){const cx=testConsole.tx*TS+6,cy=testConsole.ty*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<bd){bd=d;best={k:'console',x:cx,y:cy};}}
-  if(liftState==='idle'){const cx=exitT.x*TS+6,cy=exitT.y*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<16){bd=d;best={k:'lift',x:cx,y:cy};}}
   for(const h of hatches){let cx=h.tx*TS+6,cy=h.ty*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<Math.min(bd,12)){bd=d;best={k:'hatch',h,x:cx,y:cy};}
     cx=h.lx*TS+6;cy=h.ly*TS+6;d=Math.hypot(cx-p.x,cy-p.y);if(d<Math.min(bd,13)){bd=d;best={k:'ladder',h,x:cx,y:cy};}}
   for(const l of levers){if(l.used)continue;const cx=l.tx*TS+6,cy=l.ty*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<bd){bd=d;best={k:'lever',l,x:cx,y:cy};}}
@@ -190,6 +195,10 @@ function findInteract(){
 }
 function interact(){
   const it=findInteract();if(!it){const st=player.arms[player.armSet];if(st.off==='tank'&&fillTank())return;if(curGun())startReload(false);else if(st.off==='tank'){say('stand in water, oil or sludge to fill the tank, or carry a full flask');sfx('deny');}return;}
+  if(it.k==='liftgo'){finishLevel();return;}
+  if(it.k==='liftshut'){say(liftShutMsg());sfx('deny');return;}
+  if(it.k==='testlift'){deckUI={sel:0};mouse.l=false;mouse.r=false;sfx('map');return;}
+  if(it.k==='arcexit'){state='title';arcadeMode=false;return;}
   if(it.k==='crawl'){askCrawl(it.h);return;}
   if(it.k==='panel'){if(vaultPanelBlocked(it.pn))return;startHack(it.pn);return;}
   if(it.k==='mdoor'){const i=it.ty*MW+it.tx,m=map[i],inside=doorInside(it.md);

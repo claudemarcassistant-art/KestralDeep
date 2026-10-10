@@ -81,7 +81,7 @@ function onPress(code){
   else if(player.frozenT>0&&['KeyF','KeyE','Space','KeyR'].includes(code)){sfx('click');}
   else if(code==='KeyF')useSkill(2);
   else if(code==='Space')spaceAct();
-  else if(code==='KeyR'){if(!activeReloadPress())interact();}
+  else if(code==='KeyR'){if(exitLiftAt()||!activeReloadPress())interact();}
   else if(code==='KeyE')useSkill(1);
   else if((code==='ShiftLeft'||code==='ShiftRight')&&hasMove('blink'))blink();
   else if((code==='ShiftLeft'||code==='ShiftRight')&&hasMove('dash'))dash();

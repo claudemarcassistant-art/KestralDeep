@@ -126,13 +126,8 @@ function updatePlay(dt){
     if(perk('tether')&&!(it.noPick>0)&&!(it.pop>0)){const dx=p.x-it.x,dy=p.y-it.y,d=Math.hypot(dx,dy);if(d<95&&d>3){const sp=(60+(95-d)*1.6)*dt,nx=it.x+dx/d*sp,ny=it.y+dy/d*sp;if(!solidAt(nx,ny)){it.x=nx;it.y=ny;}if(Math.random()<dt*6)parts.push({x:it.x,y:it.y,vx:0,vy:0,t:0.3,m:0.3,c:'#a88af0',s:1});}}}
   items=items.filter(it=>!it.dead);
   updateFlasks(dt);
-  {const onEx=Math.floor(p.x/TS)===exitT.x&&Math.floor(p.y/TS)===exitT.y;
-    if(testMode&&!testDeck&&!arcadeMode){if(onEx){if(!p.liftCfgLock){p.liftCfgLock=true;deckUI={sel:0};mouse.l=false;mouse.r=false;sfx('map');}return;}else p.liftCfgLock=false;}}
-  if(arcadeMode&&Math.floor(p.x/TS)===exitT.x&&Math.floor(p.y/TS)===exitT.y){state='title';arcadeMode=false;return;}
+  // the exit lift, the test lift and the arcade exit are used with R (exitLiftAt() in 22-actions.js); only the freight lift drops on contact
   if(freightT&&Math.floor(p.x/TS)===freightT.x&&Math.floor(p.y/TS)===freightT.y){pendingSkip=2+rnd(2);say('the freight lift drops like a stone');finishLevel();return;}
-  if(Math.floor(p.x/TS)===exitT.x&&Math.floor(p.y/TS)===exitT.y){
-    if(liftState==='open'||liftState==='ready'){finishLevel();return;}
-    if(liftMsgT<=0){liftMsgT=3;say(liftState==='arena'?'the lift is sealed until every creature here is dead ('+arenaFoes().length+' left)':liftState==='locked'?'the lift is locked out. find the lift keycard':liftState==='idle'?'R to call the lift. it will take a while, and it is loud':'the lift is still on its way');}}
 
   flowTick();
 

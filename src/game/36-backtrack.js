@@ -59,3 +59,21 @@ function drawCrawlMap(ox,oy,s){for(const c of crawls){const sa=seen[c.a.ty*MW+c.
   if(sa)F('#b0a070',ox+c.a.tx*s,oy+c.a.ty*s,s,s);if(sb)F('#b0a070',ox+c.b.tx*s,oy+c.b.ty*s,s,s);}}
 function drawFadeAndAsk(){if(fadeFx){const k=fadeFx.t/fadeFx.m,a=k>0.5?1:k*2;F(`rgba(3,4,4,${a})`,0,0,W,H);if(a>0.3)txt(fadeFx.msg,W/2,H/2-4,`rgba(201,207,194,${a})`,'center');}
   if(crawlAsk){const w=300,x=(W-w)>>1,y=H/2+30;box(x,y,w,26,'#0a0d0c','#5a5030');txt('Climb into the ceiling crawlway?',W/2,y+5,'#e8c070','center');txt('R to confirm, any other key to cancel',W/2,y+15,'#8e978b','center');}}
+
+// ---- keep the exit lift clear: R at the lift takes the lift, so nothing else usable may sit on or beside its tile.
+// Runs at the end of enterLevel() (after the objective, which can add a keycard panel). Moves hack panels, chests,
+// fixtures, vending machines, levers and hatches at least two tiles away (to the nearest valid spot), or drops a panel.
+function nearLift(x,y){return Math.max(Math.abs(x-exitT.x),Math.abs(y-exitT.y))<=1;}
+function wallSpotFrom(x0,y0,taken){for(let r=2;r<=8;r++)for(let y=y0-r;y<=y0+r;y++)for(let x=x0-r;x<=x0+r;x++){if(Math.max(Math.abs(x-x0),Math.abs(y-y0))!==r||x<1||y<1||x>=MW-1||y>=MH-2)continue;
+  if(nearLift(x,y)||Math.max(Math.abs(x-exitT.x),Math.abs(y-exitT.y))<2)continue;const i=y*MW+x;if(map[i]!==1||solid(x,y+1)||map[i-1]!==1||map[i+1]!==1)continue;if(taken(x,y))continue;return [x,y];}return null;}
+function floorSpotFrom(x0,y0,taken){for(let r=1;r<=8;r++)for(let y=y0-r;y<=y0+r;y++)for(let x=x0-r;x<=x0+r;x++){if(Math.max(Math.abs(x-x0),Math.abs(y-y0))!==r||x<1||y<1||x>=MW-1||y>=MH-1)continue;
+  if(Math.max(Math.abs(x-exitT.x),Math.abs(y-exitT.y))<2)continue;const i=y*MW+x;if(solid(x,y)||liq[i]>=2||chasm[i]||molten[i]||hz[i])continue;if(taken(x,y))continue;return [x,y];}return null;}
+function clearLiftArea(){if(!exitT)return;
+  const wallUsed=(x,y)=>panels.some(q=>q.tx===x&&q.ty===y)||vendors.some(v=>v.tx===x&&v.ty===y)||fixtures.some(f=>f.tx===x&&f.ty===y)||risers.some(r=>r.tx===x&&r.ty===y);
+  const floorUsed=(x,y)=>chests.some(c=>c.tx===x&&c.ty===y)||fixtures.some(f=>f.tx===x&&f.ty===y)||levers.some(l=>l.tx===x&&l.ty===y)||barrels.some(b=>!b.dead&&b.tx===x&&b.ty===y);
+  for(const pn of panels.slice())if(nearLift(pn.tx,pn.ty)){const s=wallSpotFrom(pn.tx,pn.ty,wallUsed);if(s){pn.tx=s[0];pn.ty=s[1];}else panels=panels.filter(q=>q!==pn);}
+  for(const v of vendors.slice())if(nearLift(v.tx,v.ty)){const s=wallSpotFrom(v.tx,v.ty,wallUsed);if(s){v.tx=s[0];v.ty=s[1];if(v.x!=null){v.x=s[0]*TS+6;v.y=s[1]*TS+6;}}else vendors=vendors.filter(q=>q!==v);}
+  for(const c of chests)if(nearLift(c.tx,c.ty)){const s=floorSpotFrom(c.tx,c.ty,floorUsed);if(s){c.tx=s[0];c.ty=s[1];c.x=s[0]*TS+TS/2;c.y=s[1]*TS+TS/2;}}
+  for(const f of fixtures)if(f.kind!=='liftdoor'&&nearLift(f.tx,f.ty)){const s=f.wall?wallSpotFrom(f.tx,f.ty,wallUsed):floorSpotFrom(f.tx,f.ty,floorUsed);if(s){f.tx=s[0];f.ty=s[1];}}
+  for(const l of levers)if(nearLift(l.tx,l.ty)){const s=floorSpotFrom(l.tx,l.ty,floorUsed);if(s){l.tx=s[0];l.ty=s[1];}}
+  for(const h of hatches)if(nearLift(h.tx,h.ty)){const s=floorSpotFrom(h.tx,h.ty,floorUsed);if(s){h.tx=s[0];h.ty=s[1];}}}

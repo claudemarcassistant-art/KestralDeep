@@ -81,6 +81,10 @@ function hud(){
     else if(it.k==='mdoor'){const m2=map[it.ty*MW+it.tx],ins=doorInside(it.md);txt(m2===0?'R close door':m2===6?(ins?'R lock door':'R open door'):(ins?'R unlock and open':'R unlock (key)'),x,y-2,'#c9cfc2','center');}
     else if(it.k==='fix')txt(it.f.kind==='locker'?'R search locker':it.f.kind==='medstation'?'R use medstation':it.f.kind==='dispenser'?'R bang on the coin dispenser':it.f.kind==='grinder'?'R use the salvager':it.f.kind==='damper'?'R use the dampening terminal':it.f.kind==='freezer'?'R open the freezer':it.f.kind==='fountain'?'R drink from the fountain':it.f.kind==='closet'?(it.f.restroom?'R open the restroom door':it.f.janitor?'R open the janitor\'s closet':'R open the door'):it.f.kind==='stasis'?'R climb into the stasis pod':it.f.kind==='breaker'?'R use the breaker panel':it.f.kind==='liftdoor'?'R open the lift doors':it.f.kind==='npc'?'R talk to the '+NPCS[it.f.npc].name.toLowerCase():it.f.kind==='camera'?'R check the lift camera':it.f.kind==='psychic'?'R talk to the sensitive':'R play '+ARC[it.f.game||'rift'].name+' (1 scrap)',x,y-4,'#c9cfc2','center');
     else if(it.k==='lift')txt('R call the lift (sets off the alarm)',x,y-2,'#ff8070','center');
+    else if(it.k==='liftgo')txt(stopMode?'R ride on':'R take the lift down',x,y-2,'#9fe0b0','center');
+    else if(it.k==='liftshut')txt(liftState==='arena'?'lift sealed':liftState==='locked'?'lift locked: needs the keycard':'lift on its way',x,y-2,'#c08070','center');
+    else if(it.k==='testlift')txt('R test lift',x,y-2,'#e8c070','center');
+    else if(it.k==='arcexit')txt('R leave the arcade',x,y-2,'#e8c070','center');
     else if(it.k==='hatch')txt('R climb down',x,y+6,'#c9b48a','center');
     else if(it.k==='ladder')txt('R climb up',x,y+4,'#c9b48a','center');
     else if(it.k==='lever')txt(it.l.effect==='release'?'R raise the cage':'R pull the emergency lever',x,y+4,'#e08070','center');

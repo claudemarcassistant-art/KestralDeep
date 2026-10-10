@@ -2,7 +2,7 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v0.88**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v0.89**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
@@ -54,7 +54,7 @@ Current version: **v0.88**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v0.88)
+## Architecture overview (as of v0.89)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -133,6 +133,8 @@ Current version: **v0.88**. The game was built iteratively in claude.ai chats up
 - **Ghosts (owner's design, v0.88):** the ghost branch of the enemy loop calls `ghostMove()` (`37-pacing.js`, numbers in `GHOST_CFG`): velocity steering with low acceleration (`e.gvx`/`e.gvy`), states `e.gst` `float` (toward you within 230 px on a wandering heading `e.wob`, speed varying, about 22 px/s on average), `windup` (0.35 s shiver at ~60 px), `lunge` (210 px/s for 0.45 s, hits once), `drift` (coasts on along the lunge, slowing from 42 px/s, 2.6 s), then back to `float`, which curves it round in a loop. Looking straight at it still makes it flee. The enemy loop's `e.cd-=dt` times the 3.2 s lunge cooldown.
 - **Arena waves (owner's design):** `enterLevel()` places only `arenaStart()`'s share of the arena creatures (40%, at least 2) and sets `arenaW`; `updateArenaWaves()` queues a wave every 15 s (first after 8 s) through `queueSpawn()` (`spawnQ` entries marked `arena`), size 2-3 plus depth/3 scaled by area, skipped while the arena already holds `cap` (8 x AREA). With a mini-boss (`arenaW.boss`) waves continue until it dies; without one there are 3. The lift unlocks only when `arenaW.done` and the arena is clear.
 
+**Lifts use R (owner's decision, v0.89):** standing on `exitT` no longer does anything. `exitLiftAt()` (22-actions.js) returns `{k:'liftgo'|'liftshut'|'lift'|'testlift'|'arcexit'}` within 16 px of the exit tile, and `findInteract()` returns it before anything else, so the lift always wins R; `onPress()` also checks it before `activeReloadPress()`, so R at the lift never fumbles a reload. `liftgo` calls `finishLevel()`, `liftshut` says why (`liftShutMsg()`), `testlift` opens the test lift's deck builder, `arcexit` leaves the arcade. The freight lift event still drops on contact. To keep that safe, `clearLiftArea()` (36-backtrack.js) runs at the end of `enterLevel()` and moves hack panels, vending machines, chests, fixtures, levers and hatches off the exit tile and the 8 tiles around it, to the nearest valid spot (a panel with nowhere to go is dropped). Before this ~9% of decks (mostly arenas) had a panel, chest or breaker beside the lift; after, 0 of 150, and everything stays usable from a spot more than 16 px from the lift.
+
 **Run structure:** each biome is a sector map of 12-15 junctions (`route.nodes`) with the exit 3-4 jumps away. Shafts are hidden until ridden or revealed by intel (`route.lk`). A biome hunter boss can roam the sector (`route.chaser`). Each sector has 1-2 arena decks. The player arrives on each deck sealed in a lift cab and opens the doors with R.
 
 **Player systems:** health with injuries (lost max health shown greyed out) and ghost health from food levels; stamina; status meters (`player.st`); armament sets (`player.arms`, main and off hand, two-handed weapons fill both); hotbar of quick items; crew files and clearance training substats and the Body/Spirit/Mind cores; abilities on E and F; switchable movement skills; skill sets (Psychic and Sling) that swap the item slots for an action bar; melee combos; crits; charged attacks with a perfect-release window; gun magazines and reloads.
@@ -198,7 +200,7 @@ Current version: **v0.88**. The game was built iteratively in claude.ai chats up
 | cold and frozen: `freezePlayer()`, `chillEnemy()`, `freezeEnemy()`, `enemyFrozen()`, `asMelee()`, `drawIceShell()`, cryo cloud ticks | `33-cold.js` |
 | herbs: `genOvergrownHerbs()`, `genGreenhouseHerbs()`, `makePrep()`, `usePrep()`, `drinkDraught()`, `updateHerbs()`, incense, `drawHerbalism()` (in `20-progress-screens.js`) | `34-herbs.js` |
 | express shafts and vaults: `genExpress()`, `genVaultJunctions()`, `routeOpts()`, `pickRoute()`, `genArchiveVault()`, `fillArchive()`, `openArchive()`, `archiveBlast()` | `35-vaults.js` |
-| deck secured and crawlways: `checkSecure()`, `walkBack()`, `passTime()`, `genCrawls()`, `crawlKey()`, `drawFadeAndAsk()` | `36-backtrack.js` |
+| deck secured and crawlways: `checkSecure()`, `walkBack()`, `passTime()`, `genCrawls()`, `crawlKey()`, `drawFadeAndAsk()`, `clearLiftArea()` | `36-backtrack.js` |
 | pacing: `trackTick()`, `noiseReach()`, arena waves (`arenaStart()`, `updateArenaWaves()`), ghost movement (`ghostMove()`) | `37-pacing.js` |
 | reloads: `startReload()`, `updateReload()`, `finishReload()`, `activeReloadPress()` | `22-actions.js` |
 
