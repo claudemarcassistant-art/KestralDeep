@@ -24,7 +24,7 @@ function updateFlames(dt){for(const f of flames){f.t-=dt;const nx=f.x+f.vx*dt,ny
     if(solidAt(nx,ny)){f.t=0;}else{f.x=nx;f.y=ny;}f.vx*=Math.pow(0.25,dt);f.vy*=Math.pow(0.25,dt);
     if(liq[i]>=2&&!ice[i]){f.t=Math.min(f.t,0.05);if(Math.random()<0.2)parts.push({x:f.x,y:f.y,vx:rr(-10,10),vy:rr(-25,-5),t:0.4,m:0.4,c:'rgba(220,220,220,0.5)',s:1});continue;}
     if(oil[i])igniteOil(tx,ty);if(webs[i])tearWeb(i);if(slime[i]){slime[i]=0;paintTile(tx,ty);}
-    for(const e of enemies){if(e.dead||f.hit.has(e)||ET[e.type].ghost)continue;if(Math.hypot(e.x-f.x,e.y-f.y)<e.r+3){f.hit.add(e);const fw=fireWeak(e);damageEnemy(e,(f.trap?TRAP_TYPES.flame.perFlame:0.35)*(fw?3:1),f.vx,f.vy,6,true);e.burnT=Math.max(e.burnT||0,fw?5:3);}}
+    for(const e of enemies){if(e.dead||f.hit.has(e)||ET[e.type].ghost)continue;if(Math.hypot(e.x-f.x,e.y-f.y)<e.r+3){f.hit.add(e);const fw=fireWeak(e);damageEnemy(e,(f.trap?TRAP_TYPES.flame.perFlame:0.35*dmgVar('flamer'))*(fw?3:1),f.vx,f.vy,6,true);e.burnT=Math.max(e.burnT||0,fw?5:3);}}
     if(f.trap&&f.jet.pHit<=0&&player&&Math.hypot(player.x-f.x,player.y-f.y)<player.r+3){const F0=TRAP_TYPES.flame;f.jet.pHit=F0.hitEvery;hurtPlayer(F0.burnHurt,false);addStatus('brn',F0.burn);}
     for(const b of barrels)if(!b.dead&&Math.hypot(b.x-f.x,b.y-f.y)<6)b.heat=(b.heat||0)+0.06;
     for(const pl of plants)if(!pl.burst&&Math.hypot(pl.x-f.x,pl.y-f.y)<6)burnPlant(pl);
@@ -61,7 +61,7 @@ function shove0(){
   for(const e of enemies){const dx=e.x-player.x,dy=e.y-player.y,d=Math.hypot(dx,dy);
     if(d<m.range+e.r){const da=Math.abs(angDiff(Math.atan2(dy,dx),player.ang));
       if(da<m.arc){const amb=(player.creeping||cloaked)&&!e.alert;if(amb){float(e.x,e.y,'ambush','#ff9a7a');if(lvl)lvl.ambush++;}
-        damageEnemy(e,m.dmg*(amb?(perk('ambusher')?4:3):1),dx,dy,e.type==='brute'?m.kb*0.35:m.kb);e.cd=Math.max(e.cd,amb?1.2:0.6);}}}
+        damageEnemy(e,m.dmg*dmgVar('shove')*(amb?(perk('ambusher')?4:3):1),dx,dy,e.type==='brute'?m.kb*0.35:m.kb);e.cd=Math.max(e.cd,amb?1.2:0.6);}}}
   if(cloaked)breakCloak();
   for(const c of cores){if(c.dead)continue;const dx=c.x-player.x,dy=c.y-player.y;if(Math.hypot(dx,dy)<m.range+6&&Math.abs(angDiff(Math.atan2(dy,dx),player.ang))<m.arc)hitCore(c,m.dmg*2);}
   for(const bb of barrels){if(bb.dead)continue;const dx=bb.x-player.x,dy=bb.y-player.y;if(Math.hypot(dx,dy)<m.range+4&&Math.abs(angDiff(Math.atan2(dy,dx),player.ang))<m.arc)hitBarrel(bb,m.dmg,dx,dy,m.kb*0.9);}
@@ -111,7 +111,7 @@ function inLash(p,x,y,r,m){const ca=Math.cos(p.ang),sa=Math.sin(p.ang),rx=x-p.x,
 function inJab(p,x,y,r,m){const ca=Math.cos(p.ang),sa=Math.sin(p.ang),ox=p.x-sa*3,oy=p.y+ca*3,rx=x-ox,ry=y-oy,t=rx*ca+ry*sa;if(t<2||t>m.range+2)return false;return Math.abs(rx*sa-ry*ca)<r+3;}
 function fireBow(c,perfect){const p=player,w=WPN.bow;if(p.liq===4){say('you cannot draw a bow while swimming');return;}if(p.inv.bolts<=0){sfx('deny');say('out of bolts');p.mcd=0.3;return;}p.inv.bolts--;breakCloak();
   const mult=(1+1.5*c)*(perfect?1.4:1),sp=w.speed*(0.8+0.6*c),a=p.ang+rr(-w.spread,w.spread)*(1-c*0.8);
-  bullets.push({x:p.x,y:p.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:0.9,dmg:w.dmg*mult*(1+0.08*U('pen')),cc:critChance('bow')+(perfect?0.25:0),p:true,kb:w.kb*(1+0.5*c),pierce:perfect,kind:'bow',hits:perfect?new Set():null});
+  bullets.push({x:p.x,y:p.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:0.9,dmg:w.dmg*mult*(1+0.08*U('pen')),cc:critChance('bow')+(perfect?0.25:0),p:true,kb:w.kb*(1+0.5*c),pierce:perfect,kind:'bow',vk:c>0?'bowc':'bow',perfect,hits:perfect?new Set():null});
   p.mcd=w.cd*(1+0.3*c);p.mcdMax=p.mcd;sfx('whoosh');noise(p.x,p.y,35);if(perfect){float(p.x,p.y-12,'perfect','#fff0a0');sfx('crunch_bow');}else if(c>=1)sfx('thud');}
 function releaseCharge(k){const p=player,c=Math.min(1,p.chg),full=p.chg>=1,perfect=full&&p.chgFull>0&&p.chgFull<=0.2;
   if(k==='bow'){p.chg=0;p.chgFull=0;return fireBow(c<0.12?0:c,perfect);}
@@ -133,9 +133,12 @@ function primaryAttack0(m){const p=player;p.mcd=m.cd;p.mcdMax=m.cd;p.swingT=m.ja
   const cloaked=p.cloakT>0,bonus=S.meleeDmg||0;let connected=0;p.flurryN=p.flurryN||0;
   for(const e of enemies){if(e.dead||ET[e.type].ghost)continue;const dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy);
     if(m.lash?inLash(p,e.x,e.y,e.r,m):m.jab?inJab(p,e.x,e.y,e.r,m):(d<m.range+e.r&&Math.abs(angDiff(Math.atan2(dy,dx),p.ang))<m.arc)){
+      const amb=(p.creeping||cloaked)&&!e.alert,mk=player.arms[player.armSet].main||'fists',flurry=perk('flurry')&&comboTier()>=2&&connected===0&&(p.flurryN+1)%5===0;
+      // one roll: damage range, crit or glance (perfect releases, ambushes and flurry crits never glance)
+      const hr=hitRoll(mk,flurry?1:critChance(mk),e,amb||m.perfect||flurry);
       if(m.perfect&&!ET[e.type].dummy)e.stun=Math.max(e.stun||0,0.9);
-      if(m.lash&&!ET[e.type].dummy){e.stunB=(e.stunB||0)+(e.type==='brute'?28:45)*(m.mult||1);if(e.stunB>=100){e.stunB=0;e.stun=Math.max(e.stun||0,1.4);float(e.x,e.y-8,'reeling','#e8dcb0');}sfx('hit');}const amb=(p.creeping||cloaked)&&!e.alert;if(amb){float(e.x,e.y,'ambush','#ff9a7a');if(lvl)lvl.ambush++;}
-      {connected++;let md=(m.dmg+bonus)*(amb?(perk('ambusher')?4:3):1)*comboDmg();const mk=player.arms[player.armSet].main||'fists';const flurry=perk('flurry')&&comboTier()>=2&&connected===1&&(++p.flurryN)%5===0;if(flurry||Math.random()<critChance(mk)){md*=2;critFx(e,md);}damageEnemy(e,md,dx,dy,e.type==='brute'?m.kb*0.35:m.kb);}}}
+      if(m.lash&&!ET[e.type].dummy&&!hr.glance){e.stunB=(e.stunB||0)+(e.type==='brute'?28:45)*(m.mult||1);if(e.stunB>=100){e.stunB=0;e.stun=Math.max(e.stun||0,1.4);float(e.x,e.y-8,'reeling','#e8dcb0');}sfx('hit');}if(amb){float(e.x,e.y,'ambush','#ff9a7a');if(lvl)lvl.ambush++;}
+      {connected++;if(connected===1&&perk('flurry')&&comboTier()>=2)p.flurryN++;let md=(m.dmg+bonus)*(amb?(perk('ambusher')?4:3):1)*comboDmg()*hr.mul;if(hr.crit)critFx(e,md);if(hr.glance)glanceFx(e);damageEnemy(e,md,dx,dy,(e.type==='brute'?m.kb*0.35:m.kb)*(hr.glance?GLANCE_CFG.kbMul:1));}}}
   for(const bb of barrels){if(bb.dead)continue;const dx=bb.x-p.x,dy=bb.y-p.y;if(m.lash?inLash(p,bb.x,bb.y,4,m):m.jab?inJab(p,bb.x,bb.y,4,m):(Math.hypot(dx,dy)<m.range+4&&Math.abs(angDiff(Math.atan2(dy,dx),p.ang))<m.arc)){if(bb.crate&&(m.mult||1)>=CRATE_CFG.heavyMult)breakCrate(bb);else hitBarrel(bb,m.dmg,dx,dy,m.kb*0.9);connected++;}}
   for(const pl of plants){if(pl.burst)continue;const dx=pl.x-p.x,dy=pl.y-p.y;if(Math.hypot(dx,dy)<m.range+4&&Math.abs(angDiff(Math.atan2(dy,dx),p.ang))<m.arc)burstPlant(pl);}
   for(const c of cores){if(c.dead)continue;const dx=c.x-p.x,dy=c.y-p.y;if(Math.hypot(dx,dy)<m.range+6&&Math.abs(angDiff(Math.atan2(dy,dx),p.ang))<m.arc)hitCore(c,m.dmg*2);}
@@ -420,7 +423,10 @@ function hurtPlayer(d,quiet,src){
   if(player&&state==='play'&&!(player.iframeT>0)&&!testMode||player&&testDeck){const P=player,st=P.st||{},cause=st.brn>=100?'burn':st.shk>=100?'nerve':st.psn>=100?'blood':st.frz>=100?'frost':null;
     if(P.hp<maxHp()*0.25||cause){P.injAcc=(P.injAcc||0)+d;if(P.injAcc>=30){P.injAcc=0;if(Math.random()<0.6)giveInjury(cause);}}}
   if(player&&player.astral&&!quiet)endAstral('your body is hit. you snap back');
-  if(state!=='play'||player.iframeT>0)return;if(!quiet||src){comboBreak();player.lastHitT=T;}d*=frozenMeleeMul(src);d*=1-S.dr;d*=1-0.05*U('tough');
+  if(state!=='play'||player.iframeT>0)return;
+  // creature hits roll 85-115% and can glance off you: half damage, half stun, no combo break (GLANCE_CFG.vsPlayer)
+  let gl=false;if(!quiet&&creatureSrc(src)){d*=varRoll(DMG_VAR_CREATURE);if(Math.random()<glancePlayerChance()){gl=true;d*=GLANCE_CFG.mul;float(player.x,player.y-8,'glance','#8e978b');sfx('tink');}}
+  if((!quiet||src)&&!gl)comboBreak();if(!quiet||src)player.lastHitT=T;d*=frozenMeleeMul(src);d*=1-S.dr;d*=1-0.05*U('tough');
   if(perk('secondwind')&&!player.windUsed&&player.hp-d<20&&player.hp-d>0){player.windUsed=true;setTimeout(()=>{if(state==='play'){player.hp=Math.min(maxHp(),player.hp+30);float(player.x,player.y-10,'second wind','#9fe0b0');sfx('learn');}},0);}
   if(!quiet){const p=player;
     if(p.blocking&&p.guard>0&&(!src||Math.abs(angDiff(Math.atan2(src.y-p.y,src.x-p.x),p.ang))<1.3)){const a=Math.min(p.guard,d);p.guard-=a;d-=a;p.guardDelay=1;sfx('thud');
@@ -429,7 +435,7 @@ function hurtPlayer(d,quiet,src){
     if(d<=0)return;}
   const a=Math.min(player.armor,d*0.6);player.armor-=a;let rest=d-a;if(player.ghost>0){const g=Math.min(player.ghost,rest);player.ghost-=g;rest-=g;if(g>0)for(let k=0;k<3;k++)parts.push({x:player.x,y:player.y,vx:rr(-30,30),vy:rr(-40,-10),t:0.4,m:0.4,c:'#dfe8ff',s:1});}player.hp-=rest;if(lvl)lvl.dmg+=d;
   if(!quiet)breakCloak();
-  if(!quiet&&player.st){addStatus('stn',STUN_CFG.perHit+d*STUN_CFG.perDmg,src);if(src&&player.dazeT<=0){const dx=player.x-src.x,dy=player.y-src.y,l=Math.hypot(dx,dy)||1;player.vx+=dx/l*70;player.vy+=dy/l*70;player.kbT=0.4;}}player.hurtT=quiet?Math.max(player.hurtT,0.15):0.35;if(!quiet){shake=Math.max(shake,4);sfx('hurt');}else if(Math.random()<.3)sfx('hurt');
+  if(!quiet&&player.st){addStatus('stn',(STUN_CFG.perHit+(gl?d/GLANCE_CFG.mul:d)*STUN_CFG.perDmg)*(gl?GLANCE_CFG.vsPlayer.stunMul:1),src);if(src&&player.dazeT<=0){const dx=player.x-src.x,dy=player.y-src.y,l=Math.hypot(dx,dy)||1;player.vx+=dx/l*70;player.vy+=dy/l*70;player.kbT=0.4;}}player.hurtT=quiet?Math.max(player.hurtT,0.15):0.35;if(!quiet){shake=Math.max(shake,4);sfx('hurt');}else if(Math.random()<.3)sfx('hurt');
   splat(player.x,player.y,'#3a1714',4,5);
   if(player.hp<=0){player.hp=0;hackUI=null;vendUI=null;saveBest();clearSave();for(const k in bestiary.seen)META.seen[k]=1;saveMeta();state='dead';deadT=0;menuOpen=false;mapOpen=false;mouse.l=false;mouse.r=false;sfx('die');}
 }
@@ -441,7 +447,7 @@ function explode(x,y){puff(x,y,'smoke',16);
   archiveBlast(x,y,Rr);splat(x,y,'#0b0d0c',50,Rr*0.5);clearSlimeAround(x,y,Rr);igniteOilAround(x,y,Rr);for(const pl of plants)if(!pl.burst&&Math.hypot(pl.x-x,pl.y-y)<Rr)burstPlant(pl);for(const f of fans)if(!f.dead&&Math.hypot(f.x-x,f.y-y)<Rr)hitFan(f,99);{const tx0=Math.floor(x/TS),ty0=Math.floor(y/TS);for(let yy=ty0-4;yy<=ty0+4;yy++)for(let xx=tx0-4;xx<=tx0+4;xx++)if(xx>=0&&yy>=0&&xx<MW&&yy<MH&&Math.hypot(xx*TS+6-x,yy*TS+6-y)<Rr)ice[yy*MW+xx]=0;}
   for(const c of cores)if(!c.dead&&Math.hypot(c.x-x,c.y-y)<Rr+6)hitCore(c,18);
   for(const bb of barrels)if(!bb.dead&&Math.hypot(bb.x-x,bb.y-y)<Rr+4){if(bb.crate){pushBarrel(bb,bb.x-x,bb.y-y,260);breakCrate(bb);continue;}bb.fuse=bb.fuse>=0?Math.min(bb.fuse,0.15):0.15;pushBarrel(bb,bb.x-x,bb.y-y,260);}
-  for(const e of enemies){const d=Math.hypot(e.x-x,e.y-y);if(d<Rr+e.r&&hasLOS(x,y,e.x,e.y))damageEnemy(e,16*(perk('boom')?1.25:1)*(1-d/(Rr+e.r)*0.5),e.x-x,e.y-y,220);}
+  for(const e of enemies){const d=Math.hypot(e.x-x,e.y-y);if(d<Rr+e.r&&hasLOS(x,y,e.x,e.y))damageEnemy(e,16*(perk('boom')?1.25:1)*(1-d/(Rr+e.r)*0.5)*dmgVar('explosion'),e.x-x,e.y-y,220);}
   const tx=Math.floor(x/TS),ty=Math.floor(y/TS);
   for(let yy=ty-5;yy<=ty+5;yy++)for(let xx=tx-5;xx<=tx+5;xx++)if(xx>=0&&yy>=0&&xx<MW&&yy<MH&&(map[yy*MW+xx]===6||map[yy*MW+xx]===7)&&Math.hypot(xx*TS+6-x,yy*TS+6-y)<Rr+6)blowModDoor(yy*MW+xx);
   for(let yy=ty-5;yy<=ty+5;yy++)for(let xx=tx-5;xx<=tx+5;xx++)

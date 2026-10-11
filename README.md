@@ -30,13 +30,13 @@ src/
     inspect.js              V-look descriptions of fixtures and floor hazards
     items.js                gear, quick items, tools, pickups, flasks, liquid tank, vending stock, resource text
     npcs.js                 NPCs
-    progress.js             deck grades, run stats, work orders (achievements), point trades, challenge modifiers
+    progress.js             deck grades, run stats, work orders (achievements, tiered levels), point trades, challenge modifiers
     herbs.js                herbs, herbal preparations (poultices, incense, draughts)
     route.js                express shafts, vault junctions and archive vaults, deck secured, crawlways
-    status.js               frozen status and cryo grenade tuning, active reload, smoke blindness, player stun
+    status.js               frozen status and cryo grenade tuning, active reload, smoke blindness, player stun, glancing hits
     traps.js                trap types, trap tuning, trap control panel text, toxic vents, plate doors, crates, item weight
     versions.js             in-game version history
-    weapons.js              armaments, gun stats, magazines, crits, charge and combo timing
+    weapons.js              armaments, gun stats, magazines, crits, damage ranges, charge and combo timing
     world.js                sectors, biome layouts, palettes, route nodes, water depths, room modules, deck conditions, hazard text, deck sizes
   game/           the game, split by system
     01-core.js              canvas, view sizes, deck size variables, run seeds, shared helpers
@@ -77,6 +77,7 @@ src/
     36-backtrack.js         deck secured walk-back to the lift, ceiling crawlways, time passing, keeping the lift area clear, the 3x3 lift pads
     37-pacing.js            how long creatures hunt you, muffled noise, arena waves, ghost movement, smoke blocking creature sight
     38-inspect.js           HUD ability icons, hover tips on icons and hotbar slots, V-look descriptions
+    39-damage.js            damage ranges, the crit-or-glance roll, glancing hits on and off the player, damage text
 scripts/build.mjs  the build
 docs/specs/        change request batches
 ```

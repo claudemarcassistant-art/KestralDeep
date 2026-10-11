@@ -29,13 +29,13 @@ function drawSkillIcons(){const p=player,x0=hotbarX(),y0=H-16,live=!menuOpen&&st
   if(!live)return;const n=hotCount();
   for(let i=0;i<n;i++){const x=x0+i*HUD_SW+(i>=2?3:0);if(!mouseIn(x,y0-8,HUD_SW-1,23))continue;
     if(i<2){const st=p.arms[i],m=st.main?ARM[st.main]:null,o=st.off&&st.off!==st.main?ARM[st.off]:null;
-      setTip('Armament '+(i+1)+': '+(m?m.name:'Fists')+(o?' + '+o.name:''),m?m.desc:'Bare hands.');}
+      setTip('Armament '+(i+1)+': '+(m?m.name:'Fists')+(o?' + '+o.name:''),(m?armDesc(st.main):'Bare hands. '+dmgRangeText('fists',FIST.dmg))+(o?'  Off hand: '+armDesc(st.off):''));}
     else if(p.actMode==='sling'){const a=p.slingbar[i-2];if(a)setTip(SLING[a].name,SLING[a].desc||'');else setTip('Empty sling slot','');}
     else if(p.actMode){const a=p.actbar[i-2];if(a)setTip(ACTS[a].name,ACTS[a].desc||'','#a88af0');else setTip('Empty action slot','');}
     else{const q=qInfo(p.quick[i-2]);if(q)setTip(q.name,q.desc||'');else setTip('Empty quick slot','Put items here from Pack > Items: select one and press 3-9.');}}}
 // what is at world point (wx,wy), for V-look; null when nothing there or it cannot be seen
 function itemLook(it){const t=it.type;
-  if(t==='weapon'&&ARM[it.w])return {name:ARM[it.w].name,desc:ARM[it.w].desc};
+  if(t==='weapon'&&ARM[it.w])return {name:ARM[it.w].name,desc:armDesc(it.w)};
   if(t==='gear'&&GEAR[it.gear])return {name:GEAR[it.gear].name,desc:GEAR[it.gear].desc};
   if(t==='food'&&FOOD[it.food])return {name:FOOD[it.food].name,desc:FOOD[it.food].desc||'Food.'};
   if(t==='raw'&&RAW[it.raw])return {name:RAW[it.raw].name,desc:'A raw ingredient for cooking.'};

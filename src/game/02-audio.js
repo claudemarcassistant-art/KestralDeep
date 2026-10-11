@@ -35,6 +35,7 @@ function sfx(k){if(!AC)return;try{switch(k){
   case 'crunch_bow':nz(0.05,'highpass',1800,0.28);nz(0.07,'lowpass',800,0.3);tone(0.06,'square',180,70,0.1);break;
   case 'thud':nz(0.07,'lowpass',700,0.2);break;
   case 'click':tone(0.03,'square',1200,1100,0.05);break;
+  case 'tink':tone(0.05,'triangle',2400,1700,0.05);nz(0.03,'highpass',3000,0.05);break;
   case 'shove':nz(0.08,'lowpass',500,0.25);break;
   case 'glob':tone(0.12,'sine',300,120,0.08);break;
   case 'map':tone(0.05,'triangle',800,1200,0.05);break;

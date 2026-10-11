@@ -99,7 +99,7 @@ function drawEnemy(e){
   if(b.dummy){F('rgba(0,0,0,0.4)',x-5,y+5,11,2);F('#2a2014',x-1,y+3,2,4);F('#15110a',x-5,y-7,11,11);F(col,x-4,y-6,9,9);
     F('#6b5a3a',x-4,y-4,9,1);F('#6b5a3a',x-4,y,9,1);F('#b8493a',x-1,y-3,3,3);F('#e8dcb0',x,y-2,1,1);
     e.log=e.log.filter(q=>T-q.t<3);const tot=e.log.reduce((a,q)=>a+q.d,0);
-    txt((tot/3).toFixed(1)+' dps',x,y-18,tot?'#e8dcb0':'#6f7a6a','center');return;}
+    txt((tot/3).toFixed(1)+' dps',x,y-18,tot?'#e8dcb0':'#6f7a6a','center');if(e.log.length)txt('avg '+(tot/e.log.length).toFixed(1)+' a hit',x,y-27,'#8e978b','center');return;}
   const a=Math.atan2(player.y-e.y,player.x-e.x),ca=Math.cos(a),sa=Math.sin(a),bob=Math.sin(e.ph)*0.6;
   F('rgba(0,0,0,0.35)',x-e.r,y+e.r-1,e.r*2,2);
   if(b.snake){

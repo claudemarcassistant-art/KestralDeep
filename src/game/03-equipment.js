@@ -71,7 +71,7 @@ function useTool(id){const P=player;
     if(tx>=0&&ty>=0&&tx<MW&&ty<MH&&map[ty*MW+tx]===3){destroySecret(tx,ty);say('the wall caves in');}
     else if(solid(tx,ty))for(let k=0;k<8;k++)parts.push({x:hx,y:hy,vx:rr(-40,40),vy:rr(-40,40),t:0.3,m:0.3,c:'#8e978b',s:1});
     for(const bb of barrels){if(bb.dead)continue;const dx=bb.x-P.x,dy=bb.y-P.y;if(Math.hypot(dx,dy)<26&&Math.abs(angDiff(Math.atan2(dy,dx),P.ang))<0.9){if(bb.crate)breakCrate(bb);else hitBarrel(bb,2,dx,dy,340);}}
-    for(const e of enemies){if(e.dead)continue;const dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy);if(d>24+e.r)continue;let da=Math.atan2(dy,dx)-P.ang;da=Math.atan2(Math.sin(da),Math.cos(da));if(Math.abs(da)<0.9)damageEnemy(e,4,dx,dy,e.type==='brute'?140:300);}
+    for(const e of enemies){if(e.dead)continue;const dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy);if(d>24+e.r)continue;let da=Math.atan2(dy,dx)-P.ang;da=Math.atan2(Math.sin(da),Math.cos(da));if(Math.abs(da)<0.9)damageEnemy(e,4*dmgVar('sledge'),dx,dy,e.type==='brute'?140:300);}
     return;}
   if(id==='scanner'){if((P.scanCd||0)>0){say('the scanner is still charging');sfx('click');return;}P.scanCd=6;scanT=3.5;scanBins=new Array(8).fill(0);
     for(const e of enemies){if(e.dead||ET[e.type].dummy||ET[e.type].plant)continue;const dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy);if(d>480)continue;const b=((Math.round(Math.atan2(dy,dx)/(Math.PI/4))%8)+8)%8;scanBins[b]+=d<160?1.5:1;}
@@ -113,7 +113,7 @@ function fireSling(id,c){const P=player;if(!id){say('empty slot. set up the slin
   if(d.ammo&&!(P.inv[d.ammo]>0)){sfx('deny');say('out of '+d.ammo);P.slCd=0.3;return;}if(d.ammo)P.inv[d.ammo]--;breakCloak();
   const mult=1+1.5*c,spread=(P.actAim?0.03:0.12)*(1-0.7*c),sp=240+220*c,n=d.pel||1;
   for(let k=0;k<n;k++){const a=P.ang+rr(-spread,spread)+(n>1?(k-(n-1)/2)*0.09:0),base=d.dmg<0?rr(1,5.5):d.dmg;
-    bullets.push({x:P.x,y:P.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:0.8,dmg:base*mult,cc:0.06+(S.crit||0)+(perk('slinger')&&c>0.9?0.15:0),p:true,kb:50+80*c,kind:'sling',slk:id,pierce:!!d.pierce,hits:d.pierce?new Set():null,shock:!!d.shock});}
+    bullets.push({x:P.x,y:P.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:0.8,dmg:base*mult,cc:0.06+(S.crit||0)+(perk('slinger')&&c>0.9?0.15:0),p:true,kb:50+80*c,kind:'sling',slk:id,vk:id==='debris'?'debris':'sling',pierce:!!d.pierce,hits:d.pierce?new Set():null,shock:!!d.shock});}
   P.slCd=0.55;sfx('whoosh');noise(P.x,P.y,30);if(c>=1)float(P.x,P.y-10,'full draw','#e8dcb0');}
 function slingInput(dt){const P=player;P.actAim=mouse.r;
   if(mouse.l&&!(P.slCd>0)){if(!(P.slChg>0))P.slChg=0.001;P.slChg+=dt/0.8;if(P.slChg>=1&&!P.slFull){P.slFull=true;sfx('hackok');}}
@@ -151,7 +151,7 @@ function castAct(){const P=player,id=P.actbar[selQuick()];if(!id){say('empty act
 function updateActs(dt){const P=player;if(senseT>0){senseT-=dt;senseR+=dt*420;}for(const k in P.actCd)if(P.actCd[k]>0)P.actCd[k]-=dt;
   for(const e of enemies){if(e.hexT>0)e.hexT-=dt;if(e.stunB>0)e.stunB=Math.max(0,e.stunB-22*dt);}
   for(const o of orbiters){o.t-=dt;o.a+=dt*4.2;const ox=P.x+Math.cos(o.a)*17,oy=P.y+Math.sin(o.a)*17;o.x=ox;o.y=oy;for(const [e,t] of o.hit)if(t-dt<=0)o.hit.delete(e);else o.hit.set(e,t-dt);
-    for(const e of enemies){if(e.dead||ET[e.type].ghost||o.hit.has(e))continue;if(Math.hypot(e.x-ox,e.y-oy)<e.r+3){let od=orbitDmg();if(Math.random()<0.05+(S.crit||0)){od*=2;critFx(e,od);}damageEnemy(e,od,e.x-P.x,e.y-P.y,90);o.hit.set(e,0.45);sfx('hit');}}
+    for(const e of enemies){if(e.dead||ET[e.type].ghost||o.hit.has(e))continue;if(Math.hypot(e.x-ox,e.y-oy)<e.r+3){const hr=hitRoll('orbit',0.05+(S.crit||0),e);let od=orbitDmg()*hr.mul;if(hr.crit)critFx(e,od);if(hr.glance)glanceFx(e);damageEnemy(e,od,e.x-P.x,e.y-P.y,hr.glance?90*GLANCE_CFG.kbMul:90);o.hit.set(e,0.45);sfx('hit');}}
     for(const bb of barrels){if(!bb.dead&&Math.hypot(bb.x-ox,bb.y-oy)<7)pushBarrel(bb,bb.x-P.x,bb.y-P.y,60*dt*10);}}
   orbiters=orbiters.filter(o=>o.t>0);
   for(const w of wells){w.t-=dt;for(const bb of barrels){if(bb.dead)continue;const dx=w.x-bb.x,dy=w.y-bb.y,d=Math.hypot(dx,dy);if(d<60&&d>3)pushBarrel(bb,dx,dy,380*dt);}for(const e of enemies){if(e.dead||ET[e.type].ghost)continue;const dx=w.x-e.x,dy=w.y-e.y,d=Math.hypot(dx,dy);if(d<60&&d>2){const f=(e.type==='brute'?140:260)*dt;move(e,dx/d*f*0.4,dy/d*f*0.4);}}

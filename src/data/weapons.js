@@ -37,3 +37,14 @@ const WCRIT={kick:0.08,bow:0.15,knives:0.25,pistol:0.10,smg:0.04,scatter:0.03,na
 const MAGS={pistol:[10,1.1],smg:[30,1.7],scatter:[4,2.2],nailer:[40,1.8],bolt:[1,1.4],ray:[8,1.6],flamer:[60,2.4]};
 const CHARGE=['bat','whip','spear','bow','crowbar'];
 const COMBO_T=[[15,'frenzy','#ff7a5a'],[10,'momentum','#ffb050'],[5,'flow','#e8dcb0']];
+
+// Damage ranges (v0.99, batch 3 request 17). Every hit rolls its base damage within +-w of the listed value, with a gentle
+// bell-shaped roll (the average of two random numbers), so the average hit is unchanged. A weapon's character is its width.
+// DMG_VAR names the character of each armament or attack kind; anything missing is 'reliable'. 'none' skips the roll
+// (sling debris already rolls 1 to 5.5). The bow uses 'bowc' once drawn past a tap. Creature attacks use DMG_VAR_CREATURE.
+const DMG_CHAR={steady:{w:0.1,name:'steady'},reliable:{w:0.2,name:'reliable'},swingy:{w:0.3,name:'swingy'},wild:{w:0.5,name:'wild'},none:{w:0,name:'variable'}};
+const DMG_VAR={pistol:'steady',bolt:'steady',chainsaw:'steady',flamer:'steady',ray:'steady',
+  smg:'reliable',nailer:'reliable',cutter:'reliable',crowbar:'reliable',spear:'reliable',whip:'reliable',kick:'reliable',bowc:'reliable',
+  bat:'swingy',fists:'swingy',knives:'swingy',bow:'swingy',
+  scatter:'wild',explosion:'wild',debris:'none'};
+const DMG_VAR_CREATURE=0.15;

@@ -26,3 +26,12 @@ const SMOKE_BLIND={dens:0.3,core:0.8,near:16,memMul:3};
 // About 10 hits of any size inside ~2-3 s fill it (1-damage hits: 10 x 13 = 130 against ~30 drained).
 // An explosion within blastNear x its radius stuns outright (blastFull, before resistances); further out it adds blast.
 const STUN_CFG={perHit:11,perDmg:2,decay:12,blast:25,blastNear:0.35,blastFull:250};
+
+// Glancing hits (v0.99, batch 3 request 17): the opposite of a crit, decided in the same roll so the two never stack.
+// A glance does mul x damage, kbMul x knockback and no stun build-up. Player attacks: base chance, minus per Dexterity
+// and Perception point, never below min; armoured targets (ET flagged armor, or listed in armoured, plus every warden
+// and boss) add armoured. Perfect charged releases and ambushes never glance. Creature hits on you: base, plus armorPer
+// per point of current armour (up to armorMax), plus shield while blocking with a riot shield; half damage, stunMul of
+// the usual stun, and no combo break.
+const GLANCE_CFG={mul:0.5,kbMul:0.3,base:0.08,dex:0.01,perc:0.005,min:0.02,armoured:0.08,armouredTypes:['brute','snail','guard','warden'],
+  vsPlayer:{base:0.05,armorPer:0.002,armorMax:0.10,shield:0.10,stunMul:0.5}};

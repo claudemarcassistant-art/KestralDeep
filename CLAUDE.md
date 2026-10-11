@@ -2,14 +2,14 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v0.98**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v0.99**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
 - **Source lives in `src/`** and is built into **one self-contained HTML file**, `dist/index.html` (about 640 KB). No dependencies, no external assets. All art is drawn procedurally on a canvas; all sound is synthesised with the Web Audio API. The only network request is the optional Silkscreen font from Google Fonts in `src/boot.js` (the game falls back to a built-in font if it fails).
   - `src/index.html` is the page template; the build fills in `{{styles}}` (`src/styles.css`), `{{boot}}` (`src/boot.js`: font loader and the red error overlay) and `{{game}}`.
   - `src/data/*.js` are the content and tuning tables (creatures, weapons, items, recipes, food, crew files, work orders, NPCs, world, events, versions). Balance changes usually only touch these.
-  - `src/game/NN-name.js` are 38 game files, split by system. `README.md` lists what each file holds.
+  - `src/game/NN-name.js` are 39 game files, split by system. `README.md` lists what each file holds.
   - `scripts/build.mjs` is the build (plain Node 20+, no npm install needed).
 - **Play or test:** `npm run dev` serves http://localhost:5173 and rebuilds on every save (refresh the page). `npm run build` writes `dist/index.html`, which can also be opened straight from disk in Chrome or Edge.
 - **Playable link:** https://claudemarcassistant-art.github.io/KestralDeep/ . Every push to `main` is built and deployed by `.github/workflows/pages.yml`; other branches and pull requests are built only, which catches syntax errors.
@@ -37,7 +37,8 @@ Current version: **v0.98**. The game was built iteratively in claude.ai chats up
 2. ~~Split the code into files with a build step~~ Done, by section (see above), and the data tables gathered into `src/data/`. Play-tested after each step: title screen, new run, saving and continuing, route map to the next deck or stop, test range, arcade, Codex, Version history, pack menu; no errors.
 3. **Batch 1** (`docs/specs/batch-1.md`): four sessions, done one at a time; the owner playtests and says "continue" between them. All four sessions are done: 1 (deck sizes, v0.79), 2 (run seeds, v0.80), 3 (traps and trap panels, v0.81), 4 (plate doors, crates, item weight, spacebar styles, v0.82).
 4. **Batch 2** (`docs/specs/batch-2.md`): four sessions, same workflow. All four sessions are done: 1 (frozen status, cryo grenade, active reload, v0.83), 2 (herbs and herbalism, v0.84), 3 (express shafts and vault junctions, v0.85), 4 (poison gas traps, toxic vents, deck secured walk-back, ceiling crawlways, v0.86).
-5. **Balance pass** (the owner plays test runs and reports findings). First round done in v0.87: creature memory, muffled noise, fewer creatures on Large decks, arena waves (see "Pacing" below). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
+5. **Batch 3** (`docs/specs/batch-3.md`): five sessions, same workflow. Session 1 (damage ranges and glancing hits, tiered work orders, v0.99) is done.
+6. **Balance pass** (the owner plays test runs and reports findings). First round done in v0.87: creature memory, muffled noise, fewer creatures on Large decks, arena waves (see "Pacing" below). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
 
 ## Working conventions
 
@@ -54,7 +55,7 @@ Current version: **v0.98**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v0.98)
+## Architecture overview (as of v0.99)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -143,7 +144,7 @@ Current version: **v0.98**. The game was built iteratively in claude.ai chats up
 
 **Pack menu size (owner's layout, v0.95):** `menuRect()` (27-menus.js, numbers in `MENU_CFG` there) sizes the window to the canvas: tab row top at y 42 (two text lines under the score row, which ends at y 22; the LIVE line sits in the second), bottom 35 px above the screen bottom (just above the deflector ward bar at H-31), the same 8 px margin on both sides, never smaller than the old 368x200 (centred, as before, when the canvas is too small). Tabs share the width (`tw`). Tab contents already lay out from the `w`/`h` they are given; checked at 384x216 and 640x360. The canvas size comes from `resize()` and the View option (`VIEWS`, default 512x288 max).
 
-**Menus:** the pack menu (TAB) has tabs in this order: Pack, Equip, Craft, Food, Stats, Files, Progress (`menuTab` 0-6). Files has sub-views Crew files, Upgrades, Skills, Work orders (`fileMode` 0-3). In Upgrades the list headed Talents (owner's placeholder name, v0.95) is the file-unlocked upgrades (`upRows()`), under Active perks. Progress has Bestiary, Run stats (`progMode` 0-1). **Achievements are called work orders in all player-facing text (owner's decision, v0.91)**; the code still uses `ACH`, `player.ach`, `META.ach`, `checkAch()` and `drawAch()` (now drawn by `drawFilesTab()`), and point trades (`apSel`, `apTrade()`) are keyed in the Work orders view. The list scrolls with the wheel (`woScroll`). Crew file work orders (v0.92) use `filesAttuned()` and `filesInvested()` (03-equipment.js), which read the current tiers, so resetting a file can take them back below a threshold but an order once done stays done.
+**Menus:** the pack menu (TAB) has tabs in this order: Pack, Equip, Craft, Food, Stats, Files, Progress (`menuTab` 0-6). Files has sub-views Crew files, Upgrades, Skills, Work orders (`fileMode` 0-3). In Upgrades the list headed Talents (owner's placeholder name, v0.95) is the file-unlocked upgrades (`upRows()`), under Active perks. Progress has Bestiary, Run stats (`progMode` 0-1). **Achievements are called work orders in all player-facing text (owner's decision, v0.91)**; the code still uses `ACH`, `player.ach`, `META.ach`, `checkAch()` and `drawAch()` (now drawn by `drawFilesTab()`), and point trades (`apSel`, `apTrade()`) are keyed in the Work orders view. The list scrolls with the wheel (`woScroll`). Tiered (counting) work orders since v0.99, see below. Crew file work orders (v0.92) use `filesAttuned()` and `filesInvested()` (03-equipment.js), which read the current tiers, so resetting a file can take them back below a threshold but an order once done stays done.
 
 **Smoke grenade (v0.92):** numbers in `SMOKE_NADE_CFG` (`src/data/items.js`). `updateNades()` puffs small, thin smoke clouds along the flight (`trailRmax`, `trailDens`), and `landNade()` pushes an emitter with its own `rmax` and `rate`; `puff()` takes an optional `rmax` that raises a cloud's cap. **Smoke blinds creatures (v0.93):** `seesPlayer(e)` (`37-pacing.js`) is `hasLOS()` plus `!smokeBlocks()`, which is true when the line from the creature to the player passes within `core` x radius of a smoke cloud at least `dens` thick (`SMOKE_BLIND`, `src/data/status.js`), unless they are within `near` px. Every creature-to-player sight check in the enemy loop uses it (the guards' cone check adds `smokeBlocks()` itself), and `trackTick()` runs the hunt memory `memMul` (3x) faster while smoke hides the player. Plain `hasLOS()` is left alone because blasts and other physics use it toward the player too. New creature sight checks should use `seesPlayer(e)`.
 
@@ -152,6 +153,10 @@ Current version: **v0.98**. The game was built iteratively in claude.ai chats up
 **HUD clearance (v0.94):** `26-hud.js` draws `clearance N` (green when above 0) just left of the score in the top-right corner. **No hotbar label (owner's call, v0.96):** the line above the hotbar that named the selected armament, item or action was removed because it overlapped CREEPING/winded and repeated the bottom-right `LMB ...` line, which now also names the psychic or sling action in action mode.
 
 **HUD icons, tips and V-look (owner's design, v0.98):** `src/game/38-inspect.js`, text in `src/data/inspect.js` (`FIX_DESC`, `TILE_DESC`). `hotbarX()` puts the hotbar 10 px right of centre (at least x 150); `drawSkillIcons()` (called from the hotbar block in `hud()`) draws the E and F abilities as two 16x15 icons just left of it (glyphs in `drawSkillGlyph()`, colours `SKILL_COL`, a dark fill rising with the cooldown and the seconds left) and sets a tip when the mouse is over an icon or a hotbar slot. `drawHudTip()` (in `hud()` before the interaction prompts) shows the tip box centred at W/2+20 with its bottom at H-40, just above the CREEPING line; with nothing hovered and V held (`player.peek`) it shows `inspectAt(mouse + camera)`: creatures (`visible()`, name, state, move and attack), then only on a seen, visible tile: items (`itemLook()`), chests, barrels and crates, hack panels, vending machines, NPCs and fixtures, found traps, crawlway hatches, the exit and freight lift pads, then floor hazards (fire, toxic, cables, chasm, slag, webs, rubble, oil, ice, slime, water). New world objects that should be inspectable need a line in `inspectAt()`. The crowbar joined `CHARGE` (v0.98).
+
+**Damage ranges and glancing hits (batch 3 request 17, v0.99):** `src/game/39-damage.js`, numbers in `DMG_CHAR`, `DMG_VAR`, `DMG_VAR_CREATURE` (`src/data/weapons.js`) and `GLANCE_CFG` (`src/data/status.js`). `hitRoll(kind,cc,e,noGlance)` is the single roll for a player hit: one random number decides crit (below `cc`) or glance (the top `glanceChance(e)` of the range), so they never stack, and `mul` already holds the bell-shaped range roll (`varRoll()`, the average of two draws, mean 1) times 2 for a crit or `GLANCE_CFG.mul` for a glance. Used by melee (`primaryAttack0()`), player bullets (bullet `vk` overrides the kind: `bowc` for a drawn bow, `debris` for sling debris), `kick0()` and psychic orbiters; glances skip whip stun build-up, perfect-release stun and shock stun, cut knockback to `kbMul`, and call `glanceFx()` (grey "glance", `sfx('tink')`). Explosions, the flamethrower, shove and the sledgehammer take `dmgVar(kind)` without crit or glance; psychic powers, traps, hazards and statuses stay fixed. Armoured targets (`isArmoured()`: ET `armor` or `warden`, `GLANCE_CFG.armouredTypes`, bosses and minis) add 8%. Creature hits on the player: in `hurtPlayer()`, when `creatureSrc(src)` (a creature, or a bullet with `p:false`), damage rolls `DMG_VAR_CREATURE` and can glance (`glancePlayerChance()`): half damage, half stun, no combo break. Text: `dmgRangeText()`, `armDesc()` (used wherever an armament description shows), `recipeDmgText()` (Workbench). Measured: plain hits average 1.00x in every class; crowbar 400 hits on a dummy 3.17 (old fixed average 3.24, expected 3.12 with glances), pistol 2.13 (2.20, 2.12); glances 8% / 16% armoured, 0 crit-and-glance in 70,000 rolls; creature hits glance 4.6%. The Stats tab scrolls (`stScroll`) now that it has damage and glance rows; the test range dummies also show the average per hit.
+
+**Tiered work orders (batch 3 request 14, v0.99):** counting orders in `ACH` have `lv:[I,II,III,IV thresholds]` and `cnt()` instead of `test()`. `checkAch()` pays `pts x level` for every new level (several at once if a count jumps), calls out "work order: name II", and stores the level number in `player.ach[id]` and the best level in `META.ach[id]`; `woLv()` reads an older `true` as level I, so old saves and profiles keep their completed orders and `MODS_RUN` unlocks (truthy checks) still work. Untouched and Ghost of the deck now count decks (`rs.cleanN`, `rs.quietN`, set in `04-state.js`; an older save's `rs.clean` counts as one). `drawAch()` rows are 13 px with a progress bar and "count / next"; the description pane lists the thresholds.
 
 **Crew files view:** the tier details on the right are clipped and scroll (`flScroll`; the wheel scrolls them when the pointer is right of `flDetX`, otherwise it moves the selection). `flAuto` keeps the next tier in view until the wheel moves it, and resets when another file is selected.
 
@@ -176,14 +181,14 @@ Current version: **v0.98**. The game was built iteratively in claude.ai chats up
 | `food.js` | `FOOD`, `RAW`, `COOK` |
 | `items.js` | `IT`, `QUICK`, `FLASKCOL`, `TANKMAX`, `GEAR`, `VEND_POOL`, `TOOLS`, `RESDESC`, `CXRES`, `SMOKE_NADE_CFG` |
 | `npcs.js` | `NPCS`, `NPC_IDS`, `DICE_HP` |
-| `progress.js` | `GRADES`, `MODS_RUN`, `LVLSTAT`, `ACH`, `AP_TRADES` |
+| `progress.js` | `GRADES`, `MODS_RUN`, `LVLSTAT`, `WO_ROMAN`, `ACH`, `AP_TRADES` |
 | `versions.js` | `VERSIONS`, `GAME_VERSION` |
-| `weapons.js` | `WORDER`, `ARM`, `FIST`, `IMPLEMENTS`, `WPN`, `WCRIT`, `MAGS`, `CHARGE`, `COMBO_T` |
+| `weapons.js` | `WORDER`, `ARM`, `FIST`, `IMPLEMENTS`, `WPN`, `WCRIT`, `MAGS`, `CHARGE`, `COMBO_T`, `DMG_CHAR`, `DMG_VAR`, `DMG_VAR_CREATURE` |
 | `herbs.js` | `HERBS`, `HERB_WHERE`, `HERB_WEIGHTS`, `HERB_CFG`, `HERBAL`, `DRAUGHTS` |
 | `route.js` | `EXPRESS_CFG`, `EXPRESS_DESC`, `VAULT_CFG`, `VAULT_DANGERS`, `VAULT_DESC`, `SECURE_CFG`, `CRAWL_CFG`, `SECURE_DESC`, `CRAWL_DESC` |
 | `hacking.js` | `HACK_CFG` |
 | `inspect.js` | `FIX_DESC`, `TILE_DESC` |
-| `status.js` | `FREEZE_CFG`, `ACTIVE_RELOAD`, `SMOKE_BLIND`, `STUN_CFG` |
+| `status.js` | `FREEZE_CFG`, `ACTIVE_RELOAD`, `SMOKE_BLIND`, `STUN_CFG`, `GLANCE_CFG` |
 | `traps.js` | `TRAP_TYPES`, `TRAP_WEIGHTS`, `TRAP_CFG`, `TRAP_PANEL_DESC`, `PLATE_DOOR_CFG`, `CRATE_CFG`, `ITEM_WEIGHT`, `PLATE_DOOR_DESC`, `GAS_TRAP_BIAS`, `TOXIC_VENT_CFG` |
 | `world.js` | `SECTORS`, `BNAMES`, `PAL`, `COND_LIGHT`, `COND_HAZ`, `MODS`, `ROOMNAMES`, `HAZDESC`, `LIQ`/`LIQNAME`, `BIOME`, `NODE`, `HIDDEN_TYPES`, `DECK_SIZES`, `DECK_SIZE_ODDS` |
 
@@ -221,6 +226,7 @@ Current version: **v0.98**. The game was built iteratively in claude.ai chats up
 | deck secured and crawlways: `checkSecure()`, `walkBack()`, `passTime()`, `genCrawls()`, `crawlKey()`, `drawFadeAndAsk()`, `clearLiftArea()`, `drawLiftPad()` | `36-backtrack.js` |
 | pacing: `trackTick()`, `noiseReach()`, arena waves (`arenaStart()`, `updateArenaWaves()`), ghost movement (`ghostMove()`), smoke sight (`smokeBlocks()`, `seesPlayer()`) | `37-pacing.js` |
 | HUD ability icons, hover tips, V-look: `hotbarX()`, `drawSkillIcons()`, `drawHudTip()`, `inspectAt()` | `38-inspect.js` |
+| damage ranges and glancing hits: `hitRoll()`, `varRoll()`, `dmgVar()`, `glanceChance()`, `glancePlayerChance()`, `creatureSrc()`, `dmgRangeText()`, `armDesc()` | `39-damage.js` |
 | reloads: `startReload()`, `updateReload()`, `finishReload()`, `activeReloadPress()` | `22-actions.js` |
 
 To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "const NAME=" src/data/*.js`.
@@ -234,6 +240,7 @@ To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "con
 
 - The enemy update loop handles most creature types in their own branch that ends with `continue`; generic AI only runs for types without one. Plants, wall plants, guards, wasps, spiders and frogs all have custom branches.
 - Creature attacks (globs, tongues, seeds, charges, stings) also hit other creatures. Touching does not.
+- Player hits on creatures go through `hitRoll()` (range, crit and glance in one roll); a new attack that can crit should use it rather than its own `Math.random()<critChance()`.
 - Creature sight of the player goes through `seesPlayer(e)` (line of sight and smoke), not bare `hasLOS(e.x,e.y,p.x,p.y)`.
 - `alarmT` belongs to the lift-defence objective; the security alarm uses `secT`.
 - `hurtPlayer(d, quiet, src)`: `quiet` is used for hazard ticks and self-inflicted costs; non-quiet hits break combos and astral projection.
@@ -245,7 +252,7 @@ To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "con
 - Several arcade cabinets in one place take their games from `arcPicks(n)` (distinct games), not independent random picks.
 - Any new chest needs a loot seed `ls:(Math.random()*4294967296)>>>0` where it is created (inside generation), or its contents will not repeat on the same seed. `addChest()` does this for you.
 - When checking that generation repeats, take the fingerprint in the same instant the deck is built: the game loop keeps running between test steps, and creatures move and fires spread.
-- `30-traps.js` to `38-inspect.js` load after `29-loop.js`. `35-vaults.js` also adds `HACKR.vault` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
+- `30-traps.js` to `39-damage.js` load after `29-loop.js`. `35-vaults.js` also adds `HACKR.vault` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
 - `newTest()`, `newGame()` and `loadRun()` replace the `player` object (`initPlayer()`), so tests must re-read `player` after calling them.
 - Before v0.81, `genArena()` did not reset `panels` or `vendors`, so arena decks kept the previous deck's hack panels and vending machines at stale positions. Every generator that builds a full deck must reset every per-deck list (`resetHidden()` covers most; panels and vendors are reset by `genPanels()`/`genVending()` or by hand).
 - `populate()` starts with `items=[]`, so items placed earlier in `genLevel()` are lost; anything generation wants on the floor goes in during or after `populate()` (see `fillPlateRooms()`).

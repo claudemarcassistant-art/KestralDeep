@@ -12,7 +12,7 @@ function startLevelScore(){
 function liveLevelScore(){if(!lvl)return 0;return (lvl.vault?VAULT_CFG.score:0)+lvl.killPts+lvl.ambush*25+lvl.hacks*150+lvl.items*10+lvl.finds*100+lvl.chests*75+lvl.rare*150+lvl.doors*60+lvl.secrets*250;}
 function finishLevel(){
   if(bossRef&&!bossRef.dead&&route&&route.chaser){route.chaser.hp=bossRef.hp;route.chaser.rest=2;}bossRef=null;
-  if(player&&player.rs&&lvl&&!testMode&&!stopMode){if(!lvl.dmg&&depth>=2)player.rs.clean=true;if(depth>=3&&!alertWaves)player.rs.quiet=true;}
+  if(player&&player.rs&&lvl&&!testMode&&!stopMode){const R=player.rs;if(!lvl.dmg&&depth>=2){R.cleanN=(R.cleanN||(R.clean?1:0))+1;R.clean=true;}if(depth>=3&&!alertWaves){R.quietN=(R.quietN||(R.quiet?1:0))+1;R.quiet=true;}}
   if(testDeck){returnToTest();return;}
   if(stopMode){if(stopAmbush&&(enemies.some(e=>!e.dead)||spawnQ.length)){if(T>stopWarnT){stopWarnT=T+2;say('the lift will not move with them in here');}return;}endStop();return;}
   const L=lvl,time=Math.round(Math.max(0,L.par-L.t)*4),clean=L.dmg<10?300:0;

@@ -21,8 +21,8 @@ function kick0(){const P=player;if(state!=='play'||paused()||P.shoveCd>0||P.daze
   let hits=0;
   for(const e of enemies){if(e.dead||ET[e.type].ghost||!inArc(e.x,e.y,e.r))continue;const dx=e.x-P.x,dy=e.y-P.y,amb=(P.creeping||cloaked)&&!e.alert;
     if(amb){float(e.x,e.y,'ambush','#ff9a7a');if(lvl)lvl.ambush++;}
-    let d=dmg*(amb?(perk('ambusher')?4:3):1)*comboDmg();if(Math.random()<critChance('kick')){d*=2;critFx(e,d);}
-    damageEnemy(e,d,dx,dy,e.type==='brute'?kb*0.35:kb);e.cd=Math.max(e.cd,0.7);hits++;}
+    const hr=hitRoll('kick',critChance('kick'),e,amb);let d=dmg*(amb?(perk('ambusher')?4:3):1)*comboDmg()*hr.mul;if(hr.crit)critFx(e,d);if(hr.glance)glanceFx(e);
+    damageEnemy(e,d,dx,dy,(e.type==='brute'?kb*0.35:kb)*(hr.glance?GLANCE_CFG.kbMul:1));e.cd=Math.max(e.cd,0.7);hits++;}
   if(hits)comboAdd(1);if(cloaked)breakCloak();
   for(const pl of plants)if(!pl.burst&&inArc(pl.x,pl.y,4))burstPlant(pl);
   for(const c of cores)if(!c.dead&&inArc(c.x,c.y,6))hitCore(c,dmg*2);
