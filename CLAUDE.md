@@ -2,7 +2,7 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v0.94**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v0.95**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
@@ -54,7 +54,7 @@ Current version: **v0.94**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v0.94)
+## Architecture overview (as of v0.95)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -140,6 +140,8 @@ Current version: **v0.94**. The game was built iteratively in claude.ai chats up
 **Player systems:** health with injuries (lost max health shown greyed out) and ghost health from food levels; stamina; status meters (`player.st`); armament sets (`player.arms`, main and off hand, two-handed weapons fill both); hotbar of quick items; crew files and clearance training substats and the Body/Spirit/Mind cores; abilities on E and F; switchable movement skills; skill sets (Psychic and Sling) that swap the item slots for an action bar; melee combos; crits; charged attacks with a perfect-release window; gun magazines and reloads.
 
 **Key data tables:** `ET`, `BEASTS`, `BEASTINFO`, `KILLPTS`, `THREAT`, `ARM` (armaments), `WPN` (gun stats), `MAGS`, `WCRIT`, `GEAR`, `QUICK` (quick items), `IT` (pickups), `RECIPES` (Workbench), `COOK`, `FOOD`, `RAW`, `FILES` (crew files, tiers built with `FT()`), `FILESUB`, `SKILLS`, `MOVES`, `ACTS` (psychic actions), `SLING`, `INJ`, `ACH` (work orders), `AP_TRADES`, `NPCS`, `MODS` (room modules), `BOSSES`, `SECTORS`, `BNAMES`, `COND_HAZ`, `HAZDESC`, `TEXTEV` (between-deck events), `MODS_RUN` (challenge modifiers).
+
+**Pack menu size (owner's layout, v0.95):** `menuRect()` (27-menus.js, numbers in `MENU_CFG` there) sizes the window to the canvas: tab row top at y 42 (two text lines under the score row, which ends at y 22; the LIVE line sits in the second), bottom 35 px above the screen bottom (just above the deflector ward bar at H-31), the same 8 px margin on both sides, never smaller than the old 368x200 (centred, as before, when the canvas is too small). Tabs share the width (`tw`). Tab contents already lay out from the `w`/`h` they are given; checked at 384x216 and 640x360. The canvas size comes from `resize()` and the View option (`VIEWS`, default 512x288 max).
 
 **Menus:** the pack menu (TAB) has tabs in this order: Pack, Equip, Craft, Food, Stats, Files, Progress (`menuTab` 0-6). Files has sub-views Crew files, Upgrades & perks, Skills, Work orders (`fileMode` 0-3). Progress has Bestiary, Run stats (`progMode` 0-1). **Achievements are called work orders in all player-facing text (owner's decision, v0.91)**; the code still uses `ACH`, `player.ach`, `META.ach`, `checkAch()` and `drawAch()` (now drawn by `drawFilesTab()`), and point trades (`apSel`, `apTrade()`) are keyed in the Work orders view. The list scrolls with the wheel (`woScroll`). Crew file work orders (v0.92) use `filesAttuned()` and `filesInvested()` (03-equipment.js), which read the current tiers, so resetting a file can take them back below a threshold but an order once done stays done.
 

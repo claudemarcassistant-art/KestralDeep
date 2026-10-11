@@ -1,13 +1,19 @@
 // ---------- menus ----------
 function wbRows(){const rows=[];let cat=null;for(const r of RECIPES){if(onlyCraftable&&!canCraft(r))continue;if(r.cat!==cat){cat=r.cat;rows.push({hdr:cat});}rows.push({r});}return rows;}
+// pack menu size (owner's layout, v0.95): on bigger views it grows to fill the screen between the HUD rows.
+// Top: two text lines below the score row; bottom: just above the deflector ward bar (the highest bar bottom left);
+// sides: the same margin on both. Never smaller than the original 368 x 200, centred.
+const MENU_CFG={top:42,bottom:35,side:8,minW:368,minH:200}; // top edge, gap above the screen bottom, side margin, minimum size
+function menuRect(){const C=MENU_CFG,pw=Math.max(C.minW,W-2*C.side),top=C.top,bot=H-C.bottom,ph=Math.max(C.minH,bot-top);
+  return {pw,ph,px:(W-pw)>>1,py:ph>bot-top?(H-ph)>>1:top};}
 function drawMenu(){
   const live=state==='play'&&!OPTS.pauseMenu;F(live?'rgba(4,5,6,0.6)':'rgba(4,5,6,0.88)',0,0,W,H);
-  const pw=368,ph=200,px=(W-pw)>>1,py=(H-ph)>>1;
+  const {pw,ph,px,py}=menuRect(),tw=Math.max(52,Math.floor(pw/7));
   box(px,py+12,pw,ph-12,'#0e1211','#2a302e');
-  ['Pack','Equip','Craft','Food','Stats','Files','Progress'].forEach((n,i)=>{const x=px+i*52,act=menuTab===i;
-    const hov=ui(x,py,51,13,{click:()=>{menuTab=i;sfx('click');}});
-    F(act?'#0e1211':hov?'#141917':'#090b0b',x,py,51,13);F(act?AMBER:'#2a302e',x,py,51,act?2:1);
-    txt(n,x+25,py+3,act?AMBER:'#8e978b','center');});
+  ['Pack','Equip','Craft','Food','Stats','Files','Progress'].forEach((n,i)=>{const x=px+i*tw,act=menuTab===i;
+    const hov=ui(x,py,tw-1,13,{click:()=>{menuTab=i;sfx('click');}});
+    F(act?'#0e1211':hov?'#141917':'#090b0b',x,py,tw-1,13);F(act?AMBER:'#2a302e',x,py,tw-1,act?2:1);
+    txt(n,x+(tw>>1)-1,py+3,act?AMBER:'#8e978b','center');});
 
   if(menuTab!==1)eqPopup=null;
   if(live){F('#e07060',px,py-8,5,5);txt('LIVE: the deck keeps moving while this is open',px+9,py-9,Math.sin(T*3)>0?'#e07060':'#a05040');}
@@ -252,7 +258,7 @@ function drawActBar(x,y,w,h){const P=player,sets=[];if(P.acts.length)sets.push('
   const A=C.defs[C.list[Math.min(actPick,C.list.length-1)]];if(A)wrap(A.desc,x,yy+4,w,9,'#b9c0b3');}
 let stSel=0;
 function drawStats(x,y,w,h){
-  {const lx=x+10,lw=176;let yy=y+4;txt('Core',lx,yy,AMBER);txt('every 3 points raise the core',lx+lw,yy,'#3f4642','right');yy+=13;const keys=[];
+  {const lx=x+10,lw=176;let yy=y+4;txt('Core',lx,yy,AMBER);txt('3 points per level',lx+lw,yy,'#3f4642','right');yy+=13;const keys=[];
     for(const c in CORES){const C=CORES[c],lv=coreLv(c),pr=coreProg(c);const hov=ui(lx-2,yy-2,lw+4,11,{click:()=>{stSel=keys.length;}});keys.push({c});if(hov&&mouse.moved)stSel=keys.length-1;
       if(stSel===keys.length-1)F('#141917',lx-2,yy-2,lw+4,11);txt(C.name,lx,yy,C.col);txt('level '+lv,lx+90,yy,'#e3e6dc');for(let q=0;q<3;q++)F(q<pr?C.col:'#2a302e',lx+lw-26+q*9,yy+2,7,4);yy+=11;
       for(const k of C.subs){const n=subPts(k);const hv=ui(lx-2,yy-2,lw+4,10,{click:()=>{stSel=keys.length;}});keys.push({k});if(hv&&mouse.moved)stSel=keys.length-1;
@@ -280,13 +286,13 @@ function drawStats(x,y,w,h){
     ['Fire rate',S.rof?pct(S.rof):'normal',S.rof>0],
     ['Ammo per pickup',S.ammoBonus?pct(S.ammoBonus):'normal',S.ammoBonus>0],
     ['Gunfire noise',S.quiet?'-'+Math.round(S.quiet*100)+'%':'normal',S.quiet>0],
-    ['Critical chance',(()=>{const st=P.arms[P.armSet],g=st.off&&ARM[st.off].gun?st.off:null,mn=st.main||'fists';return Math.round(critChance(mn)*100)+'% melee'+(g?', '+Math.round(critChance(g)*100)+'% gun':'');})(),S.crit>0],
+    ['Crits',(()=>{const st=P.arms[P.armSet],g=st.off&&ARM[st.off].gun?st.off:null,mn=st.main||'fists';return Math.round(critChance(mn)*100)+'% melee'+(g?', '+Math.round(critChance(g)*100)+'% gun':'');})(),S.crit>0],
     ['Enemy drop chance',Math.round((0.3+S.luck)*100)+'%',S.luck>0],
     ['Regeneration',S.regen?(S.regen).toFixed(2)+' hp/s':'none',S.regen>0],
     ['Light radius',Math.round(lr)+' px'+(beam?', beam '+beam:''),beam>0||lr!==BASE_R],
     ['Hack window',S.hack?pct(S.hack):'normal',S.hack>0],
     ['Shove',(Math.round(m.dmg*10)/10)+' dmg, '+m.range+' reach',m.dmg>1||m.range>18],
-    ['Shove knockback',Math.round(m.kb)+', arc '+Math.round(m.arc*114)+'\u00b0',m.kb>170||m.arc>1.1],
+    ['Shove push',Math.round(m.kb)+', arc '+Math.round(m.arc*114)+'\u00b0',m.kb>170||m.arc>1.1],
     ['Run','depth '+depth+', '+kills+' down',false]
   ];
   rows.forEach(([k,v,mod],i)=>{const ry=y+15+i*9;txt(k,sx,ry,'#8e978b');txt(''+v,sx+sw,ry,mod?AMBER:'#c9cfc2','right');});
