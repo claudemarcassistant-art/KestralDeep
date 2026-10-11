@@ -63,7 +63,9 @@ function hud(){
   if(p.blocking||p.guard<(p.guardMax||40)-0.5){F('#101820',22,H-27,72,3);F('#bfe4ff',22,H-27,Math.round(72*p.guard/(p.guardMax||40)),3);}
   if((S.shield||0)>0){F('#181020',22,H-31,72,2);F('#c9a8ff',22,H-31,Math.round(72*(p.ward||0)/S.shield),2);}
   {const rs='scrap '+p.inv.scrap+' pwd '+p.inv.powder+' pipe '+p.inv.pipe+' batt '+p.inv.battery+' cloth '+p.inv.cloth;txt(rs,W-6,5,'#8e978b','right');ctx.font='8px '+FONT;const rw=ctx.measureText(rs).width||200;txt('keys '+p.inv.key+'   ',W-6-rw,5,p.inv.key?AMBER:'#5d655f','right');}
-  txt('score '+(runScore+liveLevelScore()),W-6,14,'#8e978b','right');
+  {const ss='score '+(runScore+liveLevelScore());txt(ss,W-6,14,'#8e978b','right');ctx.font='8px '+FONT;const sw=ctx.measureText(ss).width||60;
+    // clearance waiting to be spent on crew files, beside the score (green when there is any)
+    txt('clearance '+(p.clear||0)+'   ',W-6-sw,14,p.clear?'#9fe0b0':'#5d655f','right');}
   if(alertOn()||alertLock&&depth>=3){const a=alertLock?0:Math.min(1,alertM/100),st=a<0.25?0:a<0.5?1:a<0.75?2:3,ex=10,ey=36,col=['#6f7a6a','#c9b46a','#e0904a','#ff5a4a'][st];
     ctx.strokeStyle=col;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ex-5,ey);ctx.quadraticCurveTo(ex,ey-[0.5,2,3.5,5][st],ex+5,ey);ctx.quadraticCurveTo(ex,ey+[0.5,2,3.5,5][st],ex-5,ey);ctx.stroke();
     if(st>0){ctx.fillStyle=col;circ(ex,ey,st);if(st===3&&Math.sin(T*8)>0){ctx.fillStyle='#fff';circ(ex,ey,1);}}

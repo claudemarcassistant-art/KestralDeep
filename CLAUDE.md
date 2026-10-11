@@ -147,6 +147,8 @@ Current version: **v0.94**. The game was built iteratively in claude.ai chats up
 
 **Player stun (v0.94):** numbers in `STUN_CFG` (`src/data/status.js`). `hurtPlayer()` adds `perHit + perDmg x damage` stun for every non-quiet hit (was 2.2 x damage only), the meter drains `decay` per second (was 14), and `explode()` adds `blastFull` (before resistances) within `blastNear` x its radius, `blast` further out. Measured: 1-damage hits daze after 9-10 hits at 4-7 per second, 6-damage hits after 5, 10-damage hits after 4; a blast within ~16 px dazes. `dazeT` 1 s and `stnImm` 2.5 s are unchanged.
 
+**HUD clearance (v0.94):** `26-hud.js` draws `clearance N` (green when above 0) just left of the score in the top-right corner.
+
 **Crew files view:** the tier details on the right are clipped and scroll (`flScroll`; the wheel scrolls them when the pointer is right of `flDetX`, otherwise it moves the selection). `flAuto` keeps the next tier in view until the wheel moves it, and resets when another file is selected.
 
 **Hands and Bones** (the gambler's dice game, `18-dice-options.js`): both sides start with `DICE_HP` (`src/data/npcs.js`, 9 since v0.92; 12 averaged ~8.5 rounds, 9 averages ~6.3).
