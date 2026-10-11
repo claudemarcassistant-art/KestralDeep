@@ -391,7 +391,7 @@ function updateStatus(dt){const p=player,s=p.st;p.dazeT-=dt;p.stnImm-=dt;updateP
   if(s.shk>0){s.shk=Math.max(0,s.shk-9*dt);if(Math.random()<s.shk/100*1.6*dt){hurtPlayer(1.5,true);p.shockT=Math.max(p.shockT||0,0.2);shake=Math.max(shake,2);sfx('crackle');
       for(let k=0;k<5;k++)parts.push({x:p.x+rr(-4,4),y:p.y+rr(-4,4),vx:rr(-40,40),vy:rr(-40,40),t:0.2,m:0.2,c:Math.random()<.5?'#e0f0ff':'#6fa8ff',s:1});}
     if(s.shk>25&&Math.random()<dt*5)parts.push({x:p.x+rr(-4,4),y:p.y+rr(-4,4),vx:0,vy:0,t:0.1,m:0.1,c:'#cfe6ff',s:1});}
-  if(p.dazeT<=0)s.stn=Math.max(0,s.stn-14*dt);
+  if(p.dazeT<=0)s.stn=Math.max(0,s.stn-STUN_CFG.decay*dt);
   if(s.brn>0){
     if(l>=2){s.brn=0;sfx('hiss');for(let k=0;k<8;k++)parts.push({x:p.x+rr(-4,4),y:p.y,vx:rr(-10,10),vy:rr(-35,-15),t:0.6,m:0.6,c:'#dfe4e2',s:2});}
     else if(l===1)s.brn=Math.max(0,s.brn-60*dt);
@@ -426,7 +426,7 @@ function hurtPlayer(d,quiet,src){
     if(d<=0)return;}
   const a=Math.min(player.armor,d*0.6);player.armor-=a;let rest=d-a;if(player.ghost>0){const g=Math.min(player.ghost,rest);player.ghost-=g;rest-=g;if(g>0)for(let k=0;k<3;k++)parts.push({x:player.x,y:player.y,vx:rr(-30,30),vy:rr(-40,-10),t:0.4,m:0.4,c:'#dfe8ff',s:1});}player.hp-=rest;if(lvl)lvl.dmg+=d;
   if(!quiet)breakCloak();
-  if(!quiet&&player.st){addStatus('stn',d*2.2,src);if(src&&player.dazeT<=0){const dx=player.x-src.x,dy=player.y-src.y,l=Math.hypot(dx,dy)||1;player.vx+=dx/l*70;player.vy+=dy/l*70;player.kbT=0.4;}}player.hurtT=quiet?Math.max(player.hurtT,0.15):0.35;if(!quiet){shake=Math.max(shake,4);sfx('hurt');}else if(Math.random()<.3)sfx('hurt');
+  if(!quiet&&player.st){addStatus('stn',STUN_CFG.perHit+d*STUN_CFG.perDmg,src);if(src&&player.dazeT<=0){const dx=player.x-src.x,dy=player.y-src.y,l=Math.hypot(dx,dy)||1;player.vx+=dx/l*70;player.vy+=dy/l*70;player.kbT=0.4;}}player.hurtT=quiet?Math.max(player.hurtT,0.15):0.35;if(!quiet){shake=Math.max(shake,4);sfx('hurt');}else if(Math.random()<.3)sfx('hurt');
   splat(player.x,player.y,'#3a1714',4,5);
   if(player.hp<=0){player.hp=0;hackUI=null;vendUI=null;saveBest();clearSave();for(const k in bestiary.seen)META.seen[k]=1;saveMeta();state='dead';deadT=0;menuOpen=false;mapOpen=false;mouse.l=false;mouse.r=false;sfx('die');}
 }
@@ -443,6 +443,6 @@ function explode(x,y){puff(x,y,'smoke',16);
   for(let yy=ty-5;yy<=ty+5;yy++)for(let xx=tx-5;xx<=tx+5;xx++)if(xx>=0&&yy>=0&&xx<MW&&yy<MH&&(map[yy*MW+xx]===6||map[yy*MW+xx]===7)&&Math.hypot(xx*TS+6-x,yy*TS+6-y)<Rr+6)blowModDoor(yy*MW+xx);
   for(let yy=ty-5;yy<=ty+5;yy++)for(let xx=tx-5;xx<=tx+5;xx++)
     if(xx>=0&&yy>=0&&xx<MW&&yy<MH&&map[yy*MW+xx]===3&&Math.hypot(xx*TS+6-x,yy*TS+6-y)<Rr+6)destroySecret(xx,yy);
-  const pd=Math.hypot(player.x-x,player.y-y);if(pd<Rr&&hasLOS(x,y,player.x,player.y)){{const l=pd||1,f=260*(1-pd/Rr);player.vx+=(player.x-x)/l*f;player.vy+=(player.y-y)/l*f;player.kbT=0.5;}hurtPlayer(22*(1-pd/Rr)*(player.st.wet>30?0.7:1)*(perk('blastplate')?0.5:1)*(player.blastDrill?0.5:1),false,{x,y});addStatus('stn',25,{x,y});addStatus('brn',30*(1-pd/Rr));}
+  const pd=Math.hypot(player.x-x,player.y-y);if(pd<Rr&&hasLOS(x,y,player.x,player.y)){{const l=pd||1,f=260*(1-pd/Rr);player.vx+=(player.x-x)/l*f;player.vy+=(player.y-y)/l*f;player.kbT=0.5;}hurtPlayer(22*(1-pd/Rr)*(player.st.wet>30?0.7:1)*(perk('blastplate')?0.5:1)*(player.blastDrill?0.5:1),false,{x,y});addStatus('stn',pd<Rr*STUN_CFG.blastNear?STUN_CFG.blastFull:STUN_CFG.blast,{x,y});addStatus('brn',30*(1-pd/Rr));}
 }
 
