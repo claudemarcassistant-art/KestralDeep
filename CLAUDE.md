@@ -2,7 +2,7 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v0.95**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v0.96**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
@@ -54,7 +54,7 @@ Current version: **v0.95**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v0.95)
+## Architecture overview (as of v0.96)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -149,7 +149,7 @@ Current version: **v0.95**. The game was built iteratively in claude.ai chats up
 
 **Player stun (v0.94):** numbers in `STUN_CFG` (`src/data/status.js`). `hurtPlayer()` adds `perHit + perDmg x damage` stun for every non-quiet hit (was 2.2 x damage only), the meter drains `decay` per second (was 14), and `explode()` adds `blastFull` (before resistances) within `blastNear` x its radius, `blast` further out. Measured: 1-damage hits daze after 9-10 hits at 4-7 per second, 6-damage hits after 5, 10-damage hits after 4; a blast within ~16 px dazes. `dazeT` 1 s and `stnImm` 2.5 s are unchanged.
 
-**HUD clearance (v0.94):** `26-hud.js` draws `clearance N` (green when above 0) just left of the score in the top-right corner.
+**HUD clearance (v0.94):** `26-hud.js` draws `clearance N` (green when above 0) just left of the score in the top-right corner. **No hotbar label (owner's call, v0.96):** the line above the hotbar that named the selected armament, item or action was removed because it overlapped CREEPING/winded and repeated the bottom-right `LMB ...` line, which now also names the psychic or sling action in action mode.
 
 **Crew files view:** the tier details on the right are clipped and scroll (`flScroll`; the wheel scrolls them when the pointer is right of `flDetX`, otherwise it moves the selection). `flAuto` keeps the next tier in view until the wheel moves it, and resets when another file is selected.
 
