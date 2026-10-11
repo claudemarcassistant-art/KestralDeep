@@ -26,12 +26,13 @@ src/
     creatures.js            creature stats, bestiary order and text, kill points, threat costs, bosses, hunting memory, arena waves
     events.js               between-deck events, transit stop text
     food.js                 food, raw ingredients, cooking
+    hacking.js              hack panel rounds, windows and cursor speed
     items.js                gear, quick items, tools, pickups, flasks, liquid tank, vending stock, resource text
     npcs.js                 NPCs
     progress.js             deck grades, run stats, work orders (achievements), point trades, challenge modifiers
     herbs.js                herbs, herbal preparations (poultices, incense, draughts)
     route.js                express shafts, vault junctions and archive vaults, deck secured, crawlways
-    status.js               frozen status and cryo grenade tuning, active reload
+    status.js               frozen status and cryo grenade tuning, active reload, smoke blindness, player stun
     traps.js                trap types, trap tuning, trap control panel text, toxic vents, plate doors, crates, item weight
     versions.js             in-game version history
     weapons.js              armaments, gun stats, magazines, crits, charge and combo timing

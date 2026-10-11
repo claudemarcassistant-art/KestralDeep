@@ -260,8 +260,11 @@ function floodRegion(){
   for(let y=1;y<MH-1;y++)for(let x=1;x<MW-1;x++)if(liq[y*MW+x])paintTile(x,y);
   sfx('steam');
 }
-function startHack(pn){hackUI={pn,round:0,need:3,misses:0,pos:0,dir:1,flash:0,ok:0,barW:200};newHackWindow();mouse.l=false;mouse.r=false;sfx('map');}
-function newHackWindow(){const h=hackUI;h.ww=Math.max(14,(46-h.round*10)*(1+S.hack))*(h.pn.hard?VAULT_CFG.hackMul:1);h.win=rr(0,h.barW-h.ww);h.speed=(130+h.round*55)*(1-S.hack*0.3);}
+// rounds needed: HACK_CFG.win.length, minus one for each HACK_CFG.cut threshold the hack stat reaches
+function hackRounds(){const C=HACK_CFG;return Math.max(C.minRounds,C.win.length-C.cut.filter(t=>S.hack>=t).length);}
+function startHack(pn){hackUI={pn,round:0,need:hackRounds(),misses:0,pos:0,dir:1,flash:0,ok:0,barW:HACK_CFG.barW};newHackWindow();mouse.l=false;mouse.r=false;sfx('map');}
+function newHackWindow(){const h=hackUI,C=HACK_CFG;h.ww=Math.max(C.minWin,C.win[Math.min(h.round,C.win.length-1)]*(1+S.hack))*(h.pn.hard?VAULT_CFG.hackMul:1);h.win=rr(0,h.barW-h.ww);
+  h.speed=(C.speed+h.round*C.step*(1-Math.min(C.stepCutMax,S.hack*C.stepCut)))*(1-S.hack*C.slow);}
 function hackTry(){const h=hackUI;if(!h)return;
   if(h.pos>=h.win&&h.pos<=h.win+h.ww){h.round++;h.ok=0.2;
     if(h.round>=h.need){const r=HACKR[h.pn.reward];h.pn.state='done';hackUI=null;sfx('hackwin');if(lvl)lvl.hacks++;say(r.act(h.pn));return;}
@@ -275,7 +278,7 @@ function drawHack(){
   F('rgba(4,5,6,0.6)',0,0,W,H);
   box(px,py,240,96,'#070b0a','#1f3a36');F('#6fd0c0',px,py,240,2);
   txt('PANEL ACCESS',px+10,py+8,'#6fd0c0');txt(HACKR[h.pn.reward].label,px+230,py+8,AMBER,'right');
-  txt('lock the signal inside the window. 3 locks to break in.',px+10,py+20,'#6f7a6a');
+  txt('lock the signal inside the window. '+h.need+' locks to break in.',px+10,py+20,'#6f7a6a');
   const bx=px+20,by=py+38;F('#0e1614',bx,by,h.barW,14);
   for(let k=0;k<h.barW;k+=4)F(`rgba(100,200,190,${0.05+Math.random()*0.1})`,bx+k,by+rnd(14),1,1);
   F(h.ok>0?'#9fe0b0':'#2f6a4a',bx+h.win,by,h.ww,14);F('#6fd0a0',bx+h.win,by,h.ww,1);

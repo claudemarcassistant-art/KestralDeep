@@ -2,7 +2,7 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v0.96**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v0.97**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
@@ -54,7 +54,7 @@ Current version: **v0.96**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v0.96)
+## Architecture overview (as of v0.97)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -153,6 +153,8 @@ Current version: **v0.96**. The game was built iteratively in claude.ai chats up
 
 **Crew files view:** the tier details on the right are clipped and scroll (`flScroll`; the wheel scrolls them when the pointer is right of `flDetX`, otherwise it moves the selection). `flAuto` keeps the next tier in view until the wheel moves it, and resets when another file is selected.
 
+**Hacking (v0.97):** numbers in `HACK_CFG` (`src/data/hacking.js`). `startHack()` sets `need` from `hackRounds()`: `win.length` (4) rounds, minus one for each `cut` threshold the hack stat reaches (0.4, 0.8; at least `minRounds` 2). `newHackWindow()` takes the round's window from `win[]` (42, 34, 27, 22 px on a 200 px bar) times (1 + hack), and the cursor speed `speed + round x step x (1 - min(stepCutMax, hack x stepCut))`, times (1 - hack x `slow`). Vault panels still multiply the window by `VAULT_CFG.hackMul`. Measured time inside the window per round: no skill 323/189/117/79 ms (was 354/195/108 over 3 rounds); hack 0.4 (a splicer kit) 514/322/209 ms over 3; hack 0.8, 2 rounds of 765/516 ms. The hack stat comes from the splicer kit (0.4), Surveyor tier 1 (0.25) and Memory (0.05 a point). Stats shows `Hack window` with the round count.
+
 **Hands and Bones** (the gambler's dice game, `18-dice-options.js`): both sides start with `DICE_HP` (`src/data/npcs.js`, 9 since v0.92; 12 averaged ~8.5 rounds, 9 averages ~6.3).
 
 **Persistence (`localStorage`):** `kd_opts` (options), `kd_meta` (meta-progression: deepest sector reached, work orders completed, hunters killed, creatures seen, run setup), `kd_save` (the run in progress, written on the route map and cleared on death or a new game), plus the best score.
@@ -177,6 +179,7 @@ Current version: **v0.96**. The game was built iteratively in claude.ai chats up
 | `weapons.js` | `WORDER`, `ARM`, `FIST`, `IMPLEMENTS`, `WPN`, `WCRIT`, `MAGS`, `CHARGE`, `COMBO_T` |
 | `herbs.js` | `HERBS`, `HERB_WHERE`, `HERB_WEIGHTS`, `HERB_CFG`, `HERBAL`, `DRAUGHTS` |
 | `route.js` | `EXPRESS_CFG`, `EXPRESS_DESC`, `VAULT_CFG`, `VAULT_DANGERS`, `VAULT_DESC`, `SECURE_CFG`, `CRAWL_CFG`, `SECURE_DESC`, `CRAWL_DESC` |
+| `hacking.js` | `HACK_CFG` |
 | `status.js` | `FREEZE_CFG`, `ACTIVE_RELOAD`, `SMOKE_BLIND`, `STUN_CFG` |
 | `traps.js` | `TRAP_TYPES`, `TRAP_WEIGHTS`, `TRAP_CFG`, `TRAP_PANEL_DESC`, `PLATE_DOOR_CFG`, `CRATE_CFG`, `ITEM_WEIGHT`, `PLATE_DOOR_DESC`, `GAS_TRAP_BIAS`, `TOXIC_VENT_CFG` |
 | `world.js` | `SECTORS`, `BNAMES`, `PAL`, `COND_LIGHT`, `COND_HAZ`, `MODS`, `ROOMNAMES`, `HAZDESC`, `LIQ`/`LIQNAME`, `BIOME`, `NODE`, `HIDDEN_TYPES`, `DECK_SIZES`, `DECK_SIZE_ODDS` |
