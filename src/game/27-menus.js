@@ -149,12 +149,12 @@ const MENUUSE=['surgery','medpatch','medkit','trauma','regen','stim','antitox','
 function menuUsable(r){return r&&r.kind==='quick'&&(r.id.startsWith('food:')||MENUUSE.includes(r.id));}
 function useFromMenu(r){if(!menuUsable(r))return;const q=qInfo(r.id);if(!q||q.n()<=0){sfx('click');return;}q.use();}
 let fileMode=0,flSel=0;
-function drawFilesTab(x,y,w,h){const FW=[76,104,64,90];['Crew files','Upgrades & perks','Skills','Work orders'].forEach((n,i)=>{const bw=FW[i],bx=x+8+FW.slice(0,i).reduce((a,b)=>a+b+3,0),act=fileMode===i;ui(bx,y+2,bw,11,{click:()=>{fileMode=i;sfx('click');}});F(act?'#1c2220':'#0a0d0c',bx,y+2,bw,11);F(act?AMBER:'#2a302e',bx,y+12,bw,1);txt(n,bx+bw/2,y+4,act?AMBER:'#8e978b','center');});
+function drawFilesTab(x,y,w,h){const FW=[76,70,64,90];['Crew files','Upgrades','Skills','Work orders'].forEach((n,i)=>{const bw=FW[i],bx=x+8+FW.slice(0,i).reduce((a,b)=>a+b+3,0),act=fileMode===i;ui(bx,y+2,bw,11,{click:()=>{fileMode=i;sfx('click');}});F(act?'#1c2220':'#0a0d0c',bx,y+2,bw,11);F(act?AMBER:'#2a302e',bx,y+12,bw,1);txt(n,bx+bw/2,y+4,act?AMBER:'#8e978b','center');});
   if(fileMode===3)drawAch(x,y+14,w,h-14);else if(fileMode===2)drawSkills(x,y+14,w,h-14);else if(fileMode===1)drawUpPerks(x,y+14,w,h-14);else drawFiles(x,y+14,w,h-14);}
 function upPerkRows(){const P=player,R=[],{own,lock}=perkList();
   if((P.injuries||[]).length){R.push({hdr:'Injuries',col:'#ff8a7a'});for(const j of P.injuries)R.push({inj:j});}
   R.push({hdr:'Active perks',col:AMBER});if(own.length)for(const e of own)R.push({perk:e});else R.push({none:'none yet'});
-  const ur=upRows();R.push({hdr:'Upgrades',col:AMBER});if(ur.length)for(const r of ur)R.push(r.u?{u:r.u}:{hdr:r.hdr,sub:true});else R.push({none:'none unlocked yet'});
+  const ur=upRows();R.push({hdr:'Talents',col:AMBER});if(ur.length)for(const r of ur)R.push(r.u?{u:r.u}:{hdr:r.hdr,sub:true});else R.push({none:'none unlocked yet'});
   const lk=lock.filter(e=>e.found);if(lk.length){R.push({hdr:'Perks still to unlock',col:'#6f7a6a'});for(const e of lk)R.push({perk:e,locked:true});}
   return R;}
 function drawUpPerks(x,y,w,h){const rows=upPerkRows(),sel=[];rows.forEach((r,i)=>{if(!r.hdr&&!r.none)sel.push(i);});if(!sel.length)return;upSel=Math.max(0,Math.min(upSel,sel.length-1));
@@ -169,11 +169,11 @@ function drawUpPerks(x,y,w,h){const rows=upPerkRows(),sel=[];rows.forEach((r,i)=
     else if(r.perk){F(r.locked?'#2a302e':r.perk.kind==='classified'?'#e05040':'#a88af0',x+12,yy+2,3,5);txt(r.perk.name,x+18,yy+1,r.locked?'#5d655f':'#9fe0b0');}}
   if(rows.length>vis){const th=vis*rh,bh=Math.max(8,th*vis/rows.length),by=ly+(th-bh)*upScroll/Math.max(1,rows.length-vis);F('#141817',x+lw+2,ly,2,th);F('#5d655f',x+lw+2,by,2,bh);}
   const r=rows[sel[upSel]],dx=x+lw+12,dw=w-lw-20;F('#1f2524',x+lw+7,y+4,1,h-10);
-  if(r.u){const u=r.u,lv=U(u.k);txt(u.name,dx,y+6,AMBER);txt(u.cat.toLowerCase()+'  /  level '+lv+' of 3',dx,y+17,'#6f7a6a');let yy=wrap(u.desc,dx,y+30,dw,10,'#b9c0b3')+4;
+  if(r.u){const u=r.u,lv=U(u.k);txt(u.name,dx,y+6,AMBER);const sy=wrap(u.cat.toLowerCase()+'  /  level '+lv+' of 3',dx,y+17,dw,9,'#6f7a6a');let yy=wrap(u.desc,dx,Math.max(y+30,sy+4),dw,10,'#b9c0b3')+4;
     if(lv<3){txt('Next level needs',dx,yy,'#8e978b');yy+=11;const n=u.cost[lv];for(const k in n){const have=player.inv[k]||0;txt(k,dx+6,yy,'#c9cfc2');txt(have+' / '+n[k],dx+dw,yy,have>=n[k]?'#9fcf9a':'#c07060','right');yy+=10;}
       yy+=4;txt(Object.keys(n).every(k=>(player.inv[k]||0)>=n[k])?'R, Enter or click to upgrade':'missing parts',dx,yy,AMBER);}else txt('maxed',dx,yy,'#5d655f');}
   else if(r.inj){const d=INJ[r.inj.id];txt(d.name,dx,y+6,'#ff8a7a');txt('injury  /  heals in '+r.inj.left+' deck'+(r.inj.left>1?'s':''),dx,y+17,'#8a5a5a');let yy=wrap(d.desc,dx,y+30,dw,10,'#c8a8a0')+6;wrap('Treat it with a surgery kit, a medstation, a stasis pod or a ginsu bean, or let it heal over lift rides.',dx,yy,dw,9,'#6f7a6a');}
-  else if(r.perk){const e=r.perk;txt(e.name,dx,y+6,r.locked?'#8e978b':'#9fe0b0');txt((r.locked?'not yet unlocked  /  ':'perk  /  ')+e.file+' tier '+e.tier,dx,y+17,'#6f7a6a');wrap(e.desc||'',dx,y+30,dw,10,'#b9c0b3');}}
+  else if(r.perk){const e=r.perk;txt(e.name,dx,y+6,r.locked?'#8e978b':'#9fe0b0');const sy=wrap((r.locked?'not yet unlocked  /  ':'perk  /  ')+e.file+' tier '+e.tier,dx,y+17,dw,9,'#6f7a6a');wrap(e.desc||'',dx,Math.max(y+30,sy+4),dw,10,'#b9c0b3');}}
 let prScroll=0;
 function perkList(){const own=[],lock=[];for(const f of FILES){const t=fileTier(f.id);f.tiers.forEach((tr,i)=>{if(!tr.perk)return;const c=tr.desc.indexOf(':'),name=c>0?tr.desc.slice(0,c):tr.desc,desc=c>0?tr.desc.slice(c+1).trim():'';
   const e={name,desc:desc?desc[0].toUpperCase()+desc.slice(1):'',file:f.name,tier:i+1,kind:f.kind,found:hasFile(f.id)};if(i<t)own.push(e);else lock.push(e);});}return {own,lock};}
