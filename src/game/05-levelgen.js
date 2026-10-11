@@ -130,7 +130,7 @@ function setDeckSize(k){if(!DECK_SIZES[k])k='m';deckSize=k;const D=DECK_SIZES[k]
   liq=new Uint8Array(N);hz=new Uint8Array(N);furn=new Uint8Array(N);molten=new Uint8Array(N);webs=new Uint8Array(N);chasm=new Uint8Array(N);
   ice=new Uint8Array(N);flot=new Uint8Array(N);slime=new Uint8Array(N);slimeK=new Uint8Array(N);oil=new Uint8Array(N);openVent=new Uint8Array(N);rubble=new Uint8Array(N);
   flow=new Int16Array(N).fill(-1);flowB=new Int16Array(N);flowQ=new Int32Array(N);flowJob=null;oilCur=0;moltenCur=0;}
-function resetHidden(){crawls=[];crawlAsk=null;deckSecured=false;secureT=0;fadeFx=null;gasJets=[];archive=null;incense=[];plateDoors=[];traps=[];darts=[];trapJets=[];falls=[];rubbleL=[];rubble=new Uint8Array(MW*MH);furn=new Uint8Array(MW*MH);lamps=[];arrival=null;trips=[];secT=0;molten=new Uint8Array(MW*MH);chasm=new Uint8Array(MW*MH);webs=new Uint8Array(MW*MH);ice=new Uint8Array(MW*MH);fans=[];plants=[];mists=[];sprinkT=0;sprWait=rr(25,45);freightT=null;pendingSkip=0;modules=[];fixtures=[];modDoors=new Map();flot=new Uint8Array(MW*MH);slime=new Uint8Array(MW*MH);oil=new Uint8Array(MW*MH);oilIgnite=[];slimeK=new Uint8Array(MW*MH);ventRooms=[];hatchRooms=[];hatches=[];levers=[];cages=[];openVent=new Uint8Array(MW*MH);cables=[];cableMap=new Map();barrels=[];risers=[];}
+function resetHidden(){secCams=[];crawls=[];crawlAsk=null;deckSecured=false;secureT=0;fadeFx=null;gasJets=[];archive=null;incense=[];plateDoors=[];traps=[];darts=[];trapJets=[];falls=[];rubbleL=[];rubble=new Uint8Array(MW*MH);furn=new Uint8Array(MW*MH);lamps=[];arrival=null;trips=[];secT=0;molten=new Uint8Array(MW*MH);chasm=new Uint8Array(MW*MH);webs=new Uint8Array(MW*MH);ice=new Uint8Array(MW*MH);fans=[];plants=[];mists=[];sprinkT=0;sprWait=rr(25,45);freightT=null;pendingSkip=0;modules=[];fixtures=[];modDoors=new Map();flot=new Uint8Array(MW*MH);slime=new Uint8Array(MW*MH);oil=new Uint8Array(MW*MH);oilIgnite=[];slimeK=new Uint8Array(MW*MH);ventRooms=[];hatchRooms=[];hatches=[];levers=[];cages=[];openVent=new Uint8Array(MW*MH);cables=[];cableMap=new Map();barrels=[];risers=[];}
 function mkBarrel(tx,ty){return {tx,ty,x:tx*TS+6,y:ty*TS+6,vx:0,vy:0,hp:4,fuse:-1,dead:false,ph:Math.random()*6,roll:0};}
 function pushBarrel(b,dx,dy,f){if(!b||b.dead)return;const l=Math.hypot(dx,dy)||1;b.vx+=dx/l*f;b.vy+=dy/l*f;}
 function barrelWall(x,y){const tx=Math.floor(x/TS),ty=Math.floor(y/TS);if(tx<0||ty<0||tx>=MW||ty>=MH)return true;return map[ty*MW+tx]!==0;}
@@ -370,7 +370,7 @@ function genLevel(){
   genArchiveVault(start);genPlateDoors(start);
   seen=new Uint8Array(MW*MH);seed=rnd(1e9);paintMap();genPanels(false);genVending();genGrinder();genListeners();genFreezers();
   if(freightT){const dec=panels.filter(q=>!q.hack);if(dec.length){const q=dec[rnd(dec.length)];q.hack=true;q.reward='doors';}}
-  genToxicVents();genTraps(start,exitR);genCrawls(start,exitR);
+  genToxicVents();genTraps(start,exitR);genCams(start);genCrawls(start,exitR);
   return {start,exitR};
 }
 function blob(cx,cy,R,fn){const dist=new Map();const q=[cy*MW+cx];dist.set(q[0],0);

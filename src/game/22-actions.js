@@ -142,6 +142,7 @@ function primaryAttack0(m){const p=player;p.mcd=m.cd;p.mcdMax=m.cd;p.swingT=m.ja
   for(const bb of barrels){if(bb.dead)continue;const dx=bb.x-p.x,dy=bb.y-p.y;if(m.lash?inLash(p,bb.x,bb.y,4,m):m.jab?inJab(p,bb.x,bb.y,4,m):(Math.hypot(dx,dy)<m.range+4&&Math.abs(angDiff(Math.atan2(dy,dx),p.ang))<m.arc)){if(bb.crate&&(m.mult||1)>=CRATE_CFG.heavyMult)breakCrate(bb);else hitBarrel(bb,m.dmg,dx,dy,m.kb*0.9);connected++;}}
   for(const pl of plants){if(pl.burst)continue;const dx=pl.x-p.x,dy=pl.y-p.y;if(Math.hypot(dx,dy)<m.range+4&&Math.abs(angDiff(Math.atan2(dy,dx),p.ang))<m.arc)burstPlant(pl);}
   for(const c of cores){if(c.dead)continue;const dx=c.x-p.x,dy=c.y-p.y;if(Math.hypot(dx,dy)<m.range+6&&Math.abs(angDiff(Math.atan2(dy,dx),p.ang))<m.arc)hitCore(c,m.dmg*2);}
+  camsHitArc(p.x,p.y,p.ang,m.range,m.arc);
   const ca=Math.cos(p.ang),sa=Math.sin(p.ang);for(let s2=4;s2<=m.range;s2+=3){const tx=Math.floor((p.x+ca*s2)/TS),ty=Math.floor((p.y+sa*s2)/TS);if(solid(tx,ty)){if(map[ty*MW+tx]===3)damageSecret(tx,ty,m.dmg*2);break;}}
   const rapid=m.cd<0.2;
   if(connected){comboAdd(rapid?0.35:1.5);p.mcd=m.cd*comboCd();p.whiff=false;}
@@ -274,7 +275,7 @@ function hackTry(){const h=hackUI;if(!h)return;
     sfx('hackok');newHackWindow();}
   else{h.misses++;h.flash=0.35;sfx('zap');alertAdd(perk('ductrat')?6:12);shake=Math.max(shake,5);hurtPlayer(9,true);addStatus('shk',30);
     if(!hackUI)return;
-    if(h.misses>=2){h.pn.state='dead';hackUI=null;if(h.pn.reward==='traps')trapsSetOff(h.pn);else if(h.pn.reward==='vault')vaultFried(h.pn);else say('the panel shorts out in a shower of sparks');}}}
+    if(h.misses>=2){h.pn.state='dead';hackUI=null;if(h.pn.reward==='traps')trapsSetOff(h.pn);else if(h.pn.reward==='vault')vaultFried(h.pn);else if(h.pn.reward==='cams')camsHackFailed(h.pn);else say('the panel shorts out in a shower of sparks');}}}
 function updateHack(dt){const h=hackUI;h.pos+=h.dir*h.speed*dt;if(h.pos>h.barW){h.pos=h.barW;h.dir=-1;}if(h.pos<0){h.pos=0;h.dir=1;}h.flash-=dt;h.ok-=dt;}
 function drawHack(){
   const h=hackUI,px=(W-240)/2|0,py=(H-96)/2|0;
@@ -439,7 +440,7 @@ function hurtPlayer(d,quiet,src){
   splat(player.x,player.y,'#3a1714',4,5);
   if(player.hp<=0){player.hp=0;hackUI=null;vendUI=null;saveBest();clearSave();for(const k in bestiary.seen)META.seen[k]=1;saveMeta();state='dead';deadT=0;menuOpen=false;mapOpen=false;mouse.l=false;mouse.r=false;sfx('die');}
 }
-function explode(x,y){puff(x,y,'smoke',16);
+function explode(x,y){puff(x,y,'smoke',16);camsBlast(x,y,46);
   const Rr=46;sfx('boom');shake=Math.max(shake,9);noise(x,y,320);
   lights.push({x,y,r:120,t:0.3,m:0.3,c:'255,150,60'});
   for(let i=0;i<40;i++){const a=Math.random()*6.283,s=rr(30,200);parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:rr(.2,.7),m:.7,c:i%3?'#f0a040':'#ffe2a0',s:rnd(2)+1});}

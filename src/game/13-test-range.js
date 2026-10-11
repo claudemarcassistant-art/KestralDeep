@@ -72,6 +72,8 @@ function genTest(){
   for(const [x,y,ty] of [[4,35,'flame'],[4,38,'dart'],[8,35,'spike'],[11,35,'debris']]){const t=mkTrap(x,y,ty);if(t){t.found=true;traps.push(t);}}
   {const tp={tx:6,ty:33,hack:true,reward:'traps',state:'idle',ph:0,traps:[]};panels.push(tp);for(const t of traps.slice(0,3)){tp.traps.push(t);t.panel=tp;}}
   {const g=mkTrap(26,24,'gas');g.found=true;traps.push(g);}
+  // a security camera on the hall's south wall, watching the hazards area, wired to a panel on the pillar at (16,18)
+  {const c=mkCam(22,26,0,-1);secCams.push(c);const pn={tx:16,ty:18,hack:true,reward:'cams',state:'idle',ph:0,cams:[c]};panels.push(pn);c.panel=pn;}
   vendors=[mkVendor(32,3),mkVendor(39,3)];
   crawls=[{a:{tx:36,ty:4},b:{tx:4,ty:24},len:Math.hypot(32,20)*TS*1.25}];
   plateDoors.push({tx:8,ty:43,px:8,py:41,dir:[0,-1],kind:'vault',room:pr,state:'closed',t:0,hinted:false});barrels.push(mkCrate(6,40,true),mkCrate(10,41,false));

@@ -4,6 +4,7 @@ let testDeck=false,biomeOverride=null,deckUI=null;
 const DECKOPT=[
   {k:'depth',label:'Depth',vals:[1,2,3,4,5,6,7,8,9,10]},
   {k:'biome',label:'Biome',vals:['auto','Intake','Pump Hall','Sorting Floor','Cold Store','Brine Works','Relay Core']},
+  {k:'cams',label:'Cameras',vals:['normal','off','on']},
   {k:'type',label:'Deck type',vals:['station','flooded','cache']},
   {k:'size',label:'Size',vals:['random','small','medium','large']},
   {k:'traps',label:'Traps',vals:['normal','off','on']},
@@ -16,7 +17,7 @@ const DECKOPT=[
   {k:'waves',label:'Incoming waves',vals:['off','on']},
   {k:'haunt',label:'Haunted',vals:['off','on']},
   {k:'lowg',label:'Low gravity',vals:['off','on']}];
-const deckCfg={seed:'',depth:1,biome:'auto',type:'station',size:'random',traps:'normal',pdoor:'normal',vault:'off',secure:'no',light:'random',haz:'random',obj:'random',waves:'off',haunt:'off',lowg:'off'};
+const deckCfg={seed:'',depth:1,biome:'auto',cams:'normal',type:'station',size:'random',traps:'normal',pdoor:'normal',vault:'off',secure:'no',light:'random',haz:'random',obj:'random',waves:'off',haunt:'off',lowg:'off'};
 const deckRows=()=>[...DECKOPT.map(o=>({opt:o})),{seedRow:true},{act:'go',label:'Go to this deck'},{act:'rand',label:'Go to a random deck'},{act:'stay',label:'Stay here'}];
 function cycleDeck(o,d){const v=o.vals,i=v.indexOf(deckCfg[o.k]);deckCfg[o.k]=v[(i+d+v.length)%v.length];sfx('click');}
 // the seed of the test deck in play, so a deck can be rebuilt: blank seed = a new random one each time
@@ -30,6 +31,7 @@ function launchTestDeck0(rand){const c=deckCfg,type=rand?wpick([['station',6],['
   // traps: normal = as in a run (from depth 2), off = none, on = at any depth with at least one of each type and a panel
   if(!rand&&c.traps!=='normal')levelMods.traps=c.traps;
   if(!rand&&c.pdoor!=='normal')levelMods.pdoor=c.pdoor;
+  if(!rand&&c.cams!=='normal')levelMods.cams=c.cams;
   // vault deck: on = a random danger, or a named one
   if(!rand&&c.vault!=='off'){const ks=Object.keys(VAULT_DANGERS);cond.vault={d:[c.vault==='on'?ks[rnd(ks.length)]:c.vault]};}
   testDeck=true;deckUI=null;hazOff=false;levelLabel='TEST DECK';enterLevel();

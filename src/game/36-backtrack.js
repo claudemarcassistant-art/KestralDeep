@@ -73,6 +73,7 @@ function wallSpotFrom(x0,y0,taken){for(let r=1;r<=10;r++)for(let y=y0-r;y<=y0+r;
 function floorSpotFrom(x0,y0,taken){for(let r=1;r<=10;r++)for(let y=y0-r;y<=y0+r;y++)for(let x=x0-r;x<=x0+r;x++){if(Math.max(Math.abs(x-x0),Math.abs(y-y0))!==r||x<1||y<1||x>=MW-1||y>=MH-1)continue;
   if(padDist(x,y)<3)continue;const i=y*MW+x;if(solid(x,y)||liq[i]>=2||chasm[i]||molten[i]||hz[i])continue;if(taken(x,y))continue;return [x,y];}return null;}
 function clearLiftArea(){if(!exitT)return;
+  secCams=secCams.filter(c=>!nearLift(c.tx,c.ty)&&!nearLift(c.tx+c.dx,c.ty+c.dy));
   const wallUsed=(x,y)=>panels.some(q=>q.tx===x&&q.ty===y)||vendors.some(v=>v.tx===x&&v.ty===y)||fixtures.some(f=>f.tx===x&&f.ty===y)||risers.some(r=>r.tx===x&&r.ty===y);
   const floorUsed=(x,y)=>chests.some(c=>c.tx===x&&c.ty===y)||fixtures.some(f=>f.tx===x&&f.ty===y)||levers.some(l=>l.tx===x&&l.ty===y)||barrels.some(b=>!b.dead&&b.tx===x&&b.ty===y);
   for(const pn of panels.slice())if(nearLift(pn.tx,pn.ty)){const s=wallSpotFrom(pn.tx,pn.ty,wallUsed);if(s){pn.tx=s[0];pn.ty=s[1];}else panels=panels.filter(q=>q!==pn);}

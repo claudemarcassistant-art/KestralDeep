@@ -14,7 +14,7 @@ const FIX_DESC={
   grinder:{name:'Salvager',desc:'Grinds spare gear, weapons and junk down into materials.'},
   damper:{name:'Dampening terminal',desc:'Quietens the deck: lowers the disturbance meter.'},
   breaker:{name:'Breaker panel',desc:'Cuts the deck power: live cables, lights, scanners and powered traps go dead.'},
-  camera:{name:'Security camera',desc:'Shows what waits on the next ride down.'},
+  camera:{name:'Lift camera terminal',desc:'Shows what waits on the next ride down.'},
   arcade:{name:'Arcade cabinet',desc:'An old game cabinet. Winning pays out.'},
   toolbench:{name:'Workbench',desc:'A bench of tools and offcuts.'},
   bench:{name:'Bench',desc:'Somewhere to sit. Not now.'},

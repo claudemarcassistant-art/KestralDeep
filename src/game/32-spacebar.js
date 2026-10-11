@@ -26,6 +26,7 @@ function kick0(){const P=player;if(state!=='play'||paused()||P.shoveCd>0||P.daze
   if(hits)comboAdd(1);if(cloaked)breakCloak();
   for(const pl of plants)if(!pl.burst&&inArc(pl.x,pl.y,4))burstPlant(pl);
   for(const c of cores)if(!c.dead&&inArc(c.x,c.y,6))hitCore(c,dmg*2);
+  camsHitArc(P.x,P.y,P.ang,range,arc);
   for(const bb of barrels)if(!bb.dead&&inArc(bb.x,bb.y,4))hitBarrel(bb,dmg,bb.x-P.x,bb.y-P.y,kb*0.9);
   const ca=Math.cos(P.ang),sa=Math.sin(P.ang);for(let s=4;s<=range;s+=3){const tx=Math.floor((P.x+ca*s)/TS),ty=Math.floor((P.y+sa*s)/TS);
     if(solid(tx,ty)){if(map[ty*MW+tx]===3)damageSecret(tx,ty,dmg*2);else sfx('thud');break;}}}

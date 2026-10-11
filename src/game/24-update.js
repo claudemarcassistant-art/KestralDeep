@@ -79,7 +79,7 @@ function updatePlay(dt){
   if(S.regen){p.regenAcc+=S.regen*dt;while(p.regenAcc>=1){p.regenAcc--;if(p.hp<maxHp())p.hp=Math.min(maxHp(),p.hp+1);}}
   if(S.pinger&&markSecretsNear(p.x,p.y,70))say('your pinger clicks. a hollow wall nearby');
   sonarT-=dt;sonarRing+=dt;
-  updateHazards(dt);updateHazards2(dt);updateObjective(dt);updateWaves(dt);updateAlert(dt);updateActs(dt);updateBarrels(dt);updateMines(dt);updateReload(dt);updateSoaks(dt);if(p.slCd>0)p.slCd-=dt;if(p.actMode!=='sling'&&p.slChg>0){p.slChg=0;p.slFull=false;}updateMolten(dt);updateTraps(dt);updatePlateDoors(dt);updateLoose(dt);updateSpace(dt);updateEnemyCold(dt);updateHerbs(dt);updateArchive(dt);updateSecure(dt);updateFade(dt);updateArenaWaves(dt);updateAlarm(dt);checkAch(dt);updateFlames(dt);updateNades(dt);updateClouds(dt);if(p.jabT>0)p.jabT-=dt;if(p.combo>0){p.comboIdle=(p.comboIdle||0)+dt;if(p.comboIdle>1.8){p.combo=Math.max(0,p.combo-dt*(perk('secondnature')?0.85:1.7));if(p.combo<=0)p.comboShield=false;}}if(p.lashT>0)p.lashT-=dt;if(p.sledgeCd>0)p.sledgeCd-=dt;if(p.blinkCd>0)p.blinkCd-=dt;if(p.scanCd>0)p.scanCd-=dt;if(scanT>0)scanT-=dt;updateStatus(dt);
+  updateCams(dt);updateHazards(dt);updateHazards2(dt);updateObjective(dt);updateWaves(dt);updateAlert(dt);updateActs(dt);updateBarrels(dt);updateMines(dt);updateReload(dt);updateSoaks(dt);if(p.slCd>0)p.slCd-=dt;if(p.actMode!=='sling'&&p.slChg>0){p.slChg=0;p.slFull=false;}updateMolten(dt);updateTraps(dt);updatePlateDoors(dt);updateLoose(dt);updateSpace(dt);updateEnemyCold(dt);updateHerbs(dt);updateArchive(dt);updateSecure(dt);updateFade(dt);updateArenaWaves(dt);updateAlarm(dt);checkAch(dt);updateFlames(dt);updateNades(dt);updateClouds(dt);if(p.jabT>0)p.jabT-=dt;if(p.combo>0){p.comboIdle=(p.comboIdle||0)+dt;if(p.comboIdle>1.8){p.combo=Math.max(0,p.combo-dt*(perk('secondnature')?0.85:1.7));if(p.combo<=0)p.comboShield=false;}}if(p.lashT>0)p.lashT-=dt;if(p.sledgeCd>0)p.sledgeCd-=dt;if(p.blinkCd>0)p.blinkCd-=dt;if(p.scanCd>0)p.scanCd-=dt;if(scanT>0)scanT-=dt;updateStatus(dt);
   if(p.weapon==='ray'){if(p.aiming&&mouse.l&&!(p.dazeT>0)){if(p.reloadT>0){}else if(!p.charge&&magLeft('ray')<=0){useMag('ray');}else p.charge=Math.min(1.2,(p.charge||0)+dt);}
     else if(p.aiming&&(p.charge||0)>0.08){fireRay(p.charge);p.charge=0;}else p.charge=0;}
   else if(p.weapon&&p.aiming&&mouse.l&&p.cd<=0&&!(p.dazeT>0))fire();
@@ -322,7 +322,7 @@ function updatePlay(dt){
     const steps=Math.max(1,Math.ceil(Math.hypot(b.vx,b.vy)*dt/3));
     for(let s=0;s<steps&&!b.dead;s++){
       b.x+=b.vx*dt/steps;b.y+=b.vy*dt/steps;
-      if(solidAt(b.x,b.y)){b.dead=true;const tx=Math.floor(b.x/TS),ty=Math.floor(b.y/TS);if(b.p)for(const f of fans)if(!f.dead&&f.tx===tx&&f.ty===ty)hitFan(f,b.dmg);
+      if(solidAt(b.x,b.y)){b.dead=true;const tx=Math.floor(b.x/TS),ty=Math.floor(b.y/TS);if(b.p)for(const f of fans)if(!f.dead&&f.tx===tx&&f.ty===ty)hitFan(f,b.dmg);if(b.p){const cm=camAtTile(tx,ty);if(cm)hitCam(cm,1);}
         if(b.p&&map[ty*MW+tx]===3)damageSecret(tx,ty,b.dmg);
         for(let k=0;k<3;k++)parts.push({x:b.x-b.vx*0.01,y:b.y-b.vy*0.01,vx:rr(-50,50),vy:rr(-50,50),t:0.18,m:0.18,c:b.p?(b.kind==='bolt'?'#bfe4ff':'#ffe7a0'):'#9fd4c8',s:1});break;}
       if(b.p){let hpl=null;for(const pl of plants)if(!pl.burst&&Math.hypot(pl.x-b.x,pl.y-b.y+3)<4){hpl=pl;break;}if(hpl){burstPlant(hpl);b.dead=true;break;}}
