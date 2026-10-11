@@ -35,8 +35,6 @@ function hud(){
   if(p.liq>=2)txt(LIQNAME[p.liq],W/2+20,H-44,'#8fc3cf','center');
   if(p.creeping)txt('CREEPING',W/2+20,H-34,'#9fc3e0','center');
   else if(p.stamLock)txt('winded',W/2+20,H-34,'#8a7a50','center');
-  [[p.skillIdx,'E',0],[p.skillIdx2,'F',1]].forEach(([ix,kk,row])=>{if(ix==null||ix<0||!p.skills[ix])return;const id=p.skills[ix],cd=p.skillCd[id]||0,rdy=cd<=0,yy=H-62+row*14;
-    txt(kk+' '+SKILLS[id].name,102,yy,rdy?'#9fe0b0':'#5d655f');F('#141a17',102,yy+10,64,2);F(rdy?'#5fae6e':'#3a4a3f',102,yy+10,Math.round(64*(1-cd/SKILLS[id].cd)),2);});
   if(p.aiming&&p.moveMul<0.95)txt('backpedal slowed',W/2+20,H-74,'#8e978b','center');
   if(p.weapon==='ray'&&p.charge>0){F('#0a1a10',W-71,H-44,64,3);F('#8fffa8',W-71,H-44,Math.round(64*p.charge/1.2),3);}
   {const set=p.arms[p.armSet],two=set.main&&ARM[set.main].hand==='two';
@@ -53,7 +51,7 @@ function hud(){
     else if(w)txt(p.inv[w.ammo]+' '+w.ammo,W-6,H-12,p.inv[w.ammo]>0?AMBER:'#b84a3e','right');
     else if(set.off==='tank'){const T0=p.tank||{n:0};txt('tank: '+(T0.kind||'empty')+' '+T0.n+'/'+TANKMAX,W-6,H-12,T0.n?(FLASKCOL[T0.kind]==='#3a3020'?'#b8a070':FLASKCOL[T0.kind]||AMBER):'#5d655f','right');}
     else txt('guard '+Math.round(p.guard)+'/'+Math.round(p.guardMax||40),W-6,H-12,'#bfe4ff','right');}
-  {const n=hotCount(),sw=17,x0=Math.round(W/2-n*sw/2),y0=H-16;
+  {const n=hotCount(),sw=HUD_SW,x0=hotbarX(),y0=H-16;drawSkillIcons();
     for(let i=0;i<n;i++){const x=x0+i*sw+(i>=2?3:0),sel=i===p.hotSel;box(x,y0,sw-1,15,sel?'#1c2220':'#0a0d0c',sel?AMBER:'#2a302e');txt(''+(i+1),x+2,y0-8,sel?AMBER:'#3f4642');
       if(i<2){const st=p.arms[i],show=st.off&&ARM[st.off].gun?st.off:st.main||st.off;if(show)drawItem({x:x+8+camX,y:y0+7+camY,type:'weapon',w:show,ph:0});else{ctx.fillStyle='#c9c1a0';circ(x+8,y0+7,2.5);}continue;}
       if(p.actMode==='sling'){const a=p.slingbar[i-2];if(a){const A=SLING[a];F(A.col,x+4,y0+3,8,8);F('#050607',x+6,y0+5,4,4);txt(slingCount(a)==='inf'?'':slingCount(a),x+sw-2,y0+7,'#e3e6dc','right');}continue;}
@@ -75,6 +73,7 @@ function hud(){
   if(transitToast>0&&state==='play'){transitToast-=1/60;const a=Math.min(1,transitToast);ctx.globalAlpha=a;box(W/2-80,H/2-58,160,14,'#0a0d0c','#d9a441');txt('found something on the ride down',W/2,H/2-54,'#e8dcb0','center');ctx.globalAlpha=1;}
   if(bannerBoss>0){bannerBoss-=1/60;const B=bossRef?BOSSES[bossRef.boss||0]:null;if(B){ctx.globalAlpha=Math.min(1,bannerBoss);txt(B.name.toUpperCase(),W/2,H/2-58,'#e05040','center',16);ctx.globalAlpha=1;}}
   if(bannerT>0){ctx.globalAlpha=Math.min(1,bannerT);txt(arcadeMode?'ARCADE':testMode&&!testDeck?'TEST RANGE':'DEPTH '+depth,W/2,H/2-30,AMBER,'center',16);txt(arcadeMode?'insert coin':levelLabel&&!(testMode&&!testDeck)?sector(depth)+'  /  '+levelLabel:sector(depth),W/2,H/2-12,'#c9cfc2','center');if(condText(cond)&&!testMode)txt(condText(cond),W/2,H/2-1,'#d07a60','center');ctx.globalAlpha=1;}
+  drawHudTip();
   const it=findInteract();
   if(it){const x=Math.round(it.x-camX),y=Math.round(it.y-camY)-16;const has=p.inv.key>0;
     if(it.k==='crawl')txt('R climb into the crawlway',x,y+4,'#e8c070','center');

@@ -27,6 +27,7 @@ src/
     events.js               between-deck events, transit stop text
     food.js                 food, raw ingredients, cooking
     hacking.js              hack panel rounds, windows and cursor speed
+    inspect.js              V-look descriptions of fixtures and floor hazards
     items.js                gear, quick items, tools, pickups, flasks, liquid tank, vending stock, resource text
     npcs.js                 NPCs
     progress.js             deck grades, run stats, work orders (achievements), point trades, challenge modifiers
@@ -75,6 +76,7 @@ src/
     35-vaults.js            express shafts, vault junctions, archive vaults and their dangers
     36-backtrack.js         deck secured walk-back to the lift, ceiling crawlways, time passing, keeping the lift area clear, the 3x3 lift pads
     37-pacing.js            how long creatures hunt you, muffled noise, arena waves, ghost movement, smoke blocking creature sight
+    38-inspect.js           HUD ability icons, hover tips on icons and hotbar slots, V-look descriptions
 scripts/build.mjs  the build
 docs/specs/        change request batches
 ```

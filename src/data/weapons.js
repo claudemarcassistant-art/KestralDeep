@@ -11,7 +11,7 @@ const ARM={
   bolt:{name:'Bolt driver',hand:'off',gun:true,desc:'Off hand. Slow, quiet bolts that pierce a whole line.'},
   ray:{name:'Ray gun',hand:'off',gun:true,desc:'Off hand. Aim with right click, hold left click to charge, release to fire a radiation bolt. Hurts ghosts.'},
   cutter:{name:'Box cutter',hand:'main',melee:{dmg:2,cd:0.22,range:13,arc:0.7,kb:40},desc:'Main hand. Fast, light slashes.'},
-  crowbar:{name:'Crowbar',hand:'main',melee:{dmg:3,cd:0.42,range:16,arc:0.9,kb:150},desc:'Main hand. A solid all-rounder.'},
+  crowbar:{name:'Crowbar',hand:'main',melee:{dmg:3,cd:0.42,range:16,arc:0.9,kb:150},desc:'Main hand. A solid all-rounder. Hold to charge a heavier swing.'},
   bat:{name:'Bat',hand:'main',melee:{dmg:4,cd:0.6,range:17,arc:1.1,kb:260},desc:'Main hand. Slow, wide swings that send things flying. Tap to swing, or hold to charge up to 2.5x; release right as it fills for a perfect hit.'},
   spear:{name:'Spear',hand:'two',melee:{dmg:5,cd:0.7,range:30,arc:0.35,kb:180,jab:true},desc:'Two-handed. Long reach, narrow thrust. Tap to jab, or hold to charge up to 2.5x; a full charge lunges you forward, and releasing right as it fills is a perfect thrust. Right click blocks.'},
   soaker:{name:'Super soaker',hand:'main',melee:{dmg:1,cd:0.5,range:12,arc:0.8,kb:60},desc:'Main hand. Paired with a liquid tank in the off hand, hold left click to spray a stream of whatever the tank holds, leaving pools where it lands. Without a tank it is a plastic club.'},
@@ -35,5 +35,5 @@ const WPN={
 };
 const WCRIT={kick:0.08,bow:0.15,knives:0.25,pistol:0.10,smg:0.04,scatter:0.03,nailer:0.06,bolt:0.20,ray:0.08,flamer:0,fists:0.05,cutter:0.18,crowbar:0.08,bat:0.06,spear:0.12,whip:0.15,chainsaw:0.02,shield:0.04};
 const MAGS={pistol:[10,1.1],smg:[30,1.7],scatter:[4,2.2],nailer:[40,1.8],bolt:[1,1.4],ray:[8,1.6],flamer:[60,2.4]};
-const CHARGE=['bat','whip','spear','bow'];
+const CHARGE=['bat','whip','spear','bow','crowbar'];
 const COMBO_T=[[15,'frenzy','#ff7a5a'],[10,'momentum','#ffb050'],[5,'flow','#e8dcb0']];

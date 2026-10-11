@@ -2,14 +2,14 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v0.97**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v0.98**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
 - **Source lives in `src/`** and is built into **one self-contained HTML file**, `dist/index.html` (about 640 KB). No dependencies, no external assets. All art is drawn procedurally on a canvas; all sound is synthesised with the Web Audio API. The only network request is the optional Silkscreen font from Google Fonts in `src/boot.js` (the game falls back to a built-in font if it fails).
   - `src/index.html` is the page template; the build fills in `{{styles}}` (`src/styles.css`), `{{boot}}` (`src/boot.js`: font loader and the red error overlay) and `{{game}}`.
   - `src/data/*.js` are the content and tuning tables (creatures, weapons, items, recipes, food, crew files, work orders, NPCs, world, events, versions). Balance changes usually only touch these.
-  - `src/game/NN-name.js` are 37 game files, split by system. `README.md` lists what each file holds.
+  - `src/game/NN-name.js` are 38 game files, split by system. `README.md` lists what each file holds.
   - `scripts/build.mjs` is the build (plain Node 20+, no npm install needed).
 - **Play or test:** `npm run dev` serves http://localhost:5173 and rebuilds on every save (refresh the page). `npm run build` writes `dist/index.html`, which can also be opened straight from disk in Chrome or Edge.
 - **Playable link:** https://claudemarcassistant-art.github.io/KestralDeep/ . Every push to `main` is built and deployed by `.github/workflows/pages.yml`; other branches and pull requests are built only, which catches syntax errors.
@@ -54,7 +54,7 @@ Current version: **v0.97**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v0.97)
+## Architecture overview (as of v0.98)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -151,6 +151,8 @@ Current version: **v0.97**. The game was built iteratively in claude.ai chats up
 
 **HUD clearance (v0.94):** `26-hud.js` draws `clearance N` (green when above 0) just left of the score in the top-right corner. **No hotbar label (owner's call, v0.96):** the line above the hotbar that named the selected armament, item or action was removed because it overlapped CREEPING/winded and repeated the bottom-right `LMB ...` line, which now also names the psychic or sling action in action mode.
 
+**HUD icons, tips and V-look (owner's design, v0.98):** `src/game/38-inspect.js`, text in `src/data/inspect.js` (`FIX_DESC`, `TILE_DESC`). `hotbarX()` puts the hotbar 10 px right of centre (at least x 150); `drawSkillIcons()` (called from the hotbar block in `hud()`) draws the E and F abilities as two 16x15 icons just left of it (glyphs in `drawSkillGlyph()`, colours `SKILL_COL`, a dark fill rising with the cooldown and the seconds left) and sets a tip when the mouse is over an icon or a hotbar slot. `drawHudTip()` (in `hud()` before the interaction prompts) shows the tip box centred at W/2+20 with its bottom at H-40, just above the CREEPING line; with nothing hovered and V held (`player.peek`) it shows `inspectAt(mouse + camera)`: creatures (`visible()`, name, state, move and attack), then only on a seen, visible tile: items (`itemLook()`), chests, barrels and crates, hack panels, vending machines, NPCs and fixtures, found traps, crawlway hatches, the exit and freight lift pads, then floor hazards (fire, toxic, cables, chasm, slag, webs, rubble, oil, ice, slime, water). New world objects that should be inspectable need a line in `inspectAt()`. The crowbar joined `CHARGE` (v0.98).
+
 **Crew files view:** the tier details on the right are clipped and scroll (`flScroll`; the wheel scrolls them when the pointer is right of `flDetX`, otherwise it moves the selection). `flAuto` keeps the next tier in view until the wheel moves it, and resets when another file is selected.
 
 **Hacking (v0.97):** numbers in `HACK_CFG` (`src/data/hacking.js`). `startHack()` sets `need` from `hackRounds()`: `win.length` (4) rounds, minus one for each `cut` threshold the hack stat reaches (0.4, 0.8; at least `minRounds` 2). `newHackWindow()` takes the round's window from `win[]` (42, 34, 27, 22 px on a 200 px bar) times (1 + hack), and the cursor speed `speed + round x step x (1 - min(stepCutMax, hack x stepCut))`, times (1 - hack x `slow`). Vault panels still multiply the window by `VAULT_CFG.hackMul`. Measured time inside the window per round: no skill 323/189/117/79 ms (was 354/195/108 over 3 rounds); hack 0.4 (a splicer kit) 514/322/209 ms over 3; hack 0.8, 2 rounds of 765/516 ms. The hack stat comes from the splicer kit (0.4), Surveyor tier 1 (0.25) and Memory (0.05 a point). Stats shows `Hack window` with the round count.
@@ -180,6 +182,7 @@ Current version: **v0.97**. The game was built iteratively in claude.ai chats up
 | `herbs.js` | `HERBS`, `HERB_WHERE`, `HERB_WEIGHTS`, `HERB_CFG`, `HERBAL`, `DRAUGHTS` |
 | `route.js` | `EXPRESS_CFG`, `EXPRESS_DESC`, `VAULT_CFG`, `VAULT_DANGERS`, `VAULT_DESC`, `SECURE_CFG`, `CRAWL_CFG`, `SECURE_DESC`, `CRAWL_DESC` |
 | `hacking.js` | `HACK_CFG` |
+| `inspect.js` | `FIX_DESC`, `TILE_DESC` |
 | `status.js` | `FREEZE_CFG`, `ACTIVE_RELOAD`, `SMOKE_BLIND`, `STUN_CFG` |
 | `traps.js` | `TRAP_TYPES`, `TRAP_WEIGHTS`, `TRAP_CFG`, `TRAP_PANEL_DESC`, `PLATE_DOOR_CFG`, `CRATE_CFG`, `ITEM_WEIGHT`, `PLATE_DOOR_DESC`, `GAS_TRAP_BIAS`, `TOXIC_VENT_CFG` |
 | `world.js` | `SECTORS`, `BNAMES`, `PAL`, `COND_LIGHT`, `COND_HAZ`, `MODS`, `ROOMNAMES`, `HAZDESC`, `LIQ`/`LIQNAME`, `BIOME`, `NODE`, `HIDDEN_TYPES`, `DECK_SIZES`, `DECK_SIZE_ODDS` |
@@ -217,6 +220,7 @@ Current version: **v0.97**. The game was built iteratively in claude.ai chats up
 | express shafts and vaults: `genExpress()`, `genVaultJunctions()`, `routeOpts()`, `pickRoute()`, `genArchiveVault()`, `fillArchive()`, `openArchive()`, `archiveBlast()` | `35-vaults.js` |
 | deck secured and crawlways: `checkSecure()`, `walkBack()`, `passTime()`, `genCrawls()`, `crawlKey()`, `drawFadeAndAsk()`, `clearLiftArea()`, `drawLiftPad()` | `36-backtrack.js` |
 | pacing: `trackTick()`, `noiseReach()`, arena waves (`arenaStart()`, `updateArenaWaves()`), ghost movement (`ghostMove()`), smoke sight (`smokeBlocks()`, `seesPlayer()`) | `37-pacing.js` |
+| HUD ability icons, hover tips, V-look: `hotbarX()`, `drawSkillIcons()`, `drawHudTip()`, `inspectAt()` | `38-inspect.js` |
 | reloads: `startReload()`, `updateReload()`, `finishReload()`, `activeReloadPress()` | `22-actions.js` |
 
 To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "const NAME=" src/data/*.js`.
@@ -241,7 +245,7 @@ To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "con
 - Several arcade cabinets in one place take their games from `arcPicks(n)` (distinct games), not independent random picks.
 - Any new chest needs a loot seed `ls:(Math.random()*4294967296)>>>0` where it is created (inside generation), or its contents will not repeat on the same seed. `addChest()` does this for you.
 - When checking that generation repeats, take the fingerprint in the same instant the deck is built: the game loop keeps running between test steps, and creatures move and fires spread.
-- `30-traps.js` to `37-pacing.js` load after `29-loop.js`. `35-vaults.js` also adds `HACKR.vault` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
+- `30-traps.js` to `38-inspect.js` load after `29-loop.js`. `35-vaults.js` also adds `HACKR.vault` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
 - `newTest()`, `newGame()` and `loadRun()` replace the `player` object (`initPlayer()`), so tests must re-read `player` after calling them.
 - Before v0.81, `genArena()` did not reset `panels` or `vendors`, so arena decks kept the previous deck's hack panels and vending machines at stale positions. Every generator that builds a full deck must reset every per-deck list (`resetHidden()` covers most; panels and vendors are reset by `genPanels()`/`genVending()` or by hand).
 - `populate()` starts with `items=[]`, so items placed earlier in `genLevel()` are lost; anything generation wants on the floor goes in during or after `populate()` (see `fillPlateRooms()`).
