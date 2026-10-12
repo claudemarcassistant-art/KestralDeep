@@ -48,11 +48,13 @@ function spawnChoose(i){const o=spawnOpts()[i],u=spawnUI;if(!o)return;
     for(let q=0;q<10;q++)parts.push({x,y,vx:rr(-40,40),vy:rr(-40,40),t:0.4,m:0.4,c:'#c9a8ff',s:1});}
   sfx('learn');u.note=made?'released '+made+' '+BEASTINFO[o.t].name.toLowerCase()+(made>1?'s':'')+(u.loc==='near'?' near you':' in the arena'):'no room to place it there';}
 function drawSpawnUI(){
-  const u=spawnUI,O=spawnOpts(),pw=280,rh=10,ph=40+O.length*rh,px=(W-pw)>>1,py=Math.max(4,(H-ph)>>1);
+  // the list scrolls (spawnUI.off) when the screen is too short for every row, keeping the selection in view
+  const u=spawnUI,O=spawnOpts(),pw=280,rh=10,vis=Math.min(O.length,Math.max(6,Math.floor((H-8-46)/rh))),ph=40+vis*rh+6,px=(W-pw)>>1,py=Math.max(4,(H-ph)>>1);
   F('rgba(4,5,6,0.6)',0,0,W,H);box(px,py,pw,ph,'#0a0c0b','#2a2f2d');F('#c9a8ff',px,py,pw,2);
   txt('Creature console',px+10,py+7,'#c9a8ff');txt('test range only',px+pw-10,py+7,'#5d655f','right');
-  u.sel=Math.max(0,Math.min(u.sel,O.length-1));
-  O.forEach((o,i)=>{const yy=py+18+i*rh+(i>=BEASTS.length?3:0),sel=i===u.sel;
+  u.sel=Math.max(0,Math.min(u.sel,O.length-1));let off=Math.max(0,Math.min(u.off||0,O.length-vis));if(u.sel<off)off=u.sel;if(u.sel>=off+vis)off=u.sel-vis+1;u.off=off;
+  if(off>0)txt('more above',px+pw/2,py+7,'#4f5a55','center');if(off+vis<O.length)txt('more below',px+pw/2,py+ph-10,'#4f5a55','center');
+  O.forEach((o,i)=>{if(i<off||i>=off+vis)return;const yy=py+18+(i-off)*rh+(i>=BEASTS.length?3:0),sel=i===u.sel;
     const hov=ui(px+6,yy-2,pw-12,rh,{click:()=>{u.sel=i;spawnChoose(i);}});if(hov&&mouse.moved)u.sel=i;
     if(sel){F('#141917',px+6,yy-2,pw-12,rh);F('#c9a8ff',px+6,yy-2,2,rh);}
     let l='',r='',rc='#8e978b';

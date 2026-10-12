@@ -25,8 +25,8 @@ function hud(){
     if(p.combo>=1){const t=comboTier(),col=t?COMBO_T[3-t][2]:'#8e978b';txt('combo '+Math.floor(p.combo),6,ry-2,col);F('#141817',40,ry,54,2);F(col,40,ry,Math.round(54*p.combo/20),2);for(const q of [5,10,15])F('#050607',40+Math.round(54*q/20),ry,1,2);ry-=8;}
     if((p.o2==null?100:p.o2)<99.5){const o=p.o2/100;txt('air',6,ry-2,o<0.25?'#ff8a7a':'#6f7a6a');F('#141817',40,ry,54,2);F(o<0.25?(Math.sin(T*10)>0?'#ff8a7a':'#a04040'):'#9fd8ff',40,ry,Math.round(54*o),2);ry-=8;}
     if(p.guard<(p.guardMax||40)-0.5){txt('guard',6,ry-2,'#6f7a6a');F('#101820',40,ry,54,2);F('#bfe4ff',40,ry,Math.round(54*p.guard/(p.guardMax||40)),2);ry-=8;}
-    for(const [k,n,c] of [['frz','cold','#9fd8ff'],['brn','burn','#ff8a3a'],['slk','slick','#b09060'],['rad','rads','#c9a8ff'],['stk','sticky','#c8d070'],['psn','poison','#8fcf40'],['shk','shock','#8fc3ff'],['stn','stun','#e8dcb0'],['wet','wet','#4a9ad0']]){const v=p.st[k];if(v<1)continue;
-    txt(k==='frz'&&p.frozenT>0?'frozen':n,6,ry-2,c);F('#141817',40,ry,54,3);F(c,40,ry,Math.round(54*v/100),3);ry-=9;}}
+    for(const [k,n,c] of [['frz','cold','#9fd8ff'],['brn','burn','#ff8a3a'],['slk','slick','#b09060'],['rad','rads','#c9a8ff'],['stk','sticky','#c8d070'],['psn','poison','#8fcf40'],['shk','shock','#8fc3ff'],['stn','stun','#e8dcb0'],['szr','seizing','#c89ae8'],['irr','irritated','#e8e4be'],['wet','wet','#4a9ad0']]){const v=p.st[k];if(!(v>=1))continue;
+    const lb=k==='frz'&&p.frozenT>0?'frozen':n;txt(lb,6,ry-2,c);ctx.font='8px '+FONT;const bx=Math.max(40,Math.ceil(8+(ctx.measureText(lb).width||0)+4)),bw=94-bx;F('#141817',bx,ry,bw,3);F(c,bx,ry,Math.round(bw*v/100),3);ry-=9;}}
   if(archive&&archive.unstT>0)txt('POWER FAILS IN '+Math.ceil(archive.unstT)+'s',W/2+20,H-64,Math.sin(T*6)>0?'#ff8a5a':'#c06040','center');
   if(p.frozenT>0)txt('FROZEN',W/2+20,H-54,'#cfe8ff','center');else if(p.dazeT>0)txt('DAZED',W/2+20,H-54,'#e8dcb0','center');
   if(p.cloakT>0){txt('CLOAKED '+Math.ceil(p.cloakT)+'s',W/2+20,H-64,'#9fc3ff','center');const a=0.05+0.03*Math.sin(T*4);F(`rgba(120,170,255,${a})`,0,0,W,3);F(`rgba(120,170,255,${a})`,0,H-3,W,3);}

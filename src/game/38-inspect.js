@@ -61,6 +61,7 @@ function inspectAt(wx,wy){const tx=Math.floor(wx/TS),ty=Math.floor(wy/TS);if(tx<
   if(exitT&&Math.max(Math.abs(tx-exitT.x),Math.abs(ty-exitT.y))<=1)return {name:'Exit lift',desc:'R anywhere on the plate to ride down'+(liftState==='open'||liftState==='ready'?'.':', once it opens.'),col:'#9fe0b0'};
   if(freightT&&Math.max(Math.abs(tx-freightT.x),Math.abs(ty-freightT.y))<=1)return {name:'Freight lift',desc:'R on the plate: drops you several decks at once.',col:'#e8c070'};
   if(map[i]===1)return null;
+  {const g=gasLook(wx,wy);if(g)return g;}
   if(hz[i]===1)return TILE_DESC.fire;if(hz[i]===2)return TILE_DESC.toxic;if(hz[i]===5)return TILE_DESC.cable;
   if(chasm[i])return TILE_DESC.chasm;if(molten[i]===1)return TILE_DESC.molten;if(molten[i]===2)return TILE_DESC.crust;
   if(webs[i])return TILE_DESC.web;if(rubble&&rubble[i])return TILE_DESC.rubble;if(oil[i]>0)return TILE_DESC.oil;if(ice[i])return TILE_DESC.ice;if(slime[i])return TILE_DESC.slime;

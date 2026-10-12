@@ -165,15 +165,16 @@ function puff(x,y,kind,amt,src,rmax){let c=src?clouds.find(q=>q.src===src):null;
   if(clouds.length>80)return null;c={x,y,r:5+amt,rmax:rmax||(kind==='smoke'?34:kind==='incense'?20:48),kind,dens:0.55,vx:rr(-5,5),vy:rr(-5,5),src:src||null,fed:true,blobs:mkBlobs()};clouds.push(c);return c;}
 function mkBlobs(){const n=4+rnd(3),B=[{ox:0,oy:0,rs:0.62,ph:Math.random()*6,dx:0,dy:0}];for(let k=1;k<n;k++){const a=Math.random()*6.283,d=rr(0.3,0.7);B.push({ox:Math.cos(a)*d,oy:Math.sin(a)*d,rs:rr(0.32,0.55),ph:Math.random()*6,dx:rr(-0.05,0.05),dy:rr(-0.05,0.05)});}return B;}
 function blobPos(c,b){const w=Math.sin(T*0.7+b.ph)*0.08;return [c.x+(b.ox+w)*c.r,c.y+(b.oy+Math.cos(T*0.6+b.ph)*0.08)*c.r,Math.max(3,b.rs*c.r*(1+0.08*Math.sin(T*1.1+b.ph)))];}
-function updateClouds(dt){const p=player;let smoke=0,shroud=0;
-  for(const c of clouds){if(!c.fed){c.src=null;c.dens-=dt*(c.kind==='smoke'?0.1:0.2);c.r=Math.min(c.rmax+10,c.r+dt*3);}c.fed=false;
+function updateClouds(dt){const p=player;let smoke=0,shroud=0,tk=0,nk=0;gasN=0;
+  for(const c of clouds){if(!c.fed){c.src=null;c.dens-=dt*(c.kind==='smoke'?0.1:c.kind==='tear'?GAS_CFG.tear.fade:c.kind==='nerve'?GAS_CFG.nerve.fade:0.2);c.r=Math.min(c.rmax+10,c.r+dt*3);}c.fed=false;
     const nx=c.x+c.vx*dt,ny=c.y+c.vy*dt;if(solidAt(nx,c.y))c.vx*=-1;else c.x=nx;if(solidAt(c.x,ny))c.vy*=-1;else c.y=ny;c.vx*=Math.pow(0.5,dt);c.vy*=Math.pow(0.5,dt);
     for(const b of c.blobs){b.ox=Math.max(-0.9,Math.min(0.9,b.ox+b.dx*dt));b.oy=Math.max(-0.9,Math.min(0.9,b.oy+b.dy*dt));if(Math.random()<dt*0.3){b.dx=rr(-0.06,0.06);b.dy=rr(-0.06,0.06);}}
-    let k=0;for(const b of c.blobs){const [bx,by,br]=blobPos(c,b),d=Math.hypot(p.x-bx,p.y-by);if(d<br*0.9)k=Math.max(k,c.dens*(1-d/br*0.5));}if(k>0){shroud=Math.max(shroud,k*(c.kind==='smoke'?0.75:c.kind==='toxic'?0.45:c.kind==='incense'?0.12:0.5));
-      if(c.kind==='steam')addStatus('wet',22*dt*k);else if(c.kind==='toxic'){if(!p.floating||true)addStatus('psn',9*dt*k);}else if(c.kind==='cryo')addStatus('frz',FREEZE_CFG.cryo.player*dt*k);else if(c.kind!=='incense')smoke+=k;}
+    let k=0;for(const b of c.blobs){const [bx,by,br]=blobPos(c,b),d=Math.hypot(p.x-bx,p.y-by);if(d<br*0.9)k=Math.max(k,c.dens*(1-d/br*0.5));}if(k>0){shroud=Math.max(shroud,k*(c.kind==='smoke'?0.75:c.kind==='tear'?GAS_CFG.tear.shroud*(gasMask()?GAS_CFG.maskMul:1):c.kind==='nerve'?GAS_CFG.nerve.shroud:c.kind==='toxic'?0.45:c.kind==='incense'?0.12:0.5));
+      if(c.kind==='steam')addStatus('wet',22*dt*k);else if(c.kind==='toxic'){if(!p.floating||true)addStatus('psn',9*dt*k);}else if(c.kind==='cryo')addStatus('frz',FREEZE_CFG.cryo.player*dt*k);else if(c.kind==='tear')tk=Math.max(tk,k);else if(c.kind==='nerve'){nk=Math.max(nk,k);smoke+=k;}else if(c.kind!=='incense')smoke+=k;}
+    if(c.kind==='tear'||c.kind==='nerve')gasN++;
     if(c.kind==='cryo')cryoCloudTick(c,dt);
     if(c.kind==='toxic')for(const e of enemies){if(e.dead||ET[e.type].dummy||ET[e.type].plant)continue;if(c.blobs.some(b=>{const [bx,by,br]=blobPos(c,b);return Math.hypot(e.x-bx,e.y-by)<br*0.85;})){e.tox=(e.tox||0)+dt*c.dens;if(e.tox>=1){e.tox-=1;damageEnemy(e,1,0,0,0,true);}}}}
-  clouds=clouds.filter(c=>c.dens>0.03);p.shroud=(p.shroud||0)+(Math.min(0.8,shroud)-(p.shroud||0))*Math.min(1,dt*4);
+  gasPlayerTick(dt,tk,nk);clouds=clouds.filter(c=>c.dens>0.03);p.shroud=(p.shroud||0)+(Math.min(0.8,shroud)-(p.shroud||0))*Math.min(1,dt*4);
   // air: smoke and deep water use it up
   const under=p.liq===4&&!flot[Math.floor(p.y/TS)*MW+Math.floor(p.x/TS)];let drain=smoke*16*(S.poisonRes>0?0.5:1)+(under?6:0);
   if(p.o2==null)p.o2=100;if(drain>0){p.o2=Math.max(0,p.o2-drain*dt);}else p.o2=Math.min(100,p.o2+28*dt);
@@ -402,7 +403,7 @@ function fillModule(m){
   else if(m.type==='bathroom'){fixtures.push({tx:m.x+m.w-1,ty:m.y,kind:'sink'});if(Math.random()<0.6)put('medkit');if(Math.random()<0.5)put('emetic');}
   else if(m.type==='medbay'){fixtures.push({tx:m.cx,ty:m.cy,kind:'medstation',used:false});if(tw.length)panels.push({tx:tw[tw.length-1],ty:m.y-1,hack:true,reward:'map',state:'idle',ph:0});put('cloth');put('cloth');put('medkit');}
   else if(m.type==='breakroom'){if(tw.length)vendors.push(mkVendor(tw[0],m.y-1));fixtures.push({tx:m.cx,ty:m.cy,kind:'table'});put('food');put('food');put('food');put('key');put('scrap');}
-  else if(m.type==='lab'){put('powder');put('powder');put('battery');put('medkit');if(Math.random()<0.3)put('chip');fixtures.push({tx:m.x,ty:m.y,kind:'bench'},{tx:m.x+m.w-1,ty:m.y,kind:'bench'});
+  else if(m.type==='lab'){put('powder');put('powder');put('battery');put('medkit');if(Math.random()<0.3)put('chip');if(Math.random()<GAS_CFG.ampoule.lab)put('ampoule');fixtures.push({tx:m.x,ty:m.y,kind:'bench'},{tx:m.x+m.w-1,ty:m.y,kind:'bench'});
     for(let k=0;k<2;k++){const t=freeTile(m);if(t)hz[t.ty*MW+t.tx]=2;}if(Math.random()<0.5){const q=spotIn(m);if(q)enemies.push(mkEnemy('toxslug',q.x,q.y));}}
   else if(m.type==='arcade'){const g=arcPicks(2);tw.slice(0,2).forEach((x,k)=>fixtures.push({tx:x,ty:m.y-1,kind:'arcade',wall:true,won:false,game:g[k]}));put('scrap');put('scrap');}
   else if(m.type==='cafeteria'){if(tw.length)vendors.push(mkVendor(tw[tw.length-1],m.y-1));for(let x=m.x+1;x<m.x+m.w-1;x+=3)fixtures.push({tx:x,ty:m.y+2,kind:'table'});

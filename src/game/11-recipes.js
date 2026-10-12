@@ -29,7 +29,7 @@ const rName=r=>typeof r.name==='function'?r.name():r.name;
 const rNeed=r=>typeof r.need==='function'?r.need():r.need;
 function canCraft(r){if(r.ok&&!r.ok())return false;const n=rNeed(r);for(const k in n)if((player.inv[k]||0)<n[k])return false;return true;}
 function craft(r){if(!r)return;
-  if(!canCraft(r)){sfx('deny');say(r.ok&&!r.ok()?'nothing to gain from that right now':'missing parts for '+rName(r).toLowerCase());return;}
+  if(!canCraft(r)){sfx('deny');say(r.ok&&!r.ok()?(r.why?r.why():'nothing to gain from that right now'):'missing parts for '+rName(r).toLowerCase());return;}
   const n=rNeed(r);for(const k in n)player.inv[k]-=n[k];say(r.make());sfx('craft');
   for(const k in n)if(Math.random()<0.15*U('salv')){player.inv[k]++;float(player.x,player.y-10,'salvaged '+k,'#9fcf9a');}}
 

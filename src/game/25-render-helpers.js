@@ -32,7 +32,7 @@ function drawItem(it){
     case 'herb':F('#1a300e',x-3,y-2,7,5);F('#4a9a3a',x-2,y-2,2,3);F('#6ac04a',x,y-3,2,4);F('#4a9a3a',x+2,y-1,2,2);break;
     case 'cells':F('#0a1a10',x-3,y-2,6,4);F('#8fffa8',x-2,y-1,1,2);F('#8fffa8',x,y-1,1,2);F('#8fffa8',x+2,y-1,1,2);break;
     case 'trauma':case 'regen':case 'mine':case 'surgery':qIcon(it.type,x,y);break;
-    case 'flask':case 'charge':case 'flare':case 'stim':case 'antitox':case 'molotov':case 'gasnade':case 'smokenade':case 'cryonade':qIcon(it.type,x,y);break;
+    case 'flask':case 'charge':case 'flare':case 'stim':case 'antitox':case 'molotov':case 'gasnade':case 'smokenade':case 'cryonade':case 'tearnade':case 'nervenade':case 'ampoule':qIcon(it.type,x,y);break;
     case 'medpatch':F('#d8dcd4',x-3,y-2,6,4);F('#c04040',x-1,y-1,2,2);break;
     case 'tonic':{const c=CORES[SUBS[it.sub].core].col;F('#15110a',x-2,y-4,5,9);F(c,x-1,y-1,3,4);F('#d8dcd4',x-1,y-3,3,1);F('rgba(255,255,255,0.5)',x-1,y-1,1,2);break;}
     case 'sigil':{const c=CORES[it.core].col,g=0.5+0.5*Math.sin(T*4);ctx.globalAlpha=0.35*g;ctx.fillStyle=c;circ(x,y,6);ctx.globalAlpha=1;F(c,x-1,y-4,2,8);F(c,x-4,y-1,8,2);F('#fff',x,y,1,1);break;}
@@ -74,7 +74,8 @@ function drawEnemy(e){
     if(e.daze>0){for(let k=0;k<3;k++){const q=T*6+k*2.1;F('#fff0a0',Math.round(x+Math.cos(q)*4),Math.round(yy-5+Math.sin(q)*1.5),1,1);}}
     if(e.st==='wind'&&Math.sin(T*30)>0)F('#ff8a4a',Math.round(x),Math.round(yy-5),1,1);return;}
   if(b.guard){const a=e.look||0,ca=Math.cos(a),sa=Math.sin(a);F('rgba(0,0,0,0.4)',x-4,y+3,8,2);ctx.strokeStyle='#121514';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+ca*2,y+sa*2);ctx.lineTo(x+ca*6,y+sa*6);ctx.stroke();
-    ctx.fillStyle='#0d0f0e';circ(x,y,5);ctx.fillStyle=e.flash>0?'#e0e8ff':'#5a7eb0';circ(x,y,4);F('#c8d8f0',Math.round(x+ca*2),Math.round(y+sa*2),1,1);
+    ctx.fillStyle='#0d0f0e';circ(x,y,5);ctx.fillStyle=e.flash>0?'#e0e8ff':b.riot?'#3a4a64':'#5a7eb0';circ(x,y,4);F('#c8d8f0',Math.round(x+ca*2),Math.round(y+sa*2),1,1);
+    if(b.riot){F('#15181a',Math.round(x+ca*3-1),Math.round(y+sa*3-1),3,3);F('#8a9298',Math.round(x+ca*3),Math.round(y+sa*3),1,1);F('#d8d4a0',Math.round(x-ca*3),Math.round(y-sa*3),1,1);}
     if(e.seeT>0.3&&!e.radioed&&!e.called){const k=Math.min(1,e.seeT/3.2);F('#141817',x-5,y-11,10,2);F(k>0.7?'#ff5a4a':'#ffd070',x-5,y-11,Math.round(10*k),2);if(Math.sin(T*12)>0)txt('!',x,y-20,'#ff5a4a','center');}
     if(e.called)F('#5a8ac0',x+3,y-7,2,2);return;}
   if(b.pod){const ca=Math.cos(e.face||0),sa=Math.sin(e.face||0),sw=e.puff>0?1.4:1+0.08*Math.sin(T*3+e.ph);ctx.strokeStyle='#2e5a1e';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-ca*5,y-sa*5);ctx.lineTo(x,y);ctx.stroke();
@@ -168,11 +169,11 @@ function drawEnemy(e){
     F('#d8d0b0',Math.round(xx+c2*5-s2*3),Math.round(y+s2*5+c2*3),2,2);F('#d8d0b0',Math.round(xx+c2*5+s2*3),Math.round(y+s2*5-c2*3),2,2);
     F('#ff6040',Math.round(xx+c2*4-s2*1),Math.round(y+s2*4+c2*1),1,1);F('#ff6040',Math.round(xx+c2*4+s2*1),Math.round(y+s2*4-c2*1),1,1);
     if(e.st==='stun'&&!e.portrait)for(let k=0;k<3;k++){const q=T*6+k*2.1;F('#e8dcb0',Math.round(x+Math.cos(q)*6),Math.round(y-e.r-2+Math.sin(q)*1.5),1,1);}
-  }else if(e.type==='drone'){
+  }else if(b.drone){
     const by=Math.round(Math.sin(e.bob||T*5)*1.5),yy=y-4+by;
     ctx.fillStyle='#0c0e0e';circ(x,yy,e.r+1);ctx.fillStyle=e.flash>0?'#fff':col;circ(x,yy,e.r);
     const sp=Math.sin(T*40)>0;F('#aab4b8',x-6,yy-3,sp?4:2,1);F('#aab4b8',x+3,yy-3,sp?4:2,1);F('#aab4b8',x-6,yy+2,sp?2:4,1);F('#aab4b8',x+3,yy+2,sp?2:4,1);
-    F(e.beep>0||Math.sin(T*6)>0.8?'#ff3030':'#401010',x,yy-1,1,1);F('#9fd4ff',Math.round(x+Math.cos(a)*2),Math.round(yy+Math.sin(a)*2),1,1);
+    F(e.beep>0||Math.sin(T*6)>0.8?'#ff3030':'#401010',x,yy-1,1,1);if(b.riot){F('#15181a',x-2,yy+e.r,4,3);F(e.gasCd>0?'#5a5a48':'#d8d4a0',x-1,yy+e.r+1,2,1);}F('#9fd4ff',Math.round(x+Math.cos(a)*2),Math.round(yy+Math.sin(a)*2),1,1);
   }else if(e.type==='crawler'){
     ctx.strokeStyle='#3b2618';ctx.lineWidth=1;ctx.beginPath();
     for(let i=0;i<3;i++){const w=Math.sin(e.ph*2+i)*1.5;ctx.moveTo(x-4,y-2+i*2+w);ctx.lineTo(x+4,y-2+i*2-w);}ctx.stroke();

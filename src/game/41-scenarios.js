@@ -22,7 +22,7 @@ function scenTextEv(){const S=scen(),id=scenId(),L=TEXTEV.map((e,i)=>[i,e.scen&&
   return wpick(L);}
 // populate(): guards on nearly every deck in a crackdown. One cheap creature becomes a guard, so the count holds.
 function scenGuardDeck(startR){const S=scen();if(!S.guardDeck||depth<(S.guardFrom||4)||Math.random()>=S.guardDeck)return;
-  if(enemies.some(e=>e.type==='guard'))return;const cheap=enemies.filter(e=>['husk','crawler','slug','wasp','snail'].includes(e.type)&&!e.arena);
+  if(enemies.some(e=>ET[e.type].guard))return;const cheap=enemies.filter(e=>['husk','crawler','slug','wasp','snail'].includes(e.type)&&!e.arena);
   if(!cheap.length)return;const e=cheap[rnd(cheap.length)],g=mkEnemy('guard',e.x,e.y);enemies[enemies.indexOf(e)]=g;}
 // populate(): blackout decks drop extra light sources
 function scenLightLoot(startR){const S=scen();if(!S.lightLoot||Math.random()>=S.lightLoot)return;const r=randomRoom();if(!r||r===startR)return;

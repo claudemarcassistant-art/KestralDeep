@@ -35,7 +35,7 @@ src/
     scenarios.js            sector scenarios: weights, counts and score multipliers, Codex text
     security.js             security camera tuning and Codex text
     route.js                express shafts, vault junctions and archive vaults, deck secured, crawlways
-    status.js               frozen status and cryo grenade tuning, active reload, smoke blindness, player stun, glancing hits
+    status.js               frozen status and cryo grenade tuning, active reload, smoke blindness, player stun, glancing hits, tear gas and nerve gas
     traps.js                trap types, trap tuning, trap control panel text, toxic vents, plate doors, crates, item weight
     versions.js             in-game version history
     weapons.js              armaments, gun stats, magazines, crits, damage ranges, charge and combo timing
@@ -82,6 +82,7 @@ src/
     39-damage.js            damage ranges, the crit-or-glance roll, glancing hits on and off the player, damage text
     40-cameras.js           security cameras: generation, panning, lock-on and alarm, damage, control panels, drawing
     41-scenarios.js         sector scenarios: the roll, scen() and the generation hooks, announcement, map header line
+    42-gas.js               tear gas and nerve gas: player and creature effects, riot guard and riot drone canisters, V-look
 scripts/build.mjs  the build
 docs/specs/        change request batches
 ```

@@ -32,7 +32,7 @@ function updatePlay(dt){
   if(p.postDash>0)p.postDash-=dt;
   p.floating=hasMove('float')&&((shift&&!menuOpen&&!(p.dashT>0))||!!chasm[pti]);
   if(p.dashT>0&&Math.random()<0.8)parts.push({x:p.x+rr(-2,2),y:p.y+rr(-2,2),vx:-p.vx*0.1,vy:-p.vy*0.1,t:0.25,m:0.25,c:'#e8dcb0',s:1});
-  p.sprinting=!p.floating&&hasMove('sprint')&&shift&&!menuOpen&&il>0&&!p.aiming&&!p.blocking&&!p.stamLock&&p.stam>0&&liqAt(p.x,p.y)!==4;
+  p.sprinting=!p.floating&&!(p.coughT>0)&&hasMove('sprint')&&shift&&!menuOpen&&il>0&&!p.aiming&&!p.blocking&&!p.stamLock&&p.stam>0&&liqAt(p.x,p.y)!==4;
   p.creeping=hasMove('creep')&&!p.sprinting&&!p.floating;
   if(p.floating){if(p.stam>0){p.stam=Math.max(0,p.stam-floatCost()*dt);p.stamDelay=0.6;}else{p.floatHp=(p.floatHp||0)+dt;if(p.floatHp>=0.25){p.floatHp-=0.25;if(p.hp>2)hurtPlayer(1.2,true);if(Math.random()<0.3)say('floating is tearing at you');}}
     if(Math.random()<dt*10)parts.push({x:p.x+rr(-4,4),y:p.y+5,vx:rr(-6,6),vy:rr(4,10),t:0.35,m:0.35,c:'#b8a8e8',s:1});}
@@ -44,7 +44,7 @@ function updatePlay(dt){
   p.moveMul=p.sprinting?1:mv/base;
   if(p.sprinting){p.stam-=28*dt;p.stamDelay=0.7;if(p.stam<=0){p.stam=0;p.stamLock=true;}
     p.stepT-=dt;if(p.stepT<=0){p.stepT=0.3;noise(p.x,p.y,70);parts.push({x:p.x+rr(-2,2),y:p.y+4,vx:-p.vx*0.2,vy:-p.vy*0.2,t:0.4,m:0.4,c:'#3a403d',s:2});}}
-  else if(p.stamDelay<=0)p.stam=Math.min(maxSt,p.stam+22*(1+S.stamina*0.5)*(1+(S.stamRegen||0))*(p.stimT>0?2:1)*dt);
+  else if(p.stamDelay<=0)p.stam=Math.min(maxSt,p.stam+22*(1+S.stamina*0.5)*(1+(S.stamRegen||0))*irrStamMul()*(p.stimT>0?2:1)*dt);
   if(p.stamLock&&p.stam>=30)p.stamLock=false;
   if(pl===4){if(il>0||Math.hypot(p.vx,p.vy)>6){p.stam=Math.max(0,p.stam-14*dt);p.stamDelay=0.5;}
     if(p.stam<=0){mv*=0.6;p.drownT=(p.drownT||0)+dt;if(p.drownT>=0.3){p.drownT-=0.3;hurtPlayer(1.5,true);if(Math.random()<.5)say('out of breath. get to shallower water');}}
@@ -116,7 +116,7 @@ function updatePlay(dt){
       case 'liftcard':liftCard=true;float(it.x,it.y,'lift keycard','#ffd070');if(liftState==='locked'){liftState=(cond&&cond.obj==='both')?'idle':'open';say(liftState==='idle'?'keycard in hand. the lift can be called now':'keycard in hand. the lift is unlocked');}break;
       case 'weapon':{const nm=ARM[it.w].name;gainArm(it.w);if(WPN[it.w])player.inv[WPN[it.w].ammo]+=10;float(it.x,it.y,nm.toLowerCase(),'#e8c070');break;}
       case 'secretmap':float(it.x,it.y,'scrawled map','#e0c89f');revealSecrets();say(secrets.length?'a scrawled map marks hidden rooms':'the scrawl marks nothing on this level');break;
-      default:{let a=it.amt||IT[it.type].amt();if(IT[it.type].ammo)a=Math.round(a*(1+S.ammoBonus+0.1*U('scav')));p.inv[it.type]+=a;float(it.x,it.y,'+'+a+' '+IT[it.type].label,'#e8dcb0');}
+      default:{let a=it.amt||IT[it.type].amt();if(IT[it.type].ammo)a=Math.round(a*(1+S.ammoBonus+0.1*U('scav')));p.inv[it.type]=(p.inv[it.type]||0)+a;if(it.type==='nervenade')p.inv.nervenade=Math.min(GAS_CFG.nade.nerveMax,p.inv.nervenade);float(it.x,it.y,'+'+a+' '+IT[it.type].label,'#e8dcb0');}
     }
     it.dead=true;sfx('pick');if(lvl){if(it.type==='gear'||it.type==='chip'||it.type==='weapon')lvl.finds++;else lvl.items++;}}}
   items=items.filter(i=>!i.dead);
@@ -134,6 +134,7 @@ function updatePlay(dt){
     const b=ET[e.type];e.flash=Math.max(0,e.flash-dt);e.cd-=dt;e.ph+=dt*6;
     if(e.caged&&!e.caged.open)continue;
     if(enemyFrozen(e,dt))continue;
+    if(gasEnemyTick(e,b,dt))continue;
     if(!b.ghost&&!b.plant&&!b.aquatic&&!b.dummy&&!e.boss&&!e.caged&&!e.seg){if(blocked(e.x,e.y,Math.max(1,e.r-1),false,e)){e.stuckT=(e.stuckT||0)+dt;if(e.stuckT>0.25){e.stuckT=0;freeEnemy(e);}}else e.stuckT=0;}
     if(e.stun>0){e.stun-=dt;continue;}
     if(e.holdT>0){e.holdT-=dt;move(e,e.vx*dt,e.vy*dt);const hf=Math.pow(kbFr(),dt);e.vx*=hf;e.vy*=hf;continue;}
@@ -199,11 +200,12 @@ function updatePlay(dt){
       continue;}
     if(b.guard){const ff=Math.pow(kbFr(),dt);move(e,e.vx*dt,e.vy*dt);e.vx*=ff;e.vy*=ff;e.cd=(e.cd==null?1:e.cd)-dt;e.walk=(e.walk||0);if(e.look==null)e.look=Math.random()*6.283;
       const inCone=(tx,ty,range)=>{const ddx=tx-e.x,ddy=ty-e.y,dd=Math.hypot(ddx,ddy);if(dd>range)return false;let da=Math.atan2(ddy,ddx)-e.look;da=Math.atan2(Math.sin(da),Math.cos(da));return (Math.abs(da)<0.55||dd<22)&&hasLOS(e.x,e.y,tx,ty);};
-      const seeP=!(p.cloakT>0)&&(e.alert?d<190&&seesPlayer(e):inCone(p.x,p.y,150)&&!smokeBlocks(e.x,e.y,p.x,p.y));if(seeP)e.alert=true;
+      const seeP=!(p.cloakT>0)&&(e.alert?d<190&&seesPlayer(e):inCone(p.x,p.y,150)&&!smokeBlocks(e.x,e.y,p.x,p.y,b.mask));if(seeP)e.alert=true;
       let tgt=null;if(seeP)tgt=p;else{let bd=150;for(const o of enemies){if(o===e||o.dead)continue;const ob=ET[o.type];if(ob.guard||ob.dummy||ob.ghost||ob.plant)continue;const od=Math.hypot(o.x-e.x,o.y-e.y);if(od<bd&&inCone(o.x,o.y,150)){bd=od;tgt=o;}}if(!tgt&&e.foeC&&!e.foeC.dead&&hasLOS(e.x,e.y,e.foeC.x,e.foeC.y))tgt=e.foeC;}
       if(tgt&&tgt!==p)e.foeC=tgt;
       if(tgt){const tx=tgt.x-e.x,ty=tgt.y-e.y,td=Math.hypot(tx,ty)||1,wa=Math.atan2(ty,tx);let da=wa-e.look;da=Math.atan2(Math.sin(da),Math.cos(da));e.look+=da*Math.min(1,dt*6);
-        const want=td>110?1:td<55?-1:0;if(want){move(e,tx/td*b.spd*dt*want,ty/td*b.spd*dt*want);e.walk+=dt*6;}
+        riotGuardTick(e,b,dt,seeP&&tgt===p,td);if(e.pushT>0)e.pushT-=dt;
+        const want=e.pushT>0?(td>28?1:0):td>110?1:td<55?-1:0;if(want){move(e,tx/td*b.spd*dt*want,ty/td*b.spd*dt*want);e.walk+=dt*6;}
         if(e.cd<=0){e.cd=b.atk*rr(0.9,1.25);sfx('shot');const aa=wa+rr(-0.06,0.06);bullets.push({x:e.x,y:e.y,vx:Math.cos(aa)*170,vy:Math.sin(aa)*170,life:1.4,dmg:b.dmg,p:false,src:e,slug:true});noise(e.x,e.y,120);}}
       else if(e.alert){const st=flowStep(e);if(st){const sx=st.x-e.x,sy=st.y-e.y,sd=Math.hypot(sx,sy)||1;move(e,sx/sd*b.spd*dt,sy/sd*b.spd*dt);e.walk+=dt*6;let da=Math.atan2(sy,sx)-e.look;da=Math.atan2(Math.sin(da),Math.cos(da));e.look+=da*Math.min(1,dt*4);}}
       else{e.patT=(e.patT||0)-dt;if(e.patT<=0){e.patT=rr(2,4);e.patA=e.look+rr(-1.6,1.6);}let da=e.patA-e.look;da=Math.atan2(Math.sin(da),Math.cos(da));e.look+=da*Math.min(1,dt*2);if(Math.random()<0.5){const nx=Math.cos(e.look),ny=Math.sin(e.look);if(!blocked(e.x+nx*8,e.y+ny*8,e.r,false,e)){move(e,nx*b.spd*0.5*dt,ny*b.spd*0.5*dt);e.walk+=dt*3;}else e.patT=0;}}
@@ -283,7 +285,7 @@ function updatePlay(dt){
       move(e,(mx*sp+e.vx)*dt,(my*sp+e.vy)*dt);const f=Math.pow(kbFr(),dt);e.vx*=f;e.vy*=f;continue;}
     if(b.drone){e.bob=(e.bob||0)+dt*5;e.alarmT=(e.alarmT==null?rr(0.5,1.5):e.alarmT)-dt;e.beep=(e.beep||0)-dt;let mx=0,my=0;
       if(e.alert){let tx=0,ty=0;if(los){tx=dx/d;ty=dy/d;}else{const tg=flowStep(e);if(tg){const gx=tg.x-e.x,gy=tg.y-e.y,gl=Math.hypot(gx,gy)||1;tx=gx/gl;ty=gy/gl;}}
-        const want=!los||d>60?1:d<35?-1:0;mx=tx*want-ty*0.5*e.sd;my=ty*want+tx*0.5*e.sd;if(Math.random()<dt*0.3)e.sd*=-1;
+        riotDroneTick(e,b,dt,los,d);const want=e.hangT>0&&los?(d<GAS_CFG.riot.hang?-1:d>GAS_CFG.riot.hang+30?1:0):!los||d>60?1:d<35?-1:0;mx=tx*want-ty*0.5*e.sd;my=ty*want+tx*0.5*e.sd;if(Math.random()<dt*0.3)e.sd*=-1;
         if(los&&e.alarmT<=0){e.alarmT=2;e.beep=0.35;noise(e.x,e.y,220);lights.push({x:e.x,y:e.y,r:34,t:0.3,m:0.3,c:'255,40,40'});if(d<220)sfx('beep');}}
       else{e.wt-=dt;if(e.wt<=0){e.wt=rr(1,2.5);const a=Math.random()*6.283;e.wx=Math.cos(a)*0.5;e.wy=Math.sin(a)*0.5;}mx=e.wx;my=e.wy;}
       const ml=Math.hypot(mx,my);if(ml>1){mx/=ml;my/=ml;}move(e,(mx*e.spd+e.vx)*dt,(my*e.spd+e.vy)*dt);const f=Math.pow(kbFr(),dt);e.vx*=f;e.vy*=f;continue;}
@@ -318,7 +320,7 @@ function updatePlay(dt){
       for(let k=0;k<6;k++)parts.push({x:e.x+ux*e.r,y:e.y+uy*e.r,vx:rr(-40,40)-ux*30,vy:rr(-40,40)-uy*30,t:0.35,m:0.35,c:'#8e978b',s:1});}}
   enemies=enemies.filter(e=>!e.dead);
 
-  for(const b of bullets){
+  for(const b of bullets){gasJitter(b);
     const steps=Math.max(1,Math.ceil(Math.hypot(b.vx,b.vy)*dt/3));
     for(let s=0;s<steps&&!b.dead;s++){
       b.x+=b.vx*dt/steps;b.y+=b.vy*dt/steps;

@@ -2,14 +2,14 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v1.01**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v1.02**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
 - **Source lives in `src/`** and is built into **one self-contained HTML file**, `dist/index.html` (about 640 KB). No dependencies, no external assets. All art is drawn procedurally on a canvas; all sound is synthesised with the Web Audio API. The only network request is the optional Silkscreen font from Google Fonts in `src/boot.js` (the game falls back to a built-in font if it fails).
   - `src/index.html` is the page template; the build fills in `{{styles}}` (`src/styles.css`), `{{boot}}` (`src/boot.js`: font loader and the red error overlay) and `{{game}}`.
   - `src/data/*.js` are the content and tuning tables (creatures, weapons, items, recipes, food, crew files, work orders, NPCs, world, events, versions). Balance changes usually only touch these.
-  - `src/game/NN-name.js` are 41 game files, split by system. `README.md` lists what each file holds.
+  - `src/game/NN-name.js` are 42 game files, split by system. `README.md` lists what each file holds.
   - `scripts/build.mjs` is the build (plain Node 20+, no npm install needed).
 - **Play or test:** `npm run dev` serves http://localhost:5173 and rebuilds on every save (refresh the page). `npm run build` writes `dist/index.html`, which can also be opened straight from disk in Chrome or Edge.
 - **Playable link:** https://claudemarcassistant-art.github.io/KestralDeep/ . Every push to `main` is built and deployed by `.github/workflows/pages.yml`; other branches and pull requests are built only, which catches syntax errors.
@@ -37,7 +37,7 @@ Current version: **v1.01**. The game was built iteratively in claude.ai chats up
 2. ~~Split the code into files with a build step~~ Done, by section (see above), and the data tables gathered into `src/data/`. Play-tested after each step: title screen, new run, saving and continuing, route map to the next deck or stop, test range, arcade, Codex, Version history, pack menu; no errors.
 3. **Batch 1** (`docs/specs/batch-1.md`): four sessions, done one at a time; the owner playtests and says "continue" between them. All four sessions are done: 1 (deck sizes, v0.79), 2 (run seeds, v0.80), 3 (traps and trap panels, v0.81), 4 (plate doors, crates, item weight, spacebar styles, v0.82).
 4. **Batch 2** (`docs/specs/batch-2.md`): four sessions, same workflow. All four sessions are done: 1 (frozen status, cryo grenade, active reload, v0.83), 2 (herbs and herbalism, v0.84), 3 (express shafts and vault junctions, v0.85), 4 (poison gas traps, toxic vents, deck secured walk-back, ceiling crawlways, v0.86).
-5. **Batch 3** (`docs/specs/batch-3.md`): five sessions, same workflow. Session 1 (damage ranges and glancing hits, tiered work orders, v0.99) Session 2 (security cameras, v1.00) and Session 3 (sector scenarios, v1.01) are done.
+5. **Batch 3** (`docs/specs/batch-3.md`): five sessions, same workflow. Session 1 (damage ranges and glancing hits, tiered work orders, v0.99), Session 2 (security cameras, v1.00), Session 3 (sector scenarios, v1.01) and Session 4 (tear gas and nerve gas, v1.02) are done.
 6. **Balance pass** (the owner plays test runs and reports findings). First round done in v0.87: creature memory, muffled noise, fewer creatures on Large decks, arena waves (see "Pacing" below). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
 
 ## Working conventions
@@ -55,7 +55,7 @@ Current version: **v1.01**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v1.01)
+## Architecture overview (as of v1.02)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -166,6 +166,14 @@ Current version: **v1.01**. The game was built iteratively in claude.ai chats up
 - **Shown:** `announceScenario()` after the new-sector message in `openRoute()`, `scenLine()` under the sector map header, a Run stats row, a Codex Scenarios category and a Systems entry (`SCEN_DESC`).
 - **Measured** (20 decks each at depths 3, 5, 7, random conditions): creatures per deck normal 12.3, crackdown 12.1, outbreak 13.5 (its overgrowth decks bring bloom-wasp swarms), flooded 11.6, blackout 11.9, cold snap 11.7; with conditions fixed, all within 5% of normal. Crackdown: a guard on 54 of 60 decks (normal 4), 1.6 cameras and 2.3 trip scanners a deck. Outbreak: overgrowth 16 and toxic 19 of 60 decks (3 and 3), gas traps 43% (18%), herbs x4. Blackout: dark 38 of 60 (9), breaker thrown on about half. Cold snap: 65% of vents cold, frozen pools on 60% of decks. Flooded: on the sector map 29% flooded junctions (12%), water +40% on station decks.
 
+**Tear gas and nerve gas (batch 3 request 18, v1.02):** `src/game/42-gas.js`, numbers and text in `GAS_CFG` and `GAS_DESC` (`src/data/status.js`). Two cloud kinds, `'tear'` and `'nerve'`, added to `CLOUD` at load and fed by ordinary emitters, so fans, repulse and the rest push them like any cloud. `updateClouds()` takes the deepest exposure of each (`cloudK()`, the same blob test as for the player) and hands it to `gasPlayerTick()`; it fades tear at `tear.fade` (like poison) and nerve at `nerve.fade` (twice as long), and counts gas clouds in `gasN` so creature checks cost nothing when there are none.
+- **Player:** tear gas shrouds like smoke (`tear.shroud`), uses no air and does no damage, and fills `st.irr` ("irritated"; fades at `irrDecay`): `irrAimMul()` in `aimMul()`, `irrStamMul()` in stamina recovery, and coughs (`player.coughT`) that block `p.sprinting`. Nerve gas does quiet damage (`dps` x depth), drains air like smoke and fills `st.szr` ("seizing") to a `dazeT` stun of `nerve.stun` at 100, with a hiss and a warning line. A filter mask (`poisonRes` 0.5 or more, `gasMask()`) halves both. `st.irr`/`st.szr` are new: always read them with `||0` (older saves lack them; the HUD meter loop skips missing values).
+- **Creatures:** `gasEnemyTick()` runs in the enemy loop right after `enemyFrozen()`. Nerve gas hurts and seizes (`e.szr` to `e.stun`) everything but drones and ghosts, with `killMul` for plants and slime creatures (`slug`, `snail`). Tear gas makes unmasked non-plants back away from the cloud and skip their AI; `e.tearT` lingers and `gasJitter()` (bullet loop) throws their shots wide. `smokeBlocks(x0,y0,x1,y1,masked)` treats tear clouds at least `SMOKE_BLIND.tearDens` thick like smoke unless `masked`; `seesPlayer(e)` passes `ET[e.type].mask`.
+- **Throwables:** `tearnade` and `nervenade` (`QUICK`, `IT`, Workbench recipes; recipes may now give `why()` for a refusal). `gasLand()` in `landNade()` starts the emitter. The nerve agent `ampoule` is a `QUICK` entry with no use; it is placed only by `fillModule()` in labs, `fillArchive()` and the crackdown `locker` weights. Nerve grenades are capped at `nade.nerveMax` (2) on pickup and craft.
+- **Riot guard** (`riotguard`: `guard`, `riot`, `mask`; armoured for glances) runs the guard branch; `riotGuardTick()` lobs a `tearcan` nade (`lobCanister()`, lands where you stood) at 60-140 px every 12 s, then `e.pushT` makes it advance through the cloud. **Riot drone** (`riotdrone`: `drone`, `riot`, `mask`) runs the drone branch; `riotDroneTick()` drops a canister within 130 px every 15 s and `e.hangT` keeps it about 80 px off. Weights in `pickType()` (depth 6 and 7 on), a `riotguard` cap, x4 in the crackdown scenario, and crackdown alarms from depth 6 call riot guards 40% of the time. Nade collision ignores the thrower (`n.by`).
+- **Measured:** standing in tear gas fills irritated in about 3 s (61 with a mask), no damage, aim x1.6, stamina x0.5, gone 6 s after leaving; nerve gas 9 damage over 4 s (5 masked), air 100 to 44, one seizure; a brute in nerve gas seized and lost 10, a slug died, a drone was untouched; a husk backed 57 px out of tear gas; guards could not see through it, riot guards could. Riot creatures: none before depths 6/7, about 0.2 a deck after, 0.5 in a crackdown; ampoules were never outside a lab or archive room; about 2% of crackdown locker rolls.
+- **Test range:** tear and nerve grenades and two ampoules in the armory (6-8,7) and in the starting kit; the creature console (now scrolling, `spawnUI.off`) lists both riot creatures.
+
 **Crew files view:** the tier details on the right are clipped and scroll (`flScroll`; the wheel scrolls them when the pointer is right of `flDetX`, otherwise it moves the selection). `flAuto` keeps the next tier in view until the wheel moves it, and resets when another file is selected.
 
 **Hacking (v0.97):** numbers in `HACK_CFG` (`src/data/hacking.js`). `startHack()` sets `need` from `hackRounds()`: `win.length` (4) rounds, minus one for each `cut` threshold the hack stat reaches (0.4, 0.8; at least `minRounds` 2). `newHackWindow()` takes the round's window from `win[]` (42, 34, 27, 22 px on a 200 px bar) times (1 + hack), and the cursor speed `speed + round x step x (1 - min(stepCutMax, hack x stepCut))`, times (1 - hack x `slow`). Vault panels still multiply the window by `VAULT_CFG.hackMul`. Measured time inside the window per round: no skill 323/189/117/79 ms (was 354/195/108 over 3 rounds); hack 0.4 (a splicer kit) 514/322/209 ms over 3; hack 0.8, 2 rounds of 765/516 ms. The hack stat comes from the splicer kit (0.4), Surveyor tier 1 (0.25) and Memory (0.05 a point). Stats shows `Hack window` with the round count.
@@ -198,7 +206,7 @@ Current version: **v1.01**. The game was built iteratively in claude.ai chats up
 | `security.js` | `CAM_CFG`, `CAM_DESC` |
 | `scenarios.js` | `SCENARIOS`, `SCEN_IDS`, `SCEN_DESC` |
 | `inspect.js` | `FIX_DESC`, `TILE_DESC` |
-| `status.js` | `FREEZE_CFG`, `ACTIVE_RELOAD`, `SMOKE_BLIND`, `STUN_CFG`, `GLANCE_CFG` |
+| `status.js` | `FREEZE_CFG`, `ACTIVE_RELOAD`, `SMOKE_BLIND`, `STUN_CFG`, `GLANCE_CFG`, `GAS_CFG`, `GAS_DESC` |
 | `traps.js` | `TRAP_TYPES`, `TRAP_WEIGHTS`, `TRAP_CFG`, `TRAP_PANEL_DESC`, `PLATE_DOOR_CFG`, `CRATE_CFG`, `ITEM_WEIGHT`, `PLATE_DOOR_DESC`, `GAS_TRAP_BIAS`, `TOXIC_VENT_CFG` |
 | `world.js` | `SECTORS`, `BNAMES`, `PAL`, `COND_LIGHT`, `COND_HAZ`, `MODS`, `ROOMNAMES`, `HAZDESC`, `LIQ`/`LIQNAME`, `BIOME`, `NODE`, `HIDDEN_TYPES`, `DECK_SIZES`, `DECK_SIZE_ODDS` |
 
@@ -239,6 +247,7 @@ Current version: **v1.01**. The game was built iteratively in claude.ai chats up
 | damage ranges and glancing hits: `hitRoll()`, `varRoll()`, `dmgVar()`, `glanceChance()`, `glancePlayerChance()`, `creatureSrc()`, `dmgRangeText()`, `armDesc()` | `39-damage.js` |
 | security cameras: `genCams()`, `wireCam()`, `updateCams()`, `camSees()`, `hitCam()`, `HACKR.cams`, `drawCams()`, `drawCamCones()`, `camLook()` | `40-cameras.js` |
 | sector scenarios: `rollScenario()`, `scenId()`, `scen()`, `scenW()`, `scenTypes()`, `scenTextEv()`, `scenGuardDeck()`, `scenLightLoot()`, `scenFreeze()`, `scenBreaker()`, `scenBreakerOff()`, `announceScenario()`, `scenLine()` | `41-scenarios.js` |
+| tear gas and nerve gas: `cloudK()`, `gasAt()`, `gasPlayerTick()`, `gasEnemyTick()`, `gasJitter()`, `gasLand()`, `lobCanister()`, `riotGuardTick()`, `riotDroneTick()`, `gasLook()`, `irrAimMul()`, `irrStamMul()` | `42-gas.js` |
 | reloads: `startReload()`, `updateReload()`, `finishReload()`, `activeReloadPress()` | `22-actions.js` |
 
 To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "const NAME=" src/data/*.js`.
@@ -265,7 +274,7 @@ To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "con
 - Several arcade cabinets in one place take their games from `arcPicks(n)` (distinct games), not independent random picks.
 - Any new chest needs a loot seed `ls:(Math.random()*4294967296)>>>0` where it is created (inside generation), or its contents will not repeat on the same seed. `addChest()` does this for you.
 - When checking that generation repeats, take the fingerprint in the same instant the deck is built: the game loop keeps running between test steps, and creatures move and fires spread.
-- `30-traps.js` to `41-scenarios.js` load after `29-loop.js`. `35-vaults.js` and `40-cameras.js` also add `HACKR.vault` / `HACKR.cams` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
+- `30-traps.js` to `42-gas.js` load after `29-loop.js`. `42-gas.js` adds `CLOUD.tear` and `CLOUD.nerve` at load. `35-vaults.js` and `40-cameras.js` also add `HACKR.vault` / `HACKR.cams` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
 - `powerOff` is per deck: `enterNode()` resets it for real decks, and since v1.01 `launchTestDeck0()`, `returnToTest()` and `newTest()` do too (before, a breaker thrown on one test deck left the next one dark).
 - A generation tweak for a scenario should only draw a random number when the scenario sets that field (`if(S.x&&Math.random()<S.x)`), so Normal decks keep generating exactly as before.
 - `newTest()`, `newGame()` and `loadRun()` replace the `player` object (`initPlayer()`), so tests must re-read `player` after calling them.

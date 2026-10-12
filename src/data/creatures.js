@@ -10,8 +10,10 @@ const ET={
   warden:{hp:80,spd:24,r:5.5,dmg:12,col:'#8a3a3a',atk:1.4,warden:true},
   spider:{hp:6,spd:18,r:5,dmg:1,col:'#3a3640',atk:1.9,spider:true},
   guard:{hp:18,spd:17,r:5,dmg:5,col:'#34445e',atk:1.7,guard:true},
+  riotguard:{hp:24,spd:17,r:5.2,dmg:5,col:'#262e3c',atk:1.7,guard:true,riot:true,mask:true},
   wasp:{hp:2.5,spd:48,r:3,dmg:3,col:'#d8b030',atk:2.2,wasp:true,fly:true},
   drone:{hp:2,spd:62,r:3,dmg:0,col:'#7a868a',atk:1,drone:true,fly:true},
+  riotdrone:{hp:4,spd:52,r:3.6,dmg:0,col:'#565e64',atk:1,drone:true,fly:true,riot:true,mask:true},
   grasper:{hp:12,spd:40,r:6,dmg:10,col:'#7a4a8a',atk:1.1,aquatic:true,swim:1,grasper:true},
   ghost:{hp:6,spd:30,r:4,dmg:3,col:'#d8e8f0',atk:1,ghost:true,fly:true},
   snare:{hp:10,spd:0,r:5,dmg:6,col:'#4a7a2a',atk:1,grasper:true,plant:true,biteP:10},
@@ -25,9 +27,9 @@ const ET={
   dummy:{hp:1e9,spd:0,r:5,dmg:0,col:'#a89a70',atk:99,dummy:true}
 };
 const BOSSES=[{name:'Intake Maw',col:'#8a6a3a',move:'charge'},{name:'Pressure Hulk',col:'#5a6a8a',move:'slam'},{name:'The Sorter',col:'#8a7a3a',move:'throw'},{name:'Frost Matron',col:'#8ab0c8',move:'breath'},{name:'Brine Octopus',col:'#8a4a6a',move:'grab'},{name:'Arc Lord',col:'#6a8ac8',move:'pulse'}];
-const KILLPTS={wasp:25,warden:600,guard:120,pod:60,trip:70,spider:70,frog:70,husk:50,crawler:40,spitter:70,brute:150,snake:60,arcsnake:90,charger:120,drone:50,slug:60,toxslug:70,snail:90,lurker:110,grasper:130,ghost:100,snare:80,dummy:0};
-const THREAT={wasp:0.7,husk:1,crawler:1,slug:1,drone:1.3,spitter:1.6,snake:1.5,frog:1.6,spider:1.6,toxslug:1.6,snail:2,arcsnake:2.2,lurker:2.2,charger:2.6,grasper:2.6,ghost:2.6,guard:3,brute:3.6};
-const BEASTS=['husk','crawler','spitter','wasp','guard','warden','frog','spider','snake','arcsnake','lurker','grasper','snare','pod','trip','ghost','slug','toxslug','snail','charger','drone','brute'];
+const KILLPTS={wasp:25,warden:600,guard:120,riotguard:160,riotdrone:80,pod:60,trip:70,spider:70,frog:70,husk:50,crawler:40,spitter:70,brute:150,snake:60,arcsnake:90,charger:120,drone:50,slug:60,toxslug:70,snail:90,lurker:110,grasper:130,ghost:100,snare:80,dummy:0};
+const THREAT={wasp:0.7,husk:1,crawler:1,slug:1,drone:1.3,spitter:1.6,snake:1.5,frog:1.6,spider:1.6,toxslug:1.6,snail:2,arcsnake:2.2,lurker:2.2,charger:2.6,grasper:2.6,ghost:2.6,guard:3,riotguard:3.5,riotdrone:2,brute:3.6};
+const BEASTS=['husk','crawler','spitter','wasp','guard','riotguard','warden','frog','spider','snake','arcsnake','lurker','grasper','snare','pod','trip','ghost','slug','toxslug','snail','charger','drone','riotdrone','brute'];
 const BEASTINFO={
   husk:{name:'Husk',lore:'Station crew, or what the static left of them. Slow and stubborn, they follow noise through open doors and never quite give up.',move:'slow',attack:'claws at close range'},
   crawler:{name:'Crawler',lore:'Low, fast and many-legged. Something that grew in the brine tanks. Fragile, but it closes the gap before you can line up a shot.',move:'very fast',attack:'quick bites'},
@@ -43,6 +45,8 @@ const BEASTINFO={
   frog:{name:'Bog frog',move:'hops in short bursts, fast in water',attack:'tongue lash',lore:'A dog-sized frog bred in the hydroponics drains. It hops in short bursts, swims fast, and croaks loud enough to wake the deck. Its tongue lashes out like a whip from a few paces away, and anything in the way gets hit, including other creatures.'},
   charger:{name:'Ram',lore:'Heavy, low and armored at the front. It paws the floor, locks on, then builds speed in a straight line and cannot turn once it commits. Walls stop it cold and leave it dazed. Anything in its path gets flattened, including its own kind.',move:'plods, then charges in a straight line',attack:'charge impact, heavy knockback'},
   drone:{name:'Watcher drone',lore:'A station security drone still running old orders. It never attacks. It keeps its distance, follows you and sounds an alarm that brings everything nearby. Two hits bring it down, if you can catch it.',move:'flies, keeps its distance',attack:'none, calls others'},
+  riotguard:{name:'Riot guard',lore:'Station security issued the heavy kit: darker armour, a sealed gas mask and a launcher of tear gas canisters. It sees straight through its own gas and walks in after it. Tougher than an ordinary guard, armoured against glancing hits, and it radios for backup just the same. From the sixth deck down, and far more of them in a security crackdown.',move:'slow, holds its range, advances through its own gas',attack:'sidearm shots, a tear gas canister every 12 seconds at middle range, radios for backup'},
+  riotdrone:{name:'Riot drone',lore:'A heavier security drone with a canister slung underneath. When it spots you it drops tear gas on your head, then hangs back out of reach and beeps for company. From the seventh deck down, more often in a security crackdown.',move:'flies, hangs back after a drop',attack:'drops a tear gas canister every 15 seconds, calls others'},
   slug:{name:'Sludge slug',lore:'A bloated mutant slug the size of a dog. Slow and soft, but it coats every tile it crosses in sticky slime that clings to your boots. Dash over trails, burn them off, or scrape them thin by walking through.',move:'very slow, leaves sticky slime',attack:'crushing bite'},
   toxslug:{name:'Blight slug',lore:'A sludge slug that fed on the toxic spills. Its trail is still sticky, and it also poisons anything that wades through it. The bite poisons too.',move:'very slow, leaves toxic slime',attack:'poisoned bite'},
   snail:{name:'Plated snail',lore:'A huge snail with a shell of fused hull plating. Guns barely scratch the shell, and it pulls in tight when hurt. Explosions, rams and hazards get through fine. Leaves a sticky trail.',move:'crawls, leaves sticky slime',attack:'heavy bite, armored shell'},

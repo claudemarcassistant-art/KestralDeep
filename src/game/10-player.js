@@ -46,6 +46,6 @@ function giveInjury(cause){const P=player;if(!P.injuries)P.injuries=[];if(P.inju
 function cureInjury(all){const P=player;if(!P.injuries||!P.injuries.length)return 0;if(all){const n=P.injuries.length;P.injuries=[];refreshStats();return n;}P.injuries.sort((a,b)=>b.left-a.left);const j=P.injuries.shift();refreshStats();say(INJ[j.id].name.toLowerCase()+' treated');return 1;}
 function tickInjuries(){const P=player;if(!P||!P.injuries)return;for(const j of P.injuries)j.left--;const healed=P.injuries.filter(j=>j.left<=0);P.injuries=P.injuries.filter(j=>j.left>0);if(healed.length){refreshStats();setTimeout(()=>say('your '+healed.map(j=>INJ[j.id].name.toLowerCase()).join(' and ')+' healed up'),80);}}
 function mindCd(){return Math.max(0.5,1-0.03*coreLv('mind')-0.04*subPts('mem'));}
-function aimMul(){let a=Math.max(0.4,1-0.04*coreLv('mind')-0.05*subPts('dex'));for(const j of (player&&player.injuries)||[])a+=INJ[j.id].aim||0;return a*(1-(S.steady||0));}
+function aimMul(){let a=Math.max(0.4,1-0.04*coreLv('mind')-0.05*subPts('dex'));for(const j of (player&&player.injuries)||[])a+=INJ[j.id].aim||0;return a*(1-(S.steady||0))*irrAimMul();}
 function melee(){const u=player.upg,mg=subPts('might');return {dmg:(1+u.knuck+S.meleeDmg)*(1+0.06*mg),kb:170*(1+0.4*u.weight)*(1+0.08*mg),range:18+5*u.haft,arc:1.1+0.3*u.arc,cd:0.55*(1-0.15*u.quick)};}
 

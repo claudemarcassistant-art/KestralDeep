@@ -23,7 +23,7 @@ function newArcadeHall(){runSeed=null;testMode=true;arcadeMode=true;cond={light:
   testLabels=ARC_IDS.map((g,i)=>{const [x,y]=spots[i%spots.length];return {x:x+0.5,y:y+1.4,s:ARC[g].name.split(' ')[0].toUpperCase(),c:true,sz:5};});testLabels.push({x:33.5,y:20.4,s:'COINS',c:true,sz:5},{x:37.5,y:25.3,s:'EXIT',c:true,sz:6});
   player.x=27*TS+6;player.y=26*TS+6;player.inv.scrap=10;resetLevelState();bfs(27,26,flow);ensureLayers();setupObjective(null,null,'open');startLevelScore();state='play';say('the arcade. the coin dispenser is broken in your favour');}
 function placeTestNpcs(){NPC_IDS.forEach(k=>{for(let tries=0;tries<40;tries++){const t=freeTile(rooms[0]);if(t&&!fixtures.some(f=>Math.abs(f.tx-t.tx)+Math.abs(f.ty-t.ty)<2)&&Math.hypot(t.tx*TS+6-player.x,t.ty*TS+6-player.y)>20){fixtures.push({tx:t.tx,ty:t.ty,kind:'npc',npc:k,ph:Math.random()*6});break;}}});}
-function newTest(){runSeed=null;testScen=null;powerOff=false;powerPrev=null;arcadeMode=false;testDeck=false;biomeOverride=null;testMode=true;cond={light:'normal',haz:null};hazOff=false;initPlayer();player.clear=60;Object.assign(player.inv,{molotov:5,gasnade:5,smokenade:5,cryonade:5});player.tools={glowstick:true,sledge:true,scanner:true};player.found=FILES.map(f=>f.id);levelLabel='TEST RANGE';genTest();placeTestNpcs();state='play';say('test range. everything here is free to take');}
+function newTest(){runSeed=null;testScen=null;powerOff=false;powerPrev=null;arcadeMode=false;testDeck=false;biomeOverride=null;testMode=true;cond={light:'normal',haz:null};hazOff=false;initPlayer();player.clear=60;Object.assign(player.inv,{molotov:5,gasnade:5,smokenade:5,cryonade:5,tearnade:5,nervenade:2,ampoule:2});player.tools={glowstick:true,sledge:true,scanner:true};player.found=FILES.map(f=>f.id);levelLabel='TEST RANGE';genTest();placeTestNpcs();state='play';say('test range. everything here is free to take');}
 function genTest(){
   setDeckSize('m');resetHidden();
   map=new Uint8Array(MW*MH).fill(1);kind=new Uint8Array(MW*MH);secretHp=new Float32Array(MW*MH);openDoor=new Uint8Array(MW*MH);liq=new Uint8Array(MW*MH);
@@ -46,6 +46,7 @@ function genTest(){
   chests.push({tx:8,ty:23,x:8*TS+6,y:23*TS+6,tier:'common',opened:false},{tx:11,ty:23,x:11*TS+6,y:23*TS+6,tier:'rare',opened:false});
   const put=(tx,ty,type,extra)=>items.push(Object.assign({x:tx*TS+6,y:ty*TS+6,type,ph:Math.random()*6},extra||{}));
   [['flask',1],['rounds',60],['shells',20],['nails',100],['bolts',15],['cells',20],['fuel',60],['scrap',30],['powder',15],['pipe',15],['battery',10],['cloth',10],['key',8],['medkit',30]].forEach(([t,a],i)=>put(6+i,6,t,{amt:a}));
+  put(6,7,'tearnade',{amt:5});put(7,7,'nervenade',{amt:2});put(8,7,'ampoule',{amt:2});
   ['scatter','nailer','bolt','ray'].forEach((w,i)=>put(6+i,8,'weapon',{w}));IMPLEMENTS.forEach((w,i)=>put(6+i,9,'weapon',{w}));
   for(let i=0;i<Object.keys(SKILLS).length+Object.keys(MOVES).length-1;i++)put(10+i,8,'chip');
   put(16,8,'schematic');put(17,8,'secretmap');
