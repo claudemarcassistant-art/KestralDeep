@@ -18,7 +18,7 @@ function genVaultJunctions(N,ex,sec){const C=VAULT_CFG,d0=graphDist(N,0),d1=grap
   const want=Math.min(cand.length,C.perSector[0]+rnd(C.perSector[1]-C.perSector[0]+1)),picked=[];
   for(let k=0;k<want&&cand.length;k++){const w=cand.map(i=>(dp[i]*2+(N[i].links.length===1?2:0))*(picked.some(p=>N[p].links.includes(i))?0.2:1)+0.1);
     let x=Math.random()*w.reduce((a,b)=>a+b,0),ci=0;while(x>w[ci]&&ci<w.length-1){x-=w[ci];ci++;}const i=cand.splice(ci,1)[0];picked.push(i);
-    const keys=Object.keys(VAULT_DANGERS),dd=[keys[rnd(keys.length)]];if(sec>=C.minSecond&&Math.random()<C.secondDanger){const rest=keys.filter(k=>k!==dd[0]);dd.push(rest[rnd(rest.length)]);}
+    const keys=Object.keys(VAULT_DANGERS),dd=[keys[rnd(keys.length)]],vg=scen().vaultGuard;if(vg&&dd[0]!=='guarded'&&Math.random()<vg)dd[0]='guarded';if(sec>=C.minSecond&&Math.random()<C.secondDanger){const rest=keys.filter(k=>k!==dd[0]);dd.push(rest[rnd(rest.length)]);}
     N[i].cond.vault={d:dd};N[i].cond.size='l';}}
 
 // ---- route choice: options at the current junction are its shafts, then its known express shafts

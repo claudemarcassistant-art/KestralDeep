@@ -32,6 +32,7 @@ src/
     npcs.js                 NPCs
     progress.js             deck grades, run stats, work orders (achievements, tiered levels), point trades, challenge modifiers
     herbs.js                herbs, herbal preparations (poultices, incense, draughts)
+    scenarios.js            sector scenarios: weights, counts and score multipliers, Codex text
     security.js             security camera tuning and Codex text
     route.js                express shafts, vault junctions and archive vaults, deck secured, crawlways
     status.js               frozen status and cryo grenade tuning, active reload, smoke blindness, player stun, glancing hits
@@ -80,6 +81,7 @@ src/
     38-inspect.js           HUD ability icons, hover tips on icons and hotbar slots, V-look descriptions
     39-damage.js            damage ranges, the crit-or-glance roll, glancing hits on and off the player, damage text
     40-cameras.js           security cameras: generation, panning, lock-on and alarm, damage, control panels, drawing
+    41-scenarios.js         sector scenarios: the roll, scen() and the generation hooks, announcement, map header line
 scripts/build.mjs  the build
 docs/specs/        change request batches
 ```

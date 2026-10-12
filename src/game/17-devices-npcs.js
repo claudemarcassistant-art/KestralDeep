@@ -4,6 +4,7 @@ let testDeck=false,biomeOverride=null,deckUI=null;
 const DECKOPT=[
   {k:'depth',label:'Depth',vals:[1,2,3,4,5,6,7,8,9,10]},
   {k:'biome',label:'Biome',vals:['auto','Intake','Pump Hall','Sorting Floor','Cold Store','Brine Works','Relay Core']},
+  {k:'scen',label:'Scenario',vals:['none',...SCEN_IDS.filter(k=>k!=='normal')]},
   {k:'cams',label:'Cameras',vals:['normal','off','on']},
   {k:'type',label:'Deck type',vals:['station','flooded','cache']},
   {k:'size',label:'Size',vals:['random','small','medium','large']},
@@ -17,14 +18,14 @@ const DECKOPT=[
   {k:'waves',label:'Incoming waves',vals:['off','on']},
   {k:'haunt',label:'Haunted',vals:['off','on']},
   {k:'lowg',label:'Low gravity',vals:['off','on']}];
-const deckCfg={seed:'',depth:1,biome:'auto',cams:'normal',type:'station',size:'random',traps:'normal',pdoor:'normal',vault:'off',secure:'no',light:'random',haz:'random',obj:'random',waves:'off',haunt:'off',lowg:'off'};
+const deckCfg={seed:'',depth:1,biome:'auto',scen:'none',cams:'normal',type:'station',size:'random',traps:'normal',pdoor:'normal',vault:'off',secure:'no',light:'random',haz:'random',obj:'random',waves:'off',haunt:'off',lowg:'off'};
 const deckRows=()=>[...DECKOPT.map(o=>({opt:o})),{seedRow:true},{act:'go',label:'Go to this deck'},{act:'rand',label:'Go to a random deck'},{act:'stay',label:'Stay here'}];
 function cycleDeck(o,d){const v=o.vals,i=v.indexOf(deckCfg[o.k]);deckCfg[o.k]=v[(i+d+v.length)%v.length];sfx('click');}
 // the seed of the test deck in play, so a deck can be rebuilt: blank seed = a new random one each time
 let testSeed=null;
 function launchTestDeck(rand){const code=seedKey(deckCfg.seed||'')?deckCfg.seed:randomSeedCode();testSeed=code;
   withSeed(seedHash(seedKey(code)+'|test'),()=>launchTestDeck0(rand));state='play';say('test deck, seed '+code.toLowerCase()+'. reach the lift to come back');}
-function launchTestDeck0(rand){const c=deckCfg,type=rand?wpick([['station',6],['flooded',2],['cache',2]]):c.type;depth=rand?1+rnd(8):c.depth;const rc=rollCond(type);
+function launchTestDeck0(rand){const c=deckCfg;powerOff=false;powerPrev=null;testScen=c.scen==='none'?null:c.scen;const type=rand?wpick([['station',6],['flooded',2],['cache',2]]):c.type;depth=rand?1+rnd(8):c.depth;const rc=rollCond(type);
   cond={light:rand||c.light==='random'?rc.light:c.light,haz:rand||c.haz==='random'?rc.haz:(c.haz==='none'?null:c.haz),obj:rand||c.obj==='random'?rc.obj:c.obj,ev:rand?rc.ev:(c.waves==='on'?'waves':null),haunt:rand?rc.haunt:c.haunt==='on',lowg:rand?rc.lowg:c.lowg==='on',size:rand||c.size==='random'?rc.size:c.size[0]};
   biomeOverride=rand||c.biome==='auto'?null:DECKOPT[1].vals.indexOf(c.biome)-1;
   levelMods=type==='flooded'?{flood:0.85}:type==='cache'?{vaults:2,chests:2,enemyMul:1.35}:{};
@@ -37,14 +38,16 @@ function launchTestDeck0(rand){const c=deckCfg,type=rand?wpick([['station',6],['
   testDeck=true;deckUI=null;hazOff=false;levelLabel='TEST DECK';enterLevel();
   // secured: no creatures, and the exit lift already seen, so the deck counts as secured at once
   if(!rand&&c.secure==='yes'){enemies=enemies.filter(e=>ET[e.type].plant&&!ET[e.type].guard);for(let y=exitT.y-3;y<=exitT.y+3;y++)for(let x=exitT.x-3;x<=exitT.x+3;x++)if(x>=0&&y>=0&&x<MW&&y<MH)seen[y*MW+x]=1;}}
-function returnToTest(){testDeck=false;biomeOverride=null;levelMods={};cond={light:'normal',haz:null};hazOff=false;levelLabel='TEST RANGE';genTest();placeTestNpcs();player.liftCfgLock=true;say('back in the test range');}
+function returnToTest(){testDeck=false;testScen=null;powerOff=false;powerPrev=null;biomeOverride=null;levelMods={};cond={light:'normal',haz:null};hazOff=false;levelLabel='TEST RANGE';genTest();placeTestNpcs();player.liftCfgLock=true;say('back in the test range');}
 function deckChoose(i,d){const r=deckRows()[i];if(!r)return;if(r.seedRow){editText(deckCfg.seed,20,v=>{deckCfg.seed=v;});return;}if(r.opt)return cycleDeck(r.opt,d||1);if(r.act==='go')launchTestDeck(false);else if(r.act==='rand')launchTestDeck(true);else deckUI=null;}
-function drawDeckUI(){const R=deckRows(),pw=250,rh=11,ph=34+R.length*rh+18,px=(W-pw)>>1,py=Math.max(4,(H-ph)>>1);
+// the list scrolls (deckUI.off) when the screen is too short for every row, keeping the selection in view
+function drawDeckUI(){const R=deckRows(),pw=250,rh=11,vis=Math.min(R.length,Math.max(6,Math.floor((H-8-56)/rh))),ph=34+vis*rh+22,px=(W-pw)>>1,py=Math.max(4,(H-ph)>>1);
   F('rgba(4,5,6,0.6)',0,0,W,H);box(px,py,pw,ph,'#0a0c0b','#2a2f2d');F(AMBER,px,py,pw,2);txt('Test lift',px+10,py+7,AMBER);txt('build a deck to visit',px+pw-10,py+7,'#5d655f','right');
-  deckUI.sel=Math.max(0,Math.min(deckUI.sel,R.length-1));
-  R.forEach((r,i)=>{const yy=py+22+i*rh+(r.act?4:0),sel=i===deckUI.sel;const hov=ui(px+6,yy-2,pw-12,rh,{click:()=>{deckUI.sel=i;deckChoose(i,1);}});if(hov&&mouse.moved)deckUI.sel=i;
+  deckUI.sel=Math.max(0,Math.min(deckUI.sel,R.length-1));let off=Math.max(0,Math.min(deckUI.off||0,R.length-vis));if(deckUI.sel<off)off=deckUI.sel;if(deckUI.sel>=off+vis)off=deckUI.sel-vis+1;deckUI.off=off;
+  if(off>0)txt('more above',px+pw/2,py+15,'#4f5a55','center');if(off+vis<R.length)txt('more below',px+pw/2,py+ph-22,'#4f5a55','center');
+  R.forEach((r,i)=>{if(i<off||i>=off+vis)return;const yy=py+22+(i-off)*rh+(r.act?4:0),sel=i===deckUI.sel;const hov=ui(px+6,yy-2,pw-12,rh,{click:()=>{deckUI.sel=i;deckChoose(i,1);}});if(hov&&mouse.moved)deckUI.sel=i;
     if(sel){F('#141917',px+6,yy-2,pw-12,rh);F(AMBER,px+6,yy-2,2,rh);}
-    if(r.opt){txt(r.opt.label,px+14,yy,sel?'#e3e6dc':'#b9c0b3');txt('< '+deckCfg[r.opt.k]+' >',px+pw-12,yy,AMBER,'right');}
+    if(r.opt){txt(r.opt.label,px+14,yy,sel?'#e3e6dc':'#b9c0b3');const dv=r.opt.k==='scen'&&SCENARIOS[deckCfg.scen]?SCENARIOS[deckCfg.scen].name.toLowerCase():deckCfg[r.opt.k];txt('< '+dv+' >',px+pw-12,yy,AMBER,'right');}
     else if(r.seedRow){const ed=textEdit&&sel;txt('Seed',px+14,yy,sel?'#e3e6dc':'#b9c0b3');txt(ed?textEdit.val+(Math.sin(T*8)>0?'_':' '):deckCfg.seed||'random',px+pw-12,yy,ed?'#e3e6dc':AMBER,'right');}
     else txt(r.label,px+14,yy,r.act==='stay'?'#6f7a6a':'#9fe0b0');});
   txt(textEdit?'type a seed   Enter to keep   ESC to cancel':'W S select   A D or click to change   Enter to go',px+pw/2,py+ph-12,'#4f5a55','center');}
@@ -83,7 +86,7 @@ function openCamera(f){if(!f.tr){f.tr=rollTransit();if(f.tr.type==='passive'||f.
   choiceUI={title:'Lift security feed',col:'#7ad0b0',body:'Grainy footage of the shaft below. The next ride shows '+transitDesc(tr)+'.',opts:
     tr.type==='none'?[{label:'Leave',leave:true}]:[{label:'Flag the stop (the lift will stop there)',ok:()=>!(nextTransit&&nextTransit.forced),act:()=>{nextTransit=Object.assign({},tr,{forced:true});return 'flagged. the lift will stop there';}},
       {label:'Lock it out (ride straight past)',ok:()=>!(nextTransit&&nextTransit.type==='none'),act:()=>{nextTransit={type:'none'};return 'locked out. nothing will stop the lift next ride';}},{label:'Leave',leave:true}],note:''};mouse.l=false;mouse.r=false;sfx('map');}
-function genBreaker(){if(!(cond&&cond.haz==='electrical')&&!(cables.length>=4&&Math.random()<0.3))return;for(let t=0;t<30;t++){const r=randomRoom(),q=freeTile(r);if(q&&r!==rooms[0]){fixtures.push({tx:q.tx,ty:q.ty,kind:'breaker',ph:0});return;}}}
+function genBreaker(){if(!(cond&&cond.haz==='electrical')&&!(cables.length>=4&&Math.random()<0.3)&&!scenBreaker())return;for(let t=0;t<30;t++){const r=randomRoom(),q=freeTile(r);if(q&&r!==rooms[0]){fixtures.push({tx:q.tx,ty:q.ty,kind:'breaker',ph:0});return;}}}
 function openBreaker(f){choiceUI={title:'Breaker panel',col:'#e8c040',body:powerOff?'The deck feed is cut. The main breaker sits in the off position, cold to the touch.':'The deck\'s main breaker, humming. Throwing it cuts every non-essential circuit on this deck: the live cabling goes dead, but so do the lights and the security scanners.',
   opts:[powerOff?{label:'Restore the power',act:()=>{setPower(true);return 'power restored';}}:{label:'Throw the breaker',act:()=>{setPower(false);return 'deck power cut';}},{label:'Leave it',leave:true}],note:''};sfx('map');}
 function setPower(on){if(on){powerOff=false;if(powerPrev)cond.light=powerPrev;for(const t of trips)if(t.wasOn)t.on=true;say('the lights stutter back on. so do the cables');sfx('lift');}
@@ -92,10 +95,10 @@ function genStasis(){if(Math.random()>0.12)return;for(let t=0;t<30;t++){const r=
 const MODNPC={medbay:['subject','android'],lab:['subject','android','bomber'],arcade:null,cafeteria:['cook','scrapper'],breakroom:['cook','detective','scrapper'],lockers:['quarter','locksmith'],greenhouse:['cook'],custodial:['locksmith','bomber'],court:['pilot','scrapper'],bathhouse:['detective','subject']};
 // one chance of an NPC per Medium deck's worth of area
 function genNpcs(){for(let k=aN(1);k>0;k--)genNpc();}
-function genNpc(){if(depth<2||Math.random()>0.35)return;
-  const mods=(modules||[]).filter(m=>m.type in MODNPC).sort(()=>Math.random()-0.5);if(mods.length&&Math.random()<0.6){const m=mods[0],L0=MODNPC[m.type]||NPC_IDS;for(let k=0;k<20;k++){const t=freeTile(m);if(t&&!fixtures.some(f=>Math.abs(f.tx-t.tx)+Math.abs(f.ty-t.ty)<2)){fixtures.push({tx:t.tx,ty:t.ty,kind:'npc',npc:L0[rnd(L0.length)],ph:Math.random()*6});return;}}}
+function genNpc(){const S=scen(),npcPick=L=>wpick(scenW(L.map(k=>[k,1]),S.npcs));if(depth<2||Math.random()>0.35*(S.npcChance||1))return;
+  const mods=(modules||[]).filter(m=>m.type in MODNPC).sort(()=>Math.random()-0.5);if(mods.length&&Math.random()<0.6){const m=mods[0],L0=MODNPC[m.type]||NPC_IDS;for(let k=0;k<20;k++){const t=freeTile(m);if(t&&!fixtures.some(f=>Math.abs(f.tx-t.tx)+Math.abs(f.ty-t.ty)<2)){fixtures.push({tx:t.tx,ty:t.ty,kind:'npc',npc:npcPick(L0),ph:Math.random()*6});return;}}}
   const L=rooms.filter((r,i)=>i>0&&r.w>=3&&r.h>=3&&!(modules||[]).includes(r)).sort(()=>Math.random()-0.5);
-  for(const r of L){const c=carveCloset(r);if(c){fixtures.push({tx:c.cx,ty:c.cy,kind:'npc',npc:NPC_IDS[rnd(NPC_IDS.length)],ph:Math.random()*6});return;}}}
+  for(const r of L){const c=carveCloset(r);if(c){fixtures.push({tx:c.cx,ty:c.cy,kind:'npc',npc:npcPick(NPC_IDS),ph:Math.random()*6});return;}}}
 function carveCloset(r){const sides=[[-1,0],[1,0],[0,-1],[0,1]].sort(()=>Math.random()-0.5);
   for(const [sx,sy] of sides){const span=sx?r.h:r.w;for(let t=0;t<span;t++){const o=Math.floor(span/2)+((t%2)?1:-1)*Math.ceil(t/2);if(o<1||o>=span-1)continue;
       const dx=sx<0?r.x-1:sx>0?r.x+r.w:r.x+o,dy=sy<0?r.y-1:sy>0?r.y+r.h:r.y+o,ccx=dx+sx*2,ccy=dy+sy*2;let ok=true;

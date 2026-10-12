@@ -2,14 +2,14 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v1.00**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v1.01**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
 - **Source lives in `src/`** and is built into **one self-contained HTML file**, `dist/index.html` (about 640 KB). No dependencies, no external assets. All art is drawn procedurally on a canvas; all sound is synthesised with the Web Audio API. The only network request is the optional Silkscreen font from Google Fonts in `src/boot.js` (the game falls back to a built-in font if it fails).
   - `src/index.html` is the page template; the build fills in `{{styles}}` (`src/styles.css`), `{{boot}}` (`src/boot.js`: font loader and the red error overlay) and `{{game}}`.
   - `src/data/*.js` are the content and tuning tables (creatures, weapons, items, recipes, food, crew files, work orders, NPCs, world, events, versions). Balance changes usually only touch these.
-  - `src/game/NN-name.js` are 40 game files, split by system. `README.md` lists what each file holds.
+  - `src/game/NN-name.js` are 41 game files, split by system. `README.md` lists what each file holds.
   - `scripts/build.mjs` is the build (plain Node 20+, no npm install needed).
 - **Play or test:** `npm run dev` serves http://localhost:5173 and rebuilds on every save (refresh the page). `npm run build` writes `dist/index.html`, which can also be opened straight from disk in Chrome or Edge.
 - **Playable link:** https://claudemarcassistant-art.github.io/KestralDeep/ . Every push to `main` is built and deployed by `.github/workflows/pages.yml`; other branches and pull requests are built only, which catches syntax errors.
@@ -37,7 +37,7 @@ Current version: **v1.00**. The game was built iteratively in claude.ai chats up
 2. ~~Split the code into files with a build step~~ Done, by section (see above), and the data tables gathered into `src/data/`. Play-tested after each step: title screen, new run, saving and continuing, route map to the next deck or stop, test range, arcade, Codex, Version history, pack menu; no errors.
 3. **Batch 1** (`docs/specs/batch-1.md`): four sessions, done one at a time; the owner playtests and says "continue" between them. All four sessions are done: 1 (deck sizes, v0.79), 2 (run seeds, v0.80), 3 (traps and trap panels, v0.81), 4 (plate doors, crates, item weight, spacebar styles, v0.82).
 4. **Batch 2** (`docs/specs/batch-2.md`): four sessions, same workflow. All four sessions are done: 1 (frozen status, cryo grenade, active reload, v0.83), 2 (herbs and herbalism, v0.84), 3 (express shafts and vault junctions, v0.85), 4 (poison gas traps, toxic vents, deck secured walk-back, ceiling crawlways, v0.86).
-5. **Batch 3** (`docs/specs/batch-3.md`): five sessions, same workflow. Session 1 (damage ranges and glancing hits, tiered work orders, v0.99) and Session 2 (security cameras, v1.00) are done.
+5. **Batch 3** (`docs/specs/batch-3.md`): five sessions, same workflow. Session 1 (damage ranges and glancing hits, tiered work orders, v0.99) Session 2 (security cameras, v1.00) and Session 3 (sector scenarios, v1.01) are done.
 6. **Balance pass** (the owner plays test runs and reports findings). First round done in v0.87: creature memory, muffled noise, fewer creatures on Large decks, arena waves (see "Pacing" below). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
 
 ## Working conventions
@@ -55,7 +55,7 @@ Current version: **v1.00**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v1.00)
+## Architecture overview (as of v1.01)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -160,6 +160,12 @@ Current version: **v1.00**. The game was built iteratively in claude.ai chats up
 
 **Security cameras (batch 3 request 15, v1.00):** `src/game/40-cameras.js`, numbers and Codex text in `src/data/security.js` (`CAM_CFG`, `CAM_DESC`). Not the lift camera terminal (`FIX_DESC.camera`). `secCams` (reset in `resetHidden()`) holds `{tx,ty,dx,dy,x,y,face,look,ph,hp,lockT,raised,off,broken,panel}`: the wall tile, the floor direction it faces, the lens point and the swing. `genCams(start)` runs at the end of `genLevel()` (seeded; not arenas): from `minDepth` 3, `aN(0-2)` cameras on wall tiles with at least 4 open floor tiles in front, outside the start room and the lift ring, weighted 3x to corridors/doorways and 3x near vault rooms, `minApart` 10 tiles; 60% get a control panel (`wireCam()`: a hack panel `{reward:'cams',cams:[c]}` on a wall with floor below, within 7 tiles, in sight of the lens). It does not use `chests`, which still hold the last deck's chests at that point (that broke seed repeats once). `updateCams()` (in `updatePlay()`): `camSees()` is the cone (`half` 0.38 rad, `range` 140 px), line of sight, `smokeBlocks()` and no cloak; while seen `lockT` grows and the head tracks you within its swing; at `lockT` 1.5 s `raiseAlarm(...,'camera')` once (`raised`); otherwise it pans `face +- pan` and resets `lockT`. `camLive()` is false when `broken`, `off` (hacked) or `powerOff`. Damage: `hitCam()` (one per hit, 3 to break) from player bullets on its wall tile, `camsHitArc()` in `primaryAttack0()` and `kick0()`, `camsBlast()` in `explode()`. `HACKR.cams` (added at load) loops the feed; two misses call `camsHackFailed()` (the alarm). Drawn by `drawCams()` (body, lens colour by state, dashed wire to its panel) in `render()` and `drawCamCones()` in `drawActWorld()`'s lighter pass; `drawCamMap()` on the station map; `camLook()` for V-look. `clearLiftArea()` drops any camera in the lift ring. Test lift: Cameras (normal/off/on) right after Biome in `DECKOPT`; test range: a camera at (22,26) facing north over the hazards area, wired to a panel on the pillar at (16,18) (the fire there puffs smoke, which hides you from it, as it should). Measured over 20 decks per depth: none at depths 1-2, about 1.1 a deck from depth 3 (6-8 of 20 decks have none), about half wired, none in a lift ring, identical on the same seed.
 
+**Sector scenarios (batch 3 request 16, v1.01):** `src/game/41-scenarios.js`, data in `src/data/scenarios.js` (`SCENARIOS`: normal, crackdown, outbreak, flooded, blackout, coldsnap; the header comment lists every field). `newSector0()` rolls `route.scen` first, in its own key `['sector',sec,'scen']` so the sector map's stream is unchanged, then builds the map with the scenario in force; sectors up to `route.startSec` (0, or the run setup's start sector) are always normal. `route` is saved whole, so the scenario survives Continue; a missing one means normal. `scen()` returns the scenario in force: `route.scen` in a run, `testScen` (the test lift's Scenario option, set in `launchTestDeck0()`) in the test range, normal in the arcade. Every adjustment is a weight or count change at an existing hook, mostly through `scenW(list,mul,add)` (multiplies and adds `wpick` weights, adding missing keys) and only draws extra random numbers when a scenario field is set, so Normal decks generate exactly as before:
+- `rollCond()` (light, hazard, objective, waves/haunt/low gravity chances, size odds), `genSector()` junction types (`junc`), `pickType()` (`scenTypes()`: `types` multiply, `typesAdd` from `addFrom` depth), the threat budget (`threat`, capped at 1.1), the guard cap (`guardFrom`, `guardCap`) and `scenGuardDeck()` (swaps one cheap creature for a guard, so counts hold), modules (`mods`, `modCount`), `genNpc()` (`npcs`, `npcChance`), `rollTransit()` landings (`rooms`) and text events (`scenTextEv()`: a `TEXTEV` with `scen` only appears under that scenario), `alertMul()` (`alert`), `raiseAlarm()` (`alarmExtra`), `genCams()` (`cams` overrides `CAM_CFG`), `genTrips()` (`trips`), `trapWeightsAt()` (`trapW`), `genToxicVents()` (`toxicVent`), the arena mini-boss (`mini`), vault guardians (`vaultGuard`, in `genVaultJunctions()`), `pickItem()` (`loot`), lockers (`locker`), herbs (`herbs`, `herbW`), water (`flood`, station decks), dark rooms (`darkRooms`), the breaker (`breaker`; `scenBreakerOff()` at the end of `enterLevel()` throws it), cold vents and risers (`coldVent`, `coldRiser`) and `scenFreeze()` (frozen pools).
+- **Score:** `scenScore()` multiplies `liveLevelScore()` and the deck total in `finishLevel()` (the grade still uses the unmultiplied ratio); the report shows the scenario beside Deck score (`report.scen`).
+- **Shown:** `announceScenario()` after the new-sector message in `openRoute()`, `scenLine()` under the sector map header, a Run stats row, a Codex Scenarios category and a Systems entry (`SCEN_DESC`).
+- **Measured** (20 decks each at depths 3, 5, 7, random conditions): creatures per deck normal 12.3, crackdown 12.1, outbreak 13.5 (its overgrowth decks bring bloom-wasp swarms), flooded 11.6, blackout 11.9, cold snap 11.7; with conditions fixed, all within 5% of normal. Crackdown: a guard on 54 of 60 decks (normal 4), 1.6 cameras and 2.3 trip scanners a deck. Outbreak: overgrowth 16 and toxic 19 of 60 decks (3 and 3), gas traps 43% (18%), herbs x4. Blackout: dark 38 of 60 (9), breaker thrown on about half. Cold snap: 65% of vents cold, frozen pools on 60% of decks. Flooded: on the sector map 29% flooded junctions (12%), water +40% on station decks.
+
 **Crew files view:** the tier details on the right are clipped and scroll (`flScroll`; the wheel scrolls them when the pointer is right of `flDetX`, otherwise it moves the selection). `flAuto` keeps the next tier in view until the wheel moves it, and resets when another file is selected.
 
 **Hacking (v0.97):** numbers in `HACK_CFG` (`src/data/hacking.js`). `startHack()` sets `need` from `hackRounds()`: `win.length` (4) rounds, minus one for each `cut` threshold the hack stat reaches (0.4, 0.8; at least `minRounds` 2). `newHackWindow()` takes the round's window from `win[]` (42, 34, 27, 22 px on a 200 px bar) times (1 + hack), and the cursor speed `speed + round x step x (1 - min(stepCutMax, hack x stepCut))`, times (1 - hack x `slow`). Vault panels still multiply the window by `VAULT_CFG.hackMul`. Measured time inside the window per round: no skill 323/189/117/79 ms (was 354/195/108 over 3 rounds); hack 0.4 (a splicer kit) 514/322/209 ms over 3; hack 0.8, 2 rounds of 765/516 ms. The hack stat comes from the splicer kit (0.4), Surveyor tier 1 (0.25) and Memory (0.05 a point). Stats shows `Hack window` with the round count.
@@ -179,7 +185,7 @@ Current version: **v1.00**. The game was built iteratively in claude.ai chats up
 | `character.js` | `SKILLS`, `ACTS`, `SLING`, `FT()`, `FILES`, `MOVES`, `CORES`, `SUBS`, `FILESUB`, `INJ`, `SPACE_STYLES` |
 | `crafting.js` | `RECIPES` (with `upgRecipe()`, `ROMAN`), `UPGS`, grinder yields `GEARY`, `ARMY`, `CONY`, `AMMOY` |
 | `creatures.js` | `ET`, `BOSSES`, `KILLPTS`, `THREAT`, `BEASTS`, `BEASTINFO`, `TRACK_CFG`, `THREAT_SIZE_MUL`, `ARENA_WAVES`, `GHOST_CFG` |
-| `events.js` | `TEXTEV`, `ROOMDESC` |
+| `events.js` | `TEXTEV` (scenario-only events have `id` and `scen`), `ROOMDESC` |
 | `food.js` | `FOOD`, `RAW`, `COOK` |
 | `items.js` | `IT`, `QUICK`, `FLASKCOL`, `TANKMAX`, `GEAR`, `VEND_POOL`, `TOOLS`, `RESDESC`, `CXRES`, `SMOKE_NADE_CFG` |
 | `npcs.js` | `NPCS`, `NPC_IDS`, `DICE_HP` |
@@ -190,6 +196,7 @@ Current version: **v1.00**. The game was built iteratively in claude.ai chats up
 | `route.js` | `EXPRESS_CFG`, `EXPRESS_DESC`, `VAULT_CFG`, `VAULT_DANGERS`, `VAULT_DESC`, `SECURE_CFG`, `CRAWL_CFG`, `SECURE_DESC`, `CRAWL_DESC` |
 | `hacking.js` | `HACK_CFG` |
 | `security.js` | `CAM_CFG`, `CAM_DESC` |
+| `scenarios.js` | `SCENARIOS`, `SCEN_IDS`, `SCEN_DESC` |
 | `inspect.js` | `FIX_DESC`, `TILE_DESC` |
 | `status.js` | `FREEZE_CFG`, `ACTIVE_RELOAD`, `SMOKE_BLIND`, `STUN_CFG`, `GLANCE_CFG` |
 | `traps.js` | `TRAP_TYPES`, `TRAP_WEIGHTS`, `TRAP_CFG`, `TRAP_PANEL_DESC`, `PLATE_DOOR_CFG`, `CRATE_CFG`, `ITEM_WEIGHT`, `PLATE_DOOR_DESC`, `GAS_TRAP_BIAS`, `TOXIC_VENT_CFG` |
@@ -231,6 +238,7 @@ Current version: **v1.00**. The game was built iteratively in claude.ai chats up
 | HUD ability icons, hover tips, V-look: `hotbarX()`, `drawSkillIcons()`, `drawHudTip()`, `inspectAt()` | `38-inspect.js` |
 | damage ranges and glancing hits: `hitRoll()`, `varRoll()`, `dmgVar()`, `glanceChance()`, `glancePlayerChance()`, `creatureSrc()`, `dmgRangeText()`, `armDesc()` | `39-damage.js` |
 | security cameras: `genCams()`, `wireCam()`, `updateCams()`, `camSees()`, `hitCam()`, `HACKR.cams`, `drawCams()`, `drawCamCones()`, `camLook()` | `40-cameras.js` |
+| sector scenarios: `rollScenario()`, `scenId()`, `scen()`, `scenW()`, `scenTypes()`, `scenTextEv()`, `scenGuardDeck()`, `scenLightLoot()`, `scenFreeze()`, `scenBreaker()`, `scenBreakerOff()`, `announceScenario()`, `scenLine()` | `41-scenarios.js` |
 | reloads: `startReload()`, `updateReload()`, `finishReload()`, `activeReloadPress()` | `22-actions.js` |
 
 To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "const NAME=" src/data/*.js`.
@@ -251,13 +259,15 @@ To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "con
 - The pack menu runs live by default, so player input must be ignored while it is open (movement and mouse attacks are already gated on `menuOpen`).
 - Large single-line functions are common; when editing, anchor changes on exact unique strings and re-test.
 - A plain floor flood-fill from the start room does not always reach the exit: locked doors, module doors, weak walls and vents count as walls to `bfs()`. Treat any tile other than wall (`map` 1) as passable when checking that a deck is connected.
-- The test deck builder's `DECKOPT` is indexed by position in one place (`DECKOPT[1]` is Biome), so add new options after it (Cameras is `DECKOPT[2]` since v1.00).
+- The test deck builder's `DECKOPT` is indexed by position in one place (`DECKOPT[1]` is Biome), so add new options after it (Scenario is `DECKOPT[2]` and Cameras `DECKOPT[3]` since v1.01).
 - Generation code in `genLevel()` runs before `populate()`, so `chests`, `items` and creatures still hold the previous deck's there; reading them breaks seed repeats.
 - `genSector()` builds the sector map by trial: only about 1 in 40 attempts puts the exit 3-4 jumps away with every junction connected. It allows 3000 attempts; at the old 200, about 1 sector in 250 fell back to a 4-junction straight line (fixed in v0.79.1). Changing the placement rules changes that success rate, so re-measure it.
 - Several arcade cabinets in one place take their games from `arcPicks(n)` (distinct games), not independent random picks.
 - Any new chest needs a loot seed `ls:(Math.random()*4294967296)>>>0` where it is created (inside generation), or its contents will not repeat on the same seed. `addChest()` does this for you.
 - When checking that generation repeats, take the fingerprint in the same instant the deck is built: the game loop keeps running between test steps, and creatures move and fires spread.
-- `30-traps.js` to `40-cameras.js` load after `29-loop.js`. `35-vaults.js` and `40-cameras.js` also add `HACKR.vault` / `HACKR.cams` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
+- `30-traps.js` to `41-scenarios.js` load after `29-loop.js`. `35-vaults.js` and `40-cameras.js` also add `HACKR.vault` / `HACKR.cams` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
+- `powerOff` is per deck: `enterNode()` resets it for real decks, and since v1.01 `launchTestDeck0()`, `returnToTest()` and `newTest()` do too (before, a breaker thrown on one test deck left the next one dark).
+- A generation tweak for a scenario should only draw a random number when the scenario sets that field (`if(S.x&&Math.random()<S.x)`), so Normal decks keep generating exactly as before.
 - `newTest()`, `newGame()` and `loadRun()` replace the `player` object (`initPlayer()`), so tests must re-read `player` after calling them.
 - Before v0.81, `genArena()` did not reset `panels` or `vendors`, so arena decks kept the previous deck's hack panels and vending machines at stale positions. Every generator that builds a full deck must reset every per-deck list (`resetHidden()` covers most; panels and vendors are reset by `genPanels()`/`genVending()` or by hand).
 - `populate()` starts with `items=[]`, so items placed earlier in `genLevel()` are lost; anything generation wants on the floor goes in during or after `populate()` (see `fillPlateRooms()`).

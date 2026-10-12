@@ -127,7 +127,7 @@ function drawTraps(){
 // ---- poison gas trap: nozzles around the plate feed toxic clouds for TRAP_TYPES.gas.dur seconds
 function trapWeightsAt(x,y){const B=GAS_TRAP_BIAS;let m=1;if(cond&&cond.haz==='toxic')m*=B.toxicDeck;
   if(modules.some(md=>B.modules.includes(md.type)&&Math.abs(md.cx-x)+Math.abs(md.cy-y)<=B.near))m*=B.nearModule;
-  return m===1?TRAP_WEIGHTS:TRAP_WEIGHTS.map(([k,w])=>[k,k==='gas'?w*m:w]);}
+  return scenW(m===1?TRAP_WEIGHTS:TRAP_WEIGHTS.map(([k,w])=>[k,k==='gas'?w*m:w]),scen().trapW);}
 function fireGas(t){const G=TRAP_TYPES.gas,pts=[[t.tx,t.ty]],c=[];
   for(let y=t.ty-G.spread;y<=t.ty+G.spread;y++)for(let x=t.tx-G.spread;x<=t.tx+G.spread;x++){if((x===t.tx&&y===t.ty)||solid(x,y))continue;const wall=D4.some(([dx,dy])=>solid(x+dx,y+dy));c.push([x,y,wall]);}
   c.sort(()=>Math.random()-0.5);c.sort((a,b)=>b[2]-a[2]);for(const q of c){if(pts.length>=G.points)break;if(pts.some(p=>Math.abs(p[0]-q[0])+Math.abs(p[1]-q[1])<2))continue;pts.push([q[0],q[1]]);}
@@ -138,6 +138,6 @@ function updateGasJets(dt){const G=TRAP_TYPES.gas;for(const j of gasJets){if(!tr
   gasJets=gasJets.filter(j=>j.left>0);}
 
 // ---- toxic floor vents: run at the end of genLevel()/genArena(), inside the deck's seeded scope
-function genToxicVents(){const C=TOXIC_VENT_CFG,pr=cond&&cond.haz==='toxic'?C.toxicDeck:C.other;for(const v of vents)if(Math.random()<pr){v.toxic=true;v.cold=false;}}
+function genToxicVents(){const C=TOXIC_VENT_CFG,pr=Math.min(0.9,(cond&&cond.haz==='toxic'?C.toxicDeck:C.other)*(scen().toxicVent||1));for(const v of vents)if(Math.random()<pr){v.toxic=true;v.cold=false;}}
 function drawToxicVents(){for(const v of vents){if(!v.toxic||!seen[v.ty*MW+v.tx])continue;const x=v.tx*TS-camX,y=v.ty*TS-camY;if(x<-TS||y<-TS||x>W||y>H)continue;
   F('rgba(120,170,40,0.28)',x+1,y+1,TS-2,TS-2);for(let k=0;k<3;k++)F('rgba(170,215,80,0.55)',x+2,y+3+k*3,TS-4,1);}}

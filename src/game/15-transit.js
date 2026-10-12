@@ -2,7 +2,7 @@
 let transitToast=0,runStops=0,nextTransit=null,pendingNode=null,stopMode=false,stopAmbush=false,stopWarnT=0;
 function rollTransit(){if(depth<2)return {type:'none'};const guarantee=!runStops&&depth>=3;if(!guarantee&&Math.random()>0.6)return {type:'none'};
   const t=guarantee?wpick([['text',45],['room',45],['ambush',10]]):wpick([['passive',25],['text',30],['room',32],['ambush',13+(alertCarry?10:0)]]);
-  if(t==='room')return {type:'room',room:wpick([['merchant',3],['gambler',2],['quarters',3],['arcade',2],['camp',3]])};if(t==='text')return {type:'text',ev:rnd(TEXTEV.length)};return {type:t};}
+  if(t==='room')return {type:'room',room:wpick(scenW([['merchant',3],['gambler',2],['quarters',3],['arcade',2],['camp',3]],scen().rooms))};if(t==='text')return {type:'text',ev:scenTextEv()};return {type:t};}
 function transitDesc(tr){return tr.type==='none'?'a clear run down':tr.type==='passive'?'something useful lodged in the cab':tr.type==='text'?'the lift stalls between floors':tr.type==='ambush'?'something waiting on the cab roof':'the lift stopping at '+ROOMDESC[tr.room];}
 let transitAfter=null;
 function startTransit(tr,n){pendingNode=n;runStops++;

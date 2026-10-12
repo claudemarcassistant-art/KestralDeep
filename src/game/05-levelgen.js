@@ -156,7 +156,7 @@ function updateBarrels(dt){const R=4.5;
       const ov2=Math.hypot(o.vx||0,o.vy||0),gm=lowGrav()?1.3:0.6;if(ov2>(lowGrav()?5:20)){const push=((o.vx||0)*ux+(o.vy||0)*uy);if(push>0){b.vx+=ux*push*gm;b.vy+=uy*push*gm;}}}}
   for(let i=0;i<barrels.length;i++){const a=barrels[i];if(a.dead)continue;for(let j=i+1;j<barrels.length;j++){const c=barrels[j];if(c.dead)continue;const dx=c.x-a.x,dy=c.y-a.y,d=Math.hypot(dx,dy)||0.01,ov=2*R-d;if(ov<=0)continue;
     const ux=dx/d,uy=dy/d;a.x-=ux*ov/2;a.y-=uy*ov/2;c.x+=ux*ov/2;c.y+=uy*ov/2;const rv=(c.vx-a.vx)*ux+(c.vy-a.vy)*uy;if(rv<0){a.vx+=ux*rv*0.9;a.vy+=uy*rv*0.9;c.vx-=ux*rv*0.9;c.vy-=uy*rv*0.9;if(-rv>160){hitBarrel(a,1);hitBarrel(c,1);}}}}}
-function mkRiser(tx,ty,dir,cold){const R0=mkRiser0(tx,ty,dir);R0.cold=cold==null?Math.random()<0.25:cold;if(!R0.cold)R0.toxic=typeof cond!=='undefined'&&cond&&cond.haz==='toxic'?Math.random()<0.6:Math.random()<0.1;return R0;}
+function mkRiser(tx,ty,dir,cold){const R0=mkRiser0(tx,ty,dir);R0.cold=cold==null?Math.random()<(scen().coldRiser||0.25):cold;if(!R0.cold)R0.toxic=typeof cond!=='undefined'&&cond&&cond.haz==='toxic'?Math.random()<0.6:Math.random()<0.1;return R0;}
 let clouds=[];
 const CLOUD={steam:{col:'230,236,234',a:0.3},toxic:{col:'150,195,60',a:0.32},smoke:{col:'34,34,38',a:0.5},cryo:{col:'205,232,255',a:0.34},incense:{col:'205,210,200',a:0.16}};
 function puff(x,y,kind,amt,src,rmax){let c=src?clouds.find(q=>q.src===src):null;if(c&&c.kind!==kind)c=null;
@@ -203,7 +203,7 @@ function extraHazards(start){
     cand.sort(()=>Math.random()-.5);for(const [x,y,d] of cand){if(fans.length>=nF)break;if(risers.some(r=>Math.abs(r.tx-x)+Math.abs(r.ty-y)<4))continue;fans.push(mkFan(x,y,d));
       if(Math.random()<0.5){const px=d[1],py=d[0];let placed=false;
         if(Math.random()<0.5)for(const s2 of [1,-1,2,-2]){const rx=x+px*s2,ry=y+py*s2,ri=ry*MW+rx;if(map[ri]===1&&!solid(rx+d[0],ry+d[1])&&!fans.some(q=>q.tx===rx&&q.ty===ry)&&!risers.some(q=>q.tx===rx&&q.ty===ry)){risers.push(mkRiser(rx,ry,d));placed=true;break;}}
-        if(!placed)for(const k of [2,3,1]){const vx=x+d[0]*k,vy=y+d[1]*k;if(solid(vx,vy)||liq[vy*MW+vx]>=2||(vx===exitT.x&&vy===exitT.y))continue;vents.push({tx:vx,ty:vy,x:vx*TS+6,y:vy*TS+6,t:rr(0,4),phase:'idle',cold:Math.random()<0.2});break;}}}
+        if(!placed)for(const k of [2,3,1]){const vx=x+d[0]*k,vy=y+d[1]*k;if(solid(vx,vy)||liq[vy*MW+vx]>=2||(vx===exitT.x&&vy===exitT.y))continue;vents.push({tx:vx,ty:vy,x:vx*TS+6,y:vy*TS+6,t:rr(0,4),phase:'idle',cold:Math.random()<(scen().coldVent||0.2)});break;}}}
     for(const sc of secrets){if(Math.random()>0.4)continue;const x=sc.ex,y=sc.ey;const dirs=[[0,1],[1,0],[-1,0],[0,-1]].filter(([dx,dy])=>!solid(x+dx,y+dy)&&kind[(y+dy)*MW+x+dx]!==3);if(dirs.length)fans.push(mkFan(x,y,dirs[0],true));}}
 }
 function barrelAtTile(tx,ty){for(const b of barrels)if(!b.dead&&b.tx===tx&&b.ty===ty)return true;return false;}
@@ -355,11 +355,11 @@ function genLevel(){
   for(let k=0;k<ns;k++){const s=attach(3);if(s)secrets.push(s);}
   for(let k=aN(0.5);k>0;k--){const v=attach(4);if(v){v.vent=true;ventRooms.push(v);}}
   if(Math.random()<0.06){const r=attach(2,4,3,12);if(r)freightT={x:r.cx,y:r.cy};}
-  {const nm=aN((Math.random()<0.5?1:0)+(Math.random()<0.15?1:0));const types=Object.keys(MODS);
-    for(let k=0;k<nm;k++){const ty=types[rnd(types.length)],M=MODS[ty],r=attach(6,M.w,M.h,M.kd);if(!r)continue;
+  {const S=scen(),nm=aN((Math.random()<0.5?1:0)+(Math.random()<0.15?1:0)+(S.modCount&&Math.random()<S.modCount?1:0));const types=scenW(Object.keys(MODS).map(k=>[k,1]),S.mods);
+    for(let k=0;k<nm;k++){const ty=wpick(types),M=MODS[ty],r=attach(6,M.w,M.h,M.kd);if(!r)continue;
       r.type=ty;r.entered=false;const lk=Math.random()<M.lock;map[r.ey*MW+r.ex]=lk?7:6;modDoors.set(r.ey*MW+r.ex,{style:M.style,mod:r,broken:false});modules.push(r);}}
   let hr=null;if(Math.random()<0.45){hr=carveIsolated(6+rnd(4),5+rnd(3));if(hr)hatchRooms.push(hr);}
-  genLiquid(levelMods.flood!=null?levelMods.flood:B.flood,start);{let w=0,f=0;for(let i=0;i<MW*MH;i++)if(map[i]===0){f++;if(liq[i]>=2)w++;}wetness=f?w/f:0;}genHazards(start);extraHazards(start);genOil(start);
+  genLiquid(levelMods.flood!=null?levelMods.flood:Math.min(0.9,B.flood+(scen().flood||0)),start);{let w=0,f=0;for(let i=0;i<MW*MH;i++)if(map[i]===0){f++;if(liq[i]>=2)w++;}wetness=f?w/f:0;}genHazards(start);extraHazards(start);genOil(start);scenFreeze();
   if(hr){let placed=false;for(let t=0;t<60&&!placed;t++){const r=randomRoom();if(r===exitR)continue;const x=r.x+rnd(r.w),y=r.y+rnd(r.h),i=y*MW+x;
       if(map[i]===0&&liq[i]<=1&&!(x===exitT.x&&y===exitT.y)){hz[i]=0;hatches.push({tx:x,ty:y,lx:hr.x+1,ly:hr.cy,room:hr,found:false});placed=true;}}
     if(!placed){hatchRooms=[];for(let y=hr.y;y<hr.y+hr.h;y++)for(let x=hr.x;x<hr.x+hr.w;x++){map[y*MW+x]=1;kind[y*MW+x]=0;}}}

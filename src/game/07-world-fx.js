@@ -56,7 +56,7 @@ function genHazards(start){
   if(cond.haz==='fire'){const n=aN(5+rnd(4));for(let k=0;k<n;k++){const s=spot();if(!s)continue;
     blob(s[0],s[1],1+rnd(2),(i,x,y)=>{if(liq[i]<=1&&safe(x,y)){hz[i]=1;liq[i]=0;}});fires.push({x:s[0]*TS+6,y:s[1]*TS+6,ph:Math.random()*6});}}
   if(cond.haz==='toxic'){const n=aN(4+rnd(3));for(let k=0;k<n;k++){const s=spot();if(!s)continue;blob(s[0],s[1],2+rnd(2),(i,x,y)=>{if(safe(x,y)){hz[i]=2;liq[i]=0;}});}}
-  if(cond.haz==='steam'){const n=aN(7+rnd(4));for(let k=0;k<n;k++){const s=spot();if(!s)continue;hz[s[1]*MW+s[0]]=3;vents.push({tx:s[0],ty:s[1],x:s[0]*TS+6,y:s[1]*TS+6,t:rr(0,4),phase:'idle',cold:Math.random()<0.25});}}
+  if(cond.haz==='steam'){const n=aN(7+rnd(4));for(let k=0;k<n;k++){const s=spot();if(!s)continue;hz[s[1]*MW+s[0]]=3;vents.push({tx:s[0],ty:s[1],x:s[0]*TS+6,y:s[1]*TS+6,t:rr(0,4),phase:'idle',cold:Math.random()<(scen().coldVent||0.25)});}}
   if(cond.haz==='anomaly'){const n=aN(2+(depth>=5?1:0));for(let k=0;k<n;k++){const s=spot();if(!s)continue;anoms.push({x:s[0]*TS+6,y:s[1]*TS+6,vx:rr(-14,14),vy:rr(-14,14),ph:Math.random()*6});}}
 }
 const HACKR={

@@ -28,7 +28,7 @@ function wireCam(c){const R=CAM_CFG.panelRange;let best=null,bd=1e9;
   if(!best)return false;const pn={tx:best[0],ty:best[1],hack:true,reward:'cams',state:'idle',ph:Math.random()*6,cams:[c]};panels.push(pn);c.panel=pn;return true;}
 // generation (inside the deck's seeded scope): from CAM_CFG.minDepth, a count scaled by deck area.
 // levelMods.cams (test lift): 'off' = none, 'on' = at any depth and at least one, wired.
-function genCams(start){secCams=[];const C=CAM_CFG,mode=levelMods.cams||'normal';if(mode==='off'||(mode!=='on'&&depth<C.minDepth))return;
+function genCams(start){secCams=[];const C=Object.assign({},CAM_CFG,scen().cams),mode=levelMods.cams||'normal';if(mode==='off'||(mode!=='on'&&depth<C.minDepth))return;
   let n=aN(C.count[0]+rnd(C.count[1]-C.count[0]+1));if(mode==='on')n=Math.max(1,n);if(!n)return;
   const spots=camSpots(start);
   for(let k=0;k<n&&spots.length;k++){const ok=spots.filter(s=>secCams.every(c=>Math.abs(c.tx-s.x)+Math.abs(c.ty-s.y)>=C.minApart));if(!ok.length)break;

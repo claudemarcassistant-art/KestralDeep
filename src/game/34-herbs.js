@@ -7,17 +7,17 @@ Object.assign(FOOD,DRAUGHTS);
 for(const h of HERBAL)if(h.kind!=='draught')QUICK[h.id]={name:h.name,desc:h.desc,n:()=>player.inv[h.id]||0,use:()=>usePrep(h.id)};
 const HERBBY={};for(const h of HERBAL)HERBBY[h.id]=h;
 let incense=[];
-const randHerb=()=>wpick(HERB_WEIGHTS);
+const randHerb=()=>wpick(scenW(HERB_WEIGHTS,scen().herbW));
 
 // ---- generation (inside the deck's seeded scope)
 function tuftAt(tx,ty,h){items.push({x:tx*TS+6+rr(-2,2),y:ty*TS+6+rr(-2,2),type:'tuft',tuft:h||randHerb(),ph:Math.random()*6});}
 // a floor tile in room r against a wall
 function wallSpotIn(r){for(let k=0;k<20;k++){const x=r.x+rnd(r.w),y=r.y+rnd(r.h),i=y*MW+x;if(map[i]!==0||liq[i]>=2||hz[i])continue;if(D4.some(([dx,dy])=>map[(y+dy)*MW+x+dx]===1))return [x,y];}return null;}
-function genOvergrownHerbs(){const C=HERB_CFG,n=aN(C.overgrown[0]+rnd(C.overgrown[1]-C.overgrown[0]+1));
+function genOvergrownHerbs(){const C=HERB_CFG,n=aN((C.overgrown[0]+rnd(C.overgrown[1]-C.overgrown[0]+1))*(scen().herbs||1));
   for(let k=0;k<n;k++){let s=null;
     if(Math.random()<C.nearBloom&&plants.length){const q=plants[rnd(plants.length)],qx=Math.floor(q.x/TS),qy=Math.floor(q.y/TS);for(const [dx,dy] of D8){const x=qx+dx,y=qy+dy;if(!solid(x,y)&&liq[y*MW+x]<2&&!plants.some(z=>Math.floor(z.x/TS)===x&&Math.floor(z.y/TS)===y)){s=[x,y];break;}}}
     if(!s)s=wallSpotIn(randomRoom());if(s)tuftAt(s[0],s[1]);}}
-function genGreenhouseHerbs(m){const C=HERB_CFG.greenhouse,n=C[0]+rnd(C[1]-C[0]+1);for(let k=0;k<n;k++){const q=spotIn(m);if(q)items.push({x:q.x,y:q.y,type:'tuft',tuft:randHerb(),ph:Math.random()*6});}}
+function genGreenhouseHerbs(m){const C=HERB_CFG.greenhouse,n=Math.round((C[0]+rnd(C[1]-C[0]+1))*(scen().herbs||1));for(let k=0;k<n;k++){const q=spotIn(m);if(q)items.push({x:q.x,y:q.y,type:'tuft',tuft:randHerb(),ph:Math.random()*6});}}
 
 // ---- the Herbalism view
 function prepOk(h){const P=player;return Object.keys(h.need).every(k=>(P.herbs[k]||0)>=h.need[k])&&(!h.cloth||(P.inv.cloth||0)>=h.cloth)&&(!h.water||P.flask.has&&P.flask.kind==='water'&&P.flask.n>=h.water);}

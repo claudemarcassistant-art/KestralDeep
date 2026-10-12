@@ -9,7 +9,7 @@ let bossRef=null,bannerBoss=0;
 function genSector(sec){
   for(let tries=0;tries<3000;tries++){const N=[{x:0.04,y:0.5,type:'station',known:true,cond:{light:'normal',haz:null},links:[]}];
     const tgt=12+rnd(4);for(let k=0;k<400&&N.length<tgt;k++){const x=0.14+Math.random()*0.72,y=0.08+Math.random()*0.84;if(N.some(n=>Math.hypot((n.x-x)*1.6,n.y-y)<0.2))continue;
-      const d=depth+Math.round(x*3);const type=wpick([['station',60],['flooded',d>=2?13:6],['cache',12],['rest',5],['merchant',5],['event',5]]);N.push({x,y,type,known:false,links:[],cond:rollCond(type)});}
+      const d=depth+Math.round(x*3);const type=wpick(scenW([['station',60],['flooded',d>=2?13:6],['cache',12],['rest',5],['merchant',5],['event',5]],scen().junc));N.push({x,y,type,known:false,links:[],cond:rollCond(type)});}
     N.push({x:0.96,y:0.15+Math.random()*0.7,type:'station',known:true,exit:true,links:[],cond:rollCond('station')});
     for(let i=0;i<N.length;i++)for(let j=i+1;j<N.length;j++){const dd=Math.hypot((N[i].x-N[j].x)*1.6,N[i].y-N[j].y);if(dd<0.42){N[i].links.push(j);N[j].links.push(i);}}
     const dist=new Array(N.length).fill(-1),q=[0];dist[0]=0;while(q.length){const k=q.shift();for(const j of N[k].links)if(dist[j]<0){dist[j]=dist[k]+1;q.push(j);}}
@@ -23,10 +23,10 @@ function genSector(sec){
     return {nodes:N,exit:ex};}
   const N=[{x:0.04,y:0.5,type:'station',known:true,links:[1],cond:{light:'normal',haz:null}}];for(let k=1;k<=3;k++)N.push({x:0.04+k*0.3,y:0.5,type:'station',known:k===3,exit:k===3,links:[k-1].concat(k<3?[k+1]:[]),cond:rollCond('station')});N[3].cond.size=wpick(DECK_SIZE_ODDS.big);return {nodes:N,exit:3};}
 function newSector(sec){seeded(['sector',sec],()=>newSector0(sec));}
-function newSector0(sec){const g=genSector(sec);route.sector=sec;route.nodes=g.nodes;route.exit=g.exit;route.cur=0;route.chaser=null;route.lk=new Set();learnLinks(0);biomeOverride=testMode?biomeOverride:sec%6;
+function newSector0(sec){route.scen=seeded(['sector',sec,'scen'],()=>rollScenario(sec));const g=genSector(sec);route.sector=sec;route.nodes=g.nodes;route.exit=g.exit;route.cur=0;route.chaser=null;route.lk=new Set();learnLinks(0);biomeOverride=testMode?biomeOverride:sec%6;
   if(sec>=1||runAlertWaves>=3){const far=route.nodes.map((n,i)=>i).filter(i=>i>0&&i!==route.exit&&route.nodes[i].x>0.45);if(far.length&&Math.random()<Math.min(0.9,0.45+sec*0.15+runAlertWaves*0.05))route.chaser={at:far[rnd(far.length)],boss:sec%6,hp:null};}
   ensureLayers();}
-function newRoute(){route={sector:0,nodes:[],cur:0,exit:0,chaser:null};newSector(0);}
+function newRoute(){route={sector:0,nodes:[],cur:0,exit:0,chaser:null,startSec:0};newSector(0);}
 const curNode=()=>route.nodes[route.cur];
 function nodeDist(from){const N=route.nodes,dist=new Array(N.length).fill(-1),q=[from];dist[from]=0;while(q.length){const k=q.shift();for(const j of N[k].links)if(dist[j]<0){dist[j]=dist[k]+1;q.push(j);}}return dist;}
 const lkey=(i,j)=>i<j?i+'-'+j:j+'-'+i;
@@ -38,7 +38,7 @@ function revealFar(){const N=route.nodes,L=N.map((n,i)=>i).filter(i=>!N[i].known
 function ensureLayers(){if(S&&S.decoder)revealNear(2);}
 function revealNextRoutes(){learnLinks(route.cur);for(const j of curNode().links){route.nodes[j].known=true;learnLinks(j);}}
 function moveChaser(){const c=route.chaser;if(!c)return;if(c.rest>0){c.rest--;return;}const d=nodeDist(route.cur);let best=c.at;for(const j of route.nodes[c.at].links)if(d[j]>=0&&d[j]<d[best])best=j;if(Math.random()<0.75)c.at=best;}
-function openRoute(){if(route.nodes&&route.cur===route.exit&&!testMode){newSector(route.sector+1);if(route.sector>META.maxSector){META.maxSector=route.sector;saveMeta();}say('the lift drops into a new section of the station: '+BNAMES[route.sector%6].toLowerCase());}setTimeout(saveRun,0);ensureLayers();state='route';routeSel=0;menuOpen=false;mapOpen=false;mouse.l=false;mouse.r=false;sfx('lift');}
+function openRoute(){if(route.nodes&&route.cur===route.exit&&!testMode){newSector(route.sector+1);if(route.sector>META.maxSector){META.maxSector=route.sector;saveMeta();}say('the lift drops into a new section of the station: '+BNAMES[route.sector%6].toLowerCase());announceScenario();}setTimeout(saveRun,0);ensureLayers();state='route';routeSel=0;menuOpen=false;mapOpen=false;mouse.l=false;mouse.r=false;sfx('lift');}
 // the lift ride between two junctions, keying its event and any landing it stops at
 let liftKey=null;
 // express: an express shaft (pickRoute() has already taken the batteries); it never stops on the way

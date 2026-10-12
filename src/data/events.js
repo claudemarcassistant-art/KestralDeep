@@ -21,3 +21,17 @@ const TEXTEV=[
   {title:'Cable strain',body:'A sharp twang overhead and the cab lurches. The brake is slipping. You could jettison some weight.',opts:[
     {label:'Dump 3 scrap down the shaft',ok:()=>player.inv.scrap>=3,act:()=>{player.inv.scrap-=3;return 'The cab steadies. The scrap clatters away into the dark.';}},
     {label:'Brace and ride it out',act:()=>{player.hp=Math.max(1,player.hp-6);return 'The cab slams to a stop below and you are thrown against the wall.';}}]}];
+// Scenario lift events (v1.01): a TEXTEV with scen only comes up in that sector scenario (SCENARIOS[..].events weights them).
+TEXTEV.push(
+  {id:'quarantine',scen:'outbreak',title:'Quarantine checkpoint',body:'The cab stops at a sealed landing striped in biohazard yellow. A recorded voice asks all passengers to step into the decontamination spray. Beside the arch, an unattended supply shelf.',opts:[
+    {label:'Step into the spray',act:()=>{player.st.psn=0;player.st.rad=0;player.hp=Math.min(maxHp(),player.hp+6);return 'It stings, then it is over. You feel cleaner than you have in days.';}},
+    {label:'Take an antitoxin from the shelf',act:()=>{player.inv.antitox++;return 'One antitoxin, still sealed. The voice reminds you that theft is logged.';}},
+    {label:'Pry open the sample fridge (crowbar)',ok:()=>player.has.crowbar,act:()=>{if(Math.random()<0.5){player.herbs.bitterwort=(player.herbs.bitterwort||0)+2;player.herbs.redroot=(player.herbs.redroot||0)+2;return 'Labelled samples: two bitterwort, two redroot.';}transitAfter={type:'ambush'};return 'Something in the fridge was not dead. It follows you back into the cab.';}}]},
+  {id:'frost',scen:'coldsnap',title:'Frost on the cables',body:'The cab slows to a crawl. Ice has built up on the cables and the brake housing, and the motor whines against it.',opts:[
+    {label:'Climb up and chip it clear',act:()=>{player.hp=Math.max(1,player.hp-4);player.inv.scrap+=2;return 'Numb fingers and a cut palm, but the cab picks up speed. You pocket a few loose fittings.';}},
+    {label:'Burn it off with fuel',ok:()=>player.inv.fuel>=5,act:()=>{player.inv.fuel-=5;return 'The ice sloughs off in a hiss of steam. A smooth ride from here.';}},
+    {label:'Wait in the cold',act:()=>'It takes an hour. You stop feeling your feet somewhere along the way.'}]},
+  {id:'thaw',scen:'coldsnap',title:'A frozen crew member',body:'A crew member sits frozen solid against the cab wall, still in a parka, a sealed pouch clutched to their chest.',opts:[
+    {label:'Work the pouch loose',act:()=>{player.inv.cloth+=2;player.herbs.emberleaf=(player.herbs.emberleaf||0)+2;return 'Two strips of insulating cloth, and two emberleaf, still faintly warm.';}},
+    {label:'Take the parka',act:()=>{player.inv.cloth+=3;return 'Three good lengths of cloth. They will not need it now.';}},
+    {label:'Leave them be',act:()=>'You give them the corner and ride on.'}]});
