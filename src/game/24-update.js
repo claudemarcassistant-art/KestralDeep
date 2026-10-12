@@ -79,7 +79,8 @@ function updatePlay(dt){
   if(S.regen){p.regenAcc+=S.regen*dt;while(p.regenAcc>=1){p.regenAcc--;if(p.hp<maxHp())p.hp=Math.min(maxHp(),p.hp+1);}}
   if(S.pinger&&markSecretsNear(p.x,p.y,70))say('your pinger clicks. a hollow wall nearby');
   sonarT-=dt;sonarRing+=dt;
-  updateCams(dt);updateHazards(dt);updateHazards2(dt);updateObjective(dt);updateWaves(dt);updateAlert(dt);updateActs(dt);updateBarrels(dt);updateMines(dt);updateReload(dt);updateSoaks(dt);if(p.slCd>0)p.slCd-=dt;if(p.actMode!=='sling'&&p.slChg>0){p.slChg=0;p.slFull=false;}updateMolten(dt);updateTraps(dt);updatePlateDoors(dt);updateLoose(dt);updateSpace(dt);updateEnemyCold(dt);updateHerbs(dt);updateArchive(dt);updateSecure(dt);updateFade(dt);updateArenaWaves(dt);updateAlarm(dt);checkAch(dt);updateFlames(dt);updateNades(dt);updateClouds(dt);if(p.jabT>0)p.jabT-=dt;if(p.combo>0){p.comboIdle=(p.comboIdle||0)+dt;if(p.comboIdle>1.8){p.combo=Math.max(0,p.combo-dt*(perk('secondnature')?0.85:1.7));if(p.combo<=0)p.comboShield=false;}}if(p.lashT>0)p.lashT-=dt;if(p.sledgeCd>0)p.sledgeCd-=dt;if(p.blinkCd>0)p.blinkCd-=dt;if(p.scanCd>0)p.scanCd-=dt;if(scanT>0)scanT-=dt;updateStatus(dt);
+  updateCams(dt);updateZaps(dt);updateHazards(dt);updateHazards2(dt);updateObjective(dt);updateWaves(dt);updateAlert(dt);updateActs(dt);updateBarrels(dt);updateMines(dt);updateReload(dt);updateSoaks(dt);if(p.slCd>0)p.slCd-=dt;if(p.actMode!=='sling'&&p.slChg>0){p.slChg=0;p.slFull=false;}updateMolten(dt);updateTraps(dt);updatePlateDoors(dt);updateLoose(dt);updateSpace(dt);updateEnemyCold(dt);updateHerbs(dt);updateArchive(dt);updateSecure(dt);updateFade(dt);updateArenaWaves(dt);updateAlarm(dt);checkAch(dt);updateFlames(dt);updateNades(dt);updateClouds(dt);if(p.jabT>0)p.jabT-=dt;if(p.combo>0){p.comboIdle=(p.comboIdle||0)+dt;if(p.comboIdle>1.8){p.combo=Math.max(0,p.combo-dt*(perk('secondnature')?0.85:1.7));if(p.combo<=0)p.comboShield=false;}}if(p.lashT>0)p.lashT-=dt;if(p.sledgeCd>0)p.sledgeCd-=dt;if(p.blinkCd>0)p.blinkCd-=dt;if(p.scanCd>0)p.scanCd-=dt;if(scanT>0)scanT-=dt;updateStatus(dt);
+  updateBlower(dt,p.weapon==='blower'&&p.aiming&&mouse.l&&!(p.dazeT>0)&&!menuOpen);
   if(p.weapon==='ray'){if(p.aiming&&mouse.l&&!(p.dazeT>0)){if(p.reloadT>0){}else if(!p.charge&&magLeft('ray')<=0){useMag('ray');}else p.charge=Math.min(1.2,(p.charge||0)+dt);}
     else if(p.aiming&&(p.charge||0)>0.08){fireRay(p.charge);p.charge=0;}else p.charge=0;}
   else if(p.weapon&&p.aiming&&mouse.l&&p.cd<=0&&!(p.dazeT>0))fire();
@@ -91,7 +92,7 @@ function updatePlay(dt){
     if(mouse.l){if(p.mcd<=0){if(!(p.chg>0))p.chg=0.001;p.chg+=dt/0.9;if(p.chg>=1){if(!(p.chgFull>0))sfx('hackok');p.chgFull=(p.chgFull||0)+dt;}}}
     else if(p.chg>0){releaseCharge(_set.main);}}
   else{if(p.chg>0){p.chg=0;p.chgFull=0;}
-    if(_set.main!=='soaker'&&!_qs&&mouse.l&&!p.aiming&&p.mcd<=0&&!(p.dazeT>0)&&p.liq!==4)primaryAttack(_set.main?(_set.main==='chainsaw'?sawMelee():ARM[_set.main].melee):FIST);}
+    if(_set.main!=='soaker'&&!_qs&&mouse.l&&!p.aiming&&p.mcd<=0&&!(p.dazeT>0)&&p.liq!==4)(_set.main==='stungun'?stunZap():primaryAttack(_set.main?(_set.main==='chainsaw'?sawMelee():ARM[_set.main].melee):FIST));}
   {const gm=_set.off==='shield'?80:40;p.guardMax=gm;p.guardDelay=(p.guardDelay||0)-dt;if(p.guard>gm)p.guard=gm;if(p.guardDelay<=0)p.guard=Math.min(gm,(p.guard||0)+20*dt);
    const wm=S.shield||0;p.wardDelay=(p.wardDelay||0)-dt;if(p.ward>wm)p.ward=wm;if(p.wardDelay<=0)p.ward=Math.min(wm,(p.ward||0)+12*dt);}
   for(const it of items){if(it.dead||it.fall)continue;if(it.pop>0||it.noPick>0)continue;if(Math.hypot(it.x-p.x,it.y-p.y)<9){

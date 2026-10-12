@@ -36,6 +36,7 @@ function updateFlames(dt){for(const f of flames){f.t-=dt;const nx=f.x+f.vx*dt,ny
     e.burnAcc=(e.burnAcc||0)+dt;if(e.burnAcc>=0.5){e.burnAcc-=0.5;damageEnemy(e,0.8*(fireWeak(e)?3:1)*(e.oilT>0?2:1),0,0,0,true);}if(Math.random()<0.4)parts.push({x:e.x+rr(-3,3),y:e.y+rr(-3,3),vx:rr(-6,6),vy:rr(-30,-10),t:0.3,m:0.3,c:Math.random()<0.5?'#ff9a4a':'#ffd070',s:1});}}
 function fire(){
   if(player.weapon==='flamer')return fireFlame();
+  if(player.weapon==='blower'){player.cd=0.05;return;}
   const w=WPN[player.weapon],inv=player.inv;
   if(player.liq===4){if(player.emptyT<=0){say('no weapons while swimming. shove to fend them off');player.emptyT=2;}player.cd=0.3;return;}
   if(MAGS[player.weapon]){if(!useMag(player.weapon)){player.cd=0.15;return;}}else{if(inv[w.ammo]<=0){if(player.emptyT<=0){sfx('click');say('out of '+w.ammo);player.emptyT=1.2;}player.cd=0.25;return;}inv[w.ammo]--;}

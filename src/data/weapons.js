@@ -1,5 +1,5 @@
 // Weapons: armaments, gun stats, magazines, crit chances, charge and combo timing.
-const WORDER=['pistol','smg','knives','bow','scatter','nailer','bolt','ray','flamer'];
+const WORDER=['pistol','smg','knives','bow','scatter','nailer','bolt','ray','flamer','blower'];
 const ARM={
   pistol:{name:'Sidearm',hand:'off',gun:true,desc:'Off hand. Reliable semi-automatic, with a good eye for weak spots (10% crit). Hold right click to aim, then left click to fire.'},
   bow:{name:'Compound bow',hand:'two',gun:true,desc:'Two-handed. Quiet and fires bolts. Hold left click to draw and release for up to 2.5x power, letting go just as it fills for a perfect shot. Hold right click to aim and left click to loose arrows at a steady pace.'},
@@ -18,6 +18,8 @@ const ARM={
   tank:{name:'Liquid tank',hand:'off',desc:'Off hand. A big flask on a strap: holds 12 measures of one liquid. R fills it from what you stand in, or pours your flask in. Right click drinks water from it. Feeds a super soaker.'},
   whip:{name:'Cable whip',hand:'main',melee:{dmg:1.4,cd:0.55,range:38,arc:0.2,kb:40,lash:true},desc:'Main hand. A long, thin lash that reaches far and hits weakly, but every crack builds up stun. Tap to crack, or hold to charge a lash up to 2.5x as strong; release right as it fills for a perfect crack.'},
   chainsaw:{name:'Chainsaw',hand:'main',melee:{dmg:1.3,cd:0.09,range:15,arc:0.5,kb:35},desc:'Main hand. Hold left click to rev and grind through anything in front of you. Burns power cells as it runs, and is very loud. Without cells it is a heavy club.'},
+  blower:{name:'Industrial blower',hand:'off',gun:true,desc:'Off hand. Hold right click to aim, hold left click to blow a strong stream of air about 100 px ahead: it pushes gas clouds and thins them, blows out small fires close in, shoves barrels, crates, loose items and creatures (light ones far, heavy ones barely), and slows and turns slow projectiles. No damage of its own, but things slammed into walls get hurt. Loud, and burns a power cell every 4 seconds.'},
+  stungun:{name:'Stun gun',hand:'main',melee:{dmg:0.8,cd:0.18,range:28,arc:0.45,kb:0},desc:'Main hand. Hold left click to zap the nearest creature just in front of you about 5 times a second: little damage, but each zap builds stun fast and most creatures reel in under a second. Wet creatures or ones in water stun twice as fast and pass the jolt to others in the same water. Machines take triple damage. Burns a power cell every 2 seconds; without cells it is a weak prod.'},
   shield:{name:'Riot shield',hand:'off',shield:80,desc:'Off hand. Right click blocks with an 80-point guard and less slowdown.'}
 };
 const FIST={dmg:1,cd:0.3,range:12,arc:0.8,kb:90};
@@ -31,9 +33,10 @@ const WPN={
   scatter:{name:'SCATTERGUN',ammo:'shells',dmg:1.4,cd:0.75,spread:0.32,speed:380,pellets:7,kb:70,noise:210,shake:4,sfx:'scatter'},
   nailer:{name:'NAILER',ammo:'nails',dmg:1,cd:0.085,spread:0.09,speed:470,pellets:1,kb:15,noise:110,shake:0.7,sfx:'nail'},
   ray:{name:'RAY GUN',ammo:'cells',dmg:3,cd:0.3,spread:0,speed:520,pellets:1,kb:20,noise:60,shake:2,sfx:'ray',pierce:true},
+  blower:{name:'BLOWER',ammo:'cells',dmg:0,cd:0.05,spread:0,speed:0,pellets:0,kb:0,noise:210,shake:0,sfx:'whoosh'},
   bolt:{name:'BOLT DRIVER',ammo:'bolts',dmg:7,cd:0.9,spread:0,speed:720,pellets:1,kb:130,noise:80,shake:2.5,sfx:'bolt',pierce:true}
 };
-const WCRIT={kick:0.08,bow:0.15,knives:0.25,pistol:0.10,smg:0.04,scatter:0.03,nailer:0.06,bolt:0.20,ray:0.08,flamer:0,fists:0.05,cutter:0.18,crowbar:0.08,bat:0.06,spear:0.12,whip:0.15,chainsaw:0.02,shield:0.04};
+const WCRIT={kick:0.08,bow:0.15,knives:0.25,pistol:0.10,smg:0.04,scatter:0.03,nailer:0.06,bolt:0.20,ray:0.08,flamer:0,fists:0.05,cutter:0.18,crowbar:0.08,bat:0.06,spear:0.12,whip:0.15,chainsaw:0.02,stungun:0.05,shield:0.04};
 const MAGS={pistol:[10,1.1],smg:[30,1.7],scatter:[4,2.2],nailer:[40,1.8],bolt:[1,1.4],ray:[8,1.6],flamer:[60,2.4]};
 const CHARGE=['bat','whip','spear','bow','crowbar'];
 const COMBO_T=[[15,'frenzy','#ff7a5a'],[10,'momentum','#ffb050'],[5,'flow','#e8dcb0']];
@@ -43,8 +46,25 @@ const COMBO_T=[[15,'frenzy','#ff7a5a'],[10,'momentum','#ffb050'],[5,'flow','#e8d
 // DMG_VAR names the character of each armament or attack kind; anything missing is 'reliable'. 'none' skips the roll
 // (sling debris already rolls 1 to 5.5). The bow uses 'bowc' once drawn past a tap. Creature attacks use DMG_VAR_CREATURE.
 const DMG_CHAR={steady:{w:0.1,name:'steady'},reliable:{w:0.2,name:'reliable'},swingy:{w:0.3,name:'swingy'},wild:{w:0.5,name:'wild'},none:{w:0,name:'variable'}};
-const DMG_VAR={pistol:'steady',bolt:'steady',chainsaw:'steady',flamer:'steady',ray:'steady',
+const DMG_VAR={stungun:'steady',pistol:'steady',bolt:'steady',chainsaw:'steady',flamer:'steady',ray:'steady',
   smg:'reliable',nailer:'reliable',cutter:'reliable',crowbar:'reliable',spear:'reliable',whip:'reliable',kick:'reliable',bowc:'reliable',
   bat:'swingy',fists:'swingy',knives:'swingy',bow:'swingy',
   scatter:'wild',explosion:'wild',debris:'none'};
 const DMG_VAR_CREATURE=0.15;
+// Industrial blower (v1.03, batch 3 request 19). Code: src/game/43-tools.js. len/width: the air lane in px (stopped by
+// walls); near: within this distance everything is pushed at full strength, falling to fall x at the far end. cell:
+// seconds of blowing per power cell. cloud: push (px/s per second) and thin (density per second); fire: put out small
+// fires within fireR px after fireT seconds of steady air; flame: how hard flame particles are bent; barrel/crate:
+// push per second; item: slide speed; creature: knockback per second (push, capped at cap) plus a direct drift in px/s, x mass by size (fly/light/small/heavy/boss);
+// proj: slow-projectile speed under which enemy shots are slowed (x slow per second) and turned (turn per second);
+// recoil px/s on you (x float when floating or in low gravity); noise: radius every noiseEvery seconds.
+const BLOWER_CFG={len:100,width:24,near:35,fall:0.45,cell:4,cloud:{push:420,thin:0.08},fire:{fireR:40,fireT:0.5},flame:900,
+  barrel:900,crate:420,item:120,creature:{push:1300,drift:45,fly:3.2,light:1.5,small:1,heavy:0.3,boss:0.1,cap:260,rest:1.2},
+  proj:{max:180,slow:1.6,turn:5},recoil:22,floatMul:3,noise:210,noiseEvery:0.6};
+// Stun gun (v1.03, batch 3 request 20). zapCd: seconds between zaps; range px and half-arc (rad) of the cone; dmg per
+// zap; stun build-up per zap (brute), stunT reel seconds (the cable whip's meter, e.stunB); wetMul in water or wet;
+// chain: px a jolt jumps through shared water, chainMul of the damage and stun; machine: damage x for drones and
+// cameras, machineStun x reel time; cell: seconds of zapping per cell; noCell: damage x without cells (no stun);
+// selfShock: shock added to you per zap while you stand in water; oil: chance an arc into oil lights it; combo per hit.
+const STUNGUN_CFG={zapCd:0.18,range:28,arc:0.45,dmg:0.8,stun:25,stunBrute:15,stunT:1.4,wetMul:2,chain:40,chainMul:0.5,
+  machine:3,machineStun:2,cell:2,noCell:0.6,selfShock:6,oil:0.35,combo:0.2,noise:110};

@@ -173,7 +173,7 @@ function drawActWorld(){const P=player;
   ctx.save();ctx.globalCompositeOperation='lighter';for(const e of enemies){if(e.dead||!ET[e.type].guard)continue;const ex=e.x,ey=e.y;if(Math.abs(ex-camX-W/2)>W/2+150||Math.abs(ey-camY-H/2)>H/2+150)continue;
     const pts=[[ex-camX,ey-camY]];for(let k=0;k<=10;k++){const a=(e.look||0)-0.55+1.1*k/10,c=Math.cos(a),s2=Math.sin(a),dd=castRay(ex,ey,c,s2,150,false);pts.push([ex+c*dd-camX,ey+s2*dd-camY]);}
     const g=ctx.createRadialGradient(ex-camX,ey-camY,4,ex-camX,ey-camY,150);g.addColorStop(0,e.alert?'rgba(255,230,190,0.16)':'rgba(210,225,255,0.12)');g.addColorStop(1,'rgba(210,225,255,0)');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);for(const q of pts)ctx.lineTo(q[0],q[1]);ctx.closePath();ctx.fill();}
-  drawCamCones();
+  drawCamCones();drawZaps();
   ctx.restore();
   for(const t of trips){const a1=[t.x1-camX,t.y1-camY],a2=[t.x2-camX,t.y2-camY];const tx=Math.floor((t.x1+t.x2)/2/TS),ty=Math.floor((t.y1+t.y2)/2/TS);if(!seen[ty*MW+tx])continue;
     F(t.on?'#c04040':'#3a2a2a',Math.round(a1[0])-1,Math.round(a1[1])-1,3,3);F(t.on?'#c04040':'#3a2a2a',Math.round(a2[0])-1,Math.round(a2[1])-1,3,3);

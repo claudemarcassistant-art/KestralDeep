@@ -13,6 +13,8 @@ const RECIPES=[
   {cat:'Weapons',name:'Cable whip',desc:'A long thin lash: low damage, big stun build-up.',need:{scrap:2,cloth:2},ok:()=>!player.has.whip,done:'owned',make:()=>{gainArm('whip');return 'cable whip made';}},
   {cat:'Weapons',name:'Flamethrower',desc:'A hose of fire. Comes with 40 fuel.',need:{pipe:3,battery:1,scrap:3},ok:()=>!player.has.flamer,done:'owned',make:()=>{gainArm('flamer');player.inv.fuel+=40;return 'flamethrower built';}},
   {cat:'Weapons',name:'Chainsaw',desc:'A main-hand saw that runs on power cells. Comes with 6 cells.',need:{battery:2,pipe:1,scrap:4},ok:()=>!player.has.chainsaw,done:'owned',make:()=>{gainArm('chainsaw');player.inv.cells+=6;return 'chainsaw built';}},
+  {cat:'Weapons',name:'Industrial blower',desc:'An off-hand air cannon that runs on power cells. Comes with 4 cells.',need:{pipe:2,battery:2,scrap:3},ok:()=>!player.has.blower,done:'owned',make:()=>{gainArm('blower');player.inv.cells+=4;return 'blower built';}},
+  {cat:'Weapons',name:'Stun gun',desc:'A main-hand electric prod that runs on power cells. Comes with 6 cells.',need:{battery:2,pipe:1,cloth:1,scrap:2},ok:()=>!player.has.stungun,done:'owned',make:()=>{gainArm('stungun');player.inv.cells+=6;return 'stun gun built';}},
   {cat:'Weapons',name:'Nailer',desc:'Rapid fire, quiet-ish, weak per nail. Comes with 20 nails.',need:{pipe:1,battery:1,scrap:1},ok:()=>!player.has.nailer,done:'owned',make:()=>{gainArm('nailer');player.inv.nails+=20;return 'nailer wired up';}},
   {cat:'Weapons',name:'Bolt driver',desc:'Slow, very quiet, and each bolt punches through a whole line. Comes with 3 bolts.',need:{pipe:2,battery:1,scrap:1},ok:()=>!player.has.bolt,done:'owned',make:()=>{gainArm('bolt');player.inv.bolts+=3;return 'bolt driver charged';}},
   {cat:'Weapons',name:'Crowbar',desc:'Main hand implement. Left click to swing.',need:{pipe:1,scrap:1},ok:()=>!player.has.crowbar,done:'owned',make:()=>{gainArm('crowbar');return 'crowbar ready';}},
@@ -78,6 +80,6 @@ const UPGS=[
  {cat:'Survival',k:'resil',name:'Resilience',desc:'Poison, shock, burn, cold, radiation and other statuses build 8% slower per level.',cost:[{powder:1,cloth:1},{powder:2,cloth:1},{powder:2,cloth:2}]}
 ];
 const GEARY={head:{scrap:2},body:{scrap:2,cloth:2},shoulders:{scrap:2,cloth:1},hands:{cloth:2,scrap:1},legs:{cloth:2,scrap:1},feet:{cloth:1,scrap:2},back:{scrap:2,cloth:1},acc:{battery:1,scrap:1}};
-const ARMY={pistol:{pipe:1,scrap:2},scatter:{pipe:1,scrap:2},nailer:{pipe:1,battery:1,scrap:1},bolt:{pipe:1,battery:1,scrap:1},ray:{pipe:1,battery:1,scrap:2},cutter:{scrap:1},crowbar:{pipe:1,scrap:1},bat:{scrap:2},spear:{pipe:1,cloth:1},shield:{scrap:3}};
+const ARMY={pistol:{pipe:1,scrap:2},scatter:{pipe:1,scrap:2},nailer:{pipe:1,battery:1,scrap:1},bolt:{pipe:1,battery:1,scrap:1},ray:{pipe:1,battery:1,scrap:2},cutter:{scrap:1},crowbar:{pipe:1,scrap:1},bat:{scrap:2},spear:{pipe:1,cloth:1},shield:{scrap:3},blower:{pipe:1,battery:1,scrap:1},stungun:{battery:1,scrap:1}};
 const CONY={charge:{powder:1},flare:{powder:1},medpatch:{cloth:1},stim:{powder:1},antitox:{powder:1},emetic:{cloth:1}};
 const AMMOY=[['rounds',10,{scrap:1}],['shells',4,{powder:1}],['nails',20,{scrap:1}],['bolts',3,{scrap:1}],['cells',6,{battery:1}]];

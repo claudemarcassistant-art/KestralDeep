@@ -2,14 +2,14 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v1.02**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v1.03**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
 - **Source lives in `src/`** and is built into **one self-contained HTML file**, `dist/index.html` (about 640 KB). No dependencies, no external assets. All art is drawn procedurally on a canvas; all sound is synthesised with the Web Audio API. The only network request is the optional Silkscreen font from Google Fonts in `src/boot.js` (the game falls back to a built-in font if it fails).
   - `src/index.html` is the page template; the build fills in `{{styles}}` (`src/styles.css`), `{{boot}}` (`src/boot.js`: font loader and the red error overlay) and `{{game}}`.
   - `src/data/*.js` are the content and tuning tables (creatures, weapons, items, recipes, food, crew files, work orders, NPCs, world, events, versions). Balance changes usually only touch these.
-  - `src/game/NN-name.js` are 42 game files, split by system. `README.md` lists what each file holds.
+  - `src/game/NN-name.js` are 43 game files, split by system. `README.md` lists what each file holds.
   - `scripts/build.mjs` is the build (plain Node 20+, no npm install needed).
 - **Play or test:** `npm run dev` serves http://localhost:5173 and rebuilds on every save (refresh the page). `npm run build` writes `dist/index.html`, which can also be opened straight from disk in Chrome or Edge.
 - **Playable link:** https://claudemarcassistant-art.github.io/KestralDeep/ . Every push to `main` is built and deployed by `.github/workflows/pages.yml`; other branches and pull requests are built only, which catches syntax errors.
@@ -37,7 +37,7 @@ Current version: **v1.02**. The game was built iteratively in claude.ai chats up
 2. ~~Split the code into files with a build step~~ Done, by section (see above), and the data tables gathered into `src/data/`. Play-tested after each step: title screen, new run, saving and continuing, route map to the next deck or stop, test range, arcade, Codex, Version history, pack menu; no errors.
 3. **Batch 1** (`docs/specs/batch-1.md`): four sessions, done one at a time; the owner playtests and says "continue" between them. All four sessions are done: 1 (deck sizes, v0.79), 2 (run seeds, v0.80), 3 (traps and trap panels, v0.81), 4 (plate doors, crates, item weight, spacebar styles, v0.82).
 4. **Batch 2** (`docs/specs/batch-2.md`): four sessions, same workflow. All four sessions are done: 1 (frozen status, cryo grenade, active reload, v0.83), 2 (herbs and herbalism, v0.84), 3 (express shafts and vault junctions, v0.85), 4 (poison gas traps, toxic vents, deck secured walk-back, ceiling crawlways, v0.86).
-5. **Batch 3** (`docs/specs/batch-3.md`): five sessions, same workflow. Session 1 (damage ranges and glancing hits, tiered work orders, v0.99), Session 2 (security cameras, v1.00), Session 3 (sector scenarios, v1.01) and Session 4 (tear gas and nerve gas, v1.02) are done.
+5. **Batch 3** (`docs/specs/batch-3.md`): five sessions, same workflow. Session 1 (damage ranges and glancing hits, tiered work orders, v0.99), Session 2 (security cameras, v1.00), Session 3 (sector scenarios, v1.01), Session 4 (tear gas and nerve gas, v1.02) and Session 5 (industrial blower and stun gun, v1.03) are done: the batch is finished.
 6. **Balance pass** (the owner plays test runs and reports findings). First round done in v0.87: creature memory, muffled noise, fewer creatures on Large decks, arena waves (see "Pacing" below). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
 
 ## Working conventions
@@ -55,7 +55,7 @@ Current version: **v1.02**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v1.02)
+## Architecture overview (as of v1.03)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -174,6 +174,12 @@ Current version: **v1.02**. The game was built iteratively in claude.ai chats up
 - **Measured:** standing in tear gas fills irritated in about 3 s (61 with a mask), no damage, aim x1.6, stamina x0.5, gone 6 s after leaving; nerve gas 9 damage over 4 s (5 masked), air 100 to 44, one seizure; a brute in nerve gas seized and lost 10, a slug died, a drone was untouched; a husk backed 57 px out of tear gas; guards could not see through it, riot guards could. Riot creatures: none before depths 6/7, about 0.2 a deck after, 0.5 in a crackdown; ampoules were never outside a lab or archive room; about 2% of crackdown locker rolls.
 - **Test range:** tear and nerve grenades and two ampoules in the armory (6-8,7) and in the starting kit; the creature console (now scrolling, `spawnUI.off`) lists both riot creatures.
 
+**Industrial blower and stun gun (batch 3 requests 19 and 20, v1.03):** `src/game/43-tools.js`, numbers in `BLOWER_CFG` and `STUNGUN_CFG` (`src/data/weapons.js`); both run on power cells (`inv.cells`, shared with the chainsaw and ray gun) and are Workbench-only (not in `IMPLEMENTS`, so not in loot).
+- **Blower** (`ARM.blower`, off hand, `gun:true`; `WPN.blower` exists only so the HUD shows the cell count and `fire()` returns at once for it). `updateBlower(dt,on)` runs every frame from `updatePlay()`, on while aiming with left click held. The lane (`blowerLen()` stops at walls; `blowK()` gives 0-1 strength, full within `near` px, falling to `fall` at the end, with line of sight) pushes and thins clouds, counts `f.blowT` on fires within `fireR` and puts them out at `fireT`, bends `flames`, pushes barrels and crates (`pushBarrel()`), flares and charges, sets loose items' `kvx`/`kvy`, and adds knockback (`e.vx`, capped, `e.kbT` so the impact loop can slam them) plus a small direct drift scaled by `blowMass()` (flyers, light, small, heavy, bosses). After a wall slam (`e.impT`) a creature gets `e.blowRest` so it cannot be hammered against the wall. Slow enemy shots (`!p`, not `slug`, below `proj.max`) and trap `darts` are slowed and turned. Recoil on the player (x`floatMul` floating or in low gravity), `noise()` every `noiseEvery`, a cell every `cell` seconds (accumulated, with an epsilon).
+- **Stun gun** (`ARM.stungun`, main hand). The melee input path in `updatePlay()` calls `stunZap()` instead of `primaryAttack()`; it runs `stunZap0()` inside `asMelee()`. Each zap (every `zapCd`) hits the nearest creature within `range` + its radius in a cone of `arc`, through `hitRoll('stungun',...)` (steady range, crit and glance), `comboAdd(combo)`, and adds to the cable whip's meter `e.stunB` through `addStunB()` (`stun`, brutes `stunBrute`; x`wetMul` when `wetCreature()`: `wetT` or standing in water; a glance adds none). In water the jolt jumps to every other non-flying creature within `chain` px in water. Drones (`ET.drone`) take x`machine` damage and reel x`machineStun` longer; cameras in the cone take a `hitCam()` per zap. Zapping in water adds `selfShock` to your shock meter; an arc ending on oil lights it (`oil` chance). Without cells: x`noCell` damage, no stun. `zaps` holds the arcs, drawn by `drawZaps()` in `drawActWorld()`'s lighter pass.
+- **Measured:** every gas kind pushed ~118 px in 1 s and thinned; a fire at 2 tiles went out, one at 8 stayed; barrel 84 px, crate 51, item 55 in 0.8 s; in 0.7 s wasp 63 px, drone 56, crawler 51, husk 52, brute 12; a glob at 130 px/s slowed to 17; 2 cells in 8 s; recoil 22 px/s. Stun gun: most creatures reel in 0.78-0.97 s (5.5 zaps a second), brutes 1.5-1.9 s; a wet guard at 0.45 s with the jolt reaching a second guard 28 px away in the water; a riot drone lost 2.4 a zap; 2 cells in 4 s; a camera broke and oil caught.
+- **Test range:** the blower at (10,7) and the stun gun at (13,9) in the armory, with power cells on the armory row.
+
 **Crew files view:** the tier details on the right are clipped and scroll (`flScroll`; the wheel scrolls them when the pointer is right of `flDetX`, otherwise it moves the selection). `flAuto` keeps the next tier in view until the wheel moves it, and resets when another file is selected.
 
 **Hacking (v0.97):** numbers in `HACK_CFG` (`src/data/hacking.js`). `startHack()` sets `need` from `hackRounds()`: `win.length` (4) rounds, minus one for each `cut` threshold the hack stat reaches (0.4, 0.8; at least `minRounds` 2). `newHackWindow()` takes the round's window from `win[]` (42, 34, 27, 22 px on a 200 px bar) times (1 + hack), and the cursor speed `speed + round x step x (1 - min(stepCutMax, hack x stepCut))`, times (1 - hack x `slow`). Vault panels still multiply the window by `VAULT_CFG.hackMul`. Measured time inside the window per round: no skill 323/189/117/79 ms (was 354/195/108 over 3 rounds); hack 0.4 (a splicer kit) 514/322/209 ms over 3; hack 0.8, 2 rounds of 765/516 ms. The hack stat comes from the splicer kit (0.4), Surveyor tier 1 (0.25) and Memory (0.05 a point). Stats shows `Hack window` with the round count.
@@ -199,7 +205,7 @@ Current version: **v1.02**. The game was built iteratively in claude.ai chats up
 | `npcs.js` | `NPCS`, `NPC_IDS`, `DICE_HP` |
 | `progress.js` | `GRADES`, `MODS_RUN`, `LVLSTAT`, `WO_ROMAN`, `ACH`, `AP_TRADES` |
 | `versions.js` | `VERSIONS`, `GAME_VERSION` |
-| `weapons.js` | `WORDER`, `ARM`, `FIST`, `IMPLEMENTS`, `WPN`, `WCRIT`, `MAGS`, `CHARGE`, `COMBO_T`, `DMG_CHAR`, `DMG_VAR`, `DMG_VAR_CREATURE` |
+| `weapons.js` | `WORDER`, `ARM`, `FIST`, `IMPLEMENTS`, `WPN`, `WCRIT`, `MAGS`, `CHARGE`, `COMBO_T`, `DMG_CHAR`, `DMG_VAR`, `DMG_VAR_CREATURE`, `BLOWER_CFG`, `STUNGUN_CFG` |
 | `herbs.js` | `HERBS`, `HERB_WHERE`, `HERB_WEIGHTS`, `HERB_CFG`, `HERBAL`, `DRAUGHTS` |
 | `route.js` | `EXPRESS_CFG`, `EXPRESS_DESC`, `VAULT_CFG`, `VAULT_DANGERS`, `VAULT_DESC`, `SECURE_CFG`, `CRAWL_CFG`, `SECURE_DESC`, `CRAWL_DESC` |
 | `hacking.js` | `HACK_CFG` |
@@ -248,6 +254,7 @@ Current version: **v1.02**. The game was built iteratively in claude.ai chats up
 | security cameras: `genCams()`, `wireCam()`, `updateCams()`, `camSees()`, `hitCam()`, `HACKR.cams`, `drawCams()`, `drawCamCones()`, `camLook()` | `40-cameras.js` |
 | sector scenarios: `rollScenario()`, `scenId()`, `scen()`, `scenW()`, `scenTypes()`, `scenTextEv()`, `scenGuardDeck()`, `scenLightLoot()`, `scenFreeze()`, `scenBreaker()`, `scenBreakerOff()`, `announceScenario()`, `scenLine()` | `41-scenarios.js` |
 | tear gas and nerve gas: `cloudK()`, `gasAt()`, `gasPlayerTick()`, `gasEnemyTick()`, `gasJitter()`, `gasLand()`, `lobCanister()`, `riotGuardTick()`, `riotDroneTick()`, `gasLook()`, `irrAimMul()`, `irrStamMul()` | `42-gas.js` |
+| industrial blower and stun gun: `updateBlower()`, `blowK()`, `blowMass()`, `stunZap()`, `addStunB()`, `wetCreature()`, `updateZaps()`, `drawZaps()` | `43-tools.js` |
 | reloads: `startReload()`, `updateReload()`, `finishReload()`, `activeReloadPress()` | `22-actions.js` |
 
 To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "const NAME=" src/data/*.js`.
@@ -274,7 +281,7 @@ To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "con
 - Several arcade cabinets in one place take their games from `arcPicks(n)` (distinct games), not independent random picks.
 - Any new chest needs a loot seed `ls:(Math.random()*4294967296)>>>0` where it is created (inside generation), or its contents will not repeat on the same seed. `addChest()` does this for you.
 - When checking that generation repeats, take the fingerprint in the same instant the deck is built: the game loop keeps running between test steps, and creatures move and fires spread.
-- `30-traps.js` to `42-gas.js` load after `29-loop.js`. `42-gas.js` adds `CLOUD.tear` and `CLOUD.nerve` at load. `35-vaults.js` and `40-cameras.js` also add `HACKR.vault` / `HACKR.cams` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
+- `30-traps.js` to `43-tools.js` load after `29-loop.js`. `42-gas.js` adds `CLOUD.tear` and `CLOUD.nerve` at load. `35-vaults.js` and `40-cameras.js` also add `HACKR.vault` / `HACKR.cams` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
 - `powerOff` is per deck: `enterNode()` resets it for real decks, and since v1.01 `launchTestDeck0()`, `returnToTest()` and `newTest()` do too (before, a breaker thrown on one test deck left the next one dark).
 - A generation tweak for a scenario should only draw a random number when the scenario sets that field (`if(S.x&&Math.random()<S.x)`), so Normal decks keep generating exactly as before.
 - `newTest()`, `newGame()` and `loadRun()` replace the `player` object (`initPlayer()`), so tests must re-read `player` after calling them.

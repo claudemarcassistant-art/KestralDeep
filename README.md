@@ -38,7 +38,7 @@ src/
     status.js               frozen status and cryo grenade tuning, active reload, smoke blindness, player stun, glancing hits, tear gas and nerve gas
     traps.js                trap types, trap tuning, trap control panel text, toxic vents, plate doors, crates, item weight
     versions.js             in-game version history
-    weapons.js              armaments, gun stats, magazines, crits, damage ranges, charge and combo timing
+    weapons.js              armaments, gun stats, magazines, crits, damage ranges, charge and combo timing, blower and stun gun tuning
     world.js                sectors, biome layouts, palettes, route nodes, water depths, room modules, deck conditions, hazard text, deck sizes
   game/           the game, split by system
     01-core.js              canvas, view sizes, deck size variables, run seeds, shared helpers
@@ -83,6 +83,7 @@ src/
     40-cameras.js           security cameras: generation, panning, lock-on and alarm, damage, control panels, drawing
     41-scenarios.js         sector scenarios: the roll, scen() and the generation hooks, announcement, map header line
     42-gas.js               tear gas and nerve gas: player and creature effects, riot guard and riot drone canisters, V-look
+    43-tools.js             industrial blower (air lane and its pushes) and stun gun (zaps, stun, water jolts), arcs drawing
 scripts/build.mjs  the build
 docs/specs/        change request batches
 ```

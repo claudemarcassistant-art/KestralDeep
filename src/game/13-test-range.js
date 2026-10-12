@@ -47,7 +47,7 @@ function genTest(){
   const put=(tx,ty,type,extra)=>items.push(Object.assign({x:tx*TS+6,y:ty*TS+6,type,ph:Math.random()*6},extra||{}));
   [['flask',1],['rounds',60],['shells',20],['nails',100],['bolts',15],['cells',20],['fuel',60],['scrap',30],['powder',15],['pipe',15],['battery',10],['cloth',10],['key',8],['medkit',30]].forEach(([t,a],i)=>put(6+i,6,t,{amt:a}));
   put(6,7,'tearnade',{amt:5});put(7,7,'nervenade',{amt:2});put(8,7,'ampoule',{amt:2});
-  ['scatter','nailer','bolt','ray'].forEach((w,i)=>put(6+i,8,'weapon',{w}));IMPLEMENTS.forEach((w,i)=>put(6+i,9,'weapon',{w}));
+  ['scatter','nailer','bolt','ray'].forEach((w,i)=>put(6+i,8,'weapon',{w}));IMPLEMENTS.forEach((w,i)=>put(6+i,9,'weapon',{w}));put(6+IMPLEMENTS.length,9,'weapon',{w:'stungun'});put(10,7,'weapon',{w:'blower'});
   for(let i=0;i<Object.keys(SKILLS).length+Object.keys(MOVES).length-1;i++)put(10+i,8,'chip');
   put(16,8,'schematic');put(17,8,'secretmap');
   Object.keys(HERBS).forEach((k,i)=>put(36+i,6,'tuft',{tuft:k,amt:4}));
