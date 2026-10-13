@@ -8,7 +8,7 @@ function varRoll(w){return w?1+w*(Math.random()+Math.random()-1):1;}
 function dmgVar(kind){return varRoll(dmgChar(kind).w);}
 function isArmoured(e){const b=ET[e.type];return !!(b&&(b.armor||b.warden||GLANCE_CFG.armouredTypes.includes(e.type)))||e.boss!=null||!!e.mini;}
 function glanceBase(){return Math.max(GLANCE_CFG.min,GLANCE_CFG.base-GLANCE_CFG.dex*subPts('dex')-GLANCE_CFG.perc*subPts('perc'));}
-function glanceChance(e){return glanceBase()+(e&&isArmoured(e)?GLANCE_CFG.armoured:0);}
+function glanceChance(e){return glanceBase()+(e&&isArmoured(e)?GLANCE_CFG.armoured:0)+(e&&e.kit&&e.kit.armor?LOADOUT_CFG.armorGlance[e.kit.armor]||0:0);}
 // one roll for a player hit on creature e: {mul, crit, glance}; mul already holds the range roll and the crit or glance factor
 function hitRoll(kind,cc,e,noGlance){const gc=noGlance?0:glanceChance(e),c=Math.min(cc||0,1-gc),u=Math.random(),crit=u<c,glance=!crit&&u>=1-gc;
   return {mul:dmgVar(kind)*(crit?2:glance?GLANCE_CFG.mul:1),crit,glance};}

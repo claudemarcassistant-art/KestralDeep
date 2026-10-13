@@ -47,7 +47,7 @@ function itemLook(it){const t=it.type;
 function inspectAt(wx,wy){const tx=Math.floor(wx/TS),ty=Math.floor(wy/TS);if(tx<0||ty<0||tx>=MW||ty>=MH)return null;const i=ty*MW+tx;
   let be=null,bd=1e9;for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-wx,e.y-wy);if(d<e.r+5&&d<bd&&visible(e.x,e.y,e.r)){bd=d;be=e;}}
   if(be){const B=BEASTINFO[be.type]||{name:be.type},st=be.friendT>0?'friendly':be.frozenT>0?'frozen':be.alert?'hunting you':'unaware';
-    return {name:B.name+'  ('+st+')',desc:(B.move?'Moves: '+B.move+'. ':'')+(B.attack?'Attacks: '+B.attack+'.':''),col:'#e07060'};}
+    return {name:B.name+'  ('+st+')'+(be.kit?'  - '+kitText(be):''),desc:(B.move?'Moves: '+B.move+'. ':'')+(B.attack?'Attacks: '+B.attack+'.':''),col:'#e07060'};}
   {const cm=secCams.find(c=>Math.hypot(c.x-wx,c.y-wy)<7)||camAtTile(tx,ty);if(cm&&seen[(cm.ty+cm.dy)*MW+cm.tx+cm.dx]&&visible(cm.x,cm.y,4))return camLook(cm);}
   if(!seen[i]||!visible(wx,wy,0))return null;
   for(const it of items)if(!it.fall&&Math.hypot(it.x-wx,it.y-wy)<7)return itemLook(it);

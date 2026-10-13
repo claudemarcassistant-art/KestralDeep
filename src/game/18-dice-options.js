@@ -27,12 +27,13 @@ function drawDiceUI(){const d=diceUI,pw=260,ph=150,px=(W-pw)>>1,py=(H-ph)>>1;
 const OPTS={pauseMenu:false};try{Object.assign(OPTS,JSON.parse(localStorage.getItem('kd_opts')||'{}'));}catch(e){}
 function saveOpts(){try{localStorage.setItem('kd_opts',JSON.stringify(OPTS));}catch(e){}}
 const paused=()=>(menuOpen&&(OPTS.pauseMenu||state!=='play'))||mapOpen||!!hackUI||!!vendUI||!!spawnUI||!!arcadeUI||!!deckUI||!!grindUI||!!choiceUI||!!diceUI;
-const spawnOpts=()=>[...BEASTS.map(t=>({kind:'spawn',t})),{kind:'loc'},{kind:'alert'},{kind:'count'},{kind:'waves'},{kind:'clear'},{kind:'heal'},{kind:'close'}];
+const spawnOpts=()=>[...BEASTS.map(t=>({kind:'spawn',t})),{kind:'loc'},{kind:'alert'},{kind:'count'},{kind:'kit'},{kind:'waves'},{kind:'clear'},{kind:'heal'},{kind:'close'}];
 function spawnChoose(i){const o=spawnOpts()[i],u=spawnUI;if(!o)return;
   if(o.kind==='close'){spawnUI=null;return;}
   if(o.kind==='loc'){u.loc=u.loc==='arena'?'near':'arena';sfx('click');return;}
   if(o.kind==='alert'){u.alert=!u.alert;sfx('click');return;}
   if(o.kind==='count'){u.count=u.count===1?3:u.count===3?5:1;sfx('click');return;}
+  if(o.kind==='kit'){u.kit=((u.kit||0)+1)%KIT_PRESETS.length;sfx('click');return;}
   if(o.kind==='clear'){let n=0;for(const e of enemies)if(e.testSpawn){e.dead=true;n++;for(let k=0;k<6;k++)parts.push({x:e.x,y:e.y,vx:rr(-40,40),vy:rr(-40,40),t:0.4,m:0.4,c:'#c9a8ff',s:1});}
     enemies=enemies.filter(e=>!e.dead);u.note='cleared '+n+' test creature'+(n===1?'':'s');sfx('craft');return;}
   if(o.kind==='waves'){waves={phase:'warn',t:3,n:3,wave:0,trigT:0,trigPct:0,chk:0,pct:0};u.note='wave event starting';spawnUI=null;return;}
@@ -44,7 +45,7 @@ function spawnChoose(i){const o=spawnOpts()[i],u=spawnUI;if(!o)return;
     if(ET[o.t].aquatic){const cx=u.loc==='near'?player.x:15*TS,cy=u.loc==='near'?player.y:40*TS,w=[];
       for(let yy=0;yy<MH;yy++)for(let xx=0;xx<MW;xx++){const i=yy*MW+xx;if(map[i]===0&&liq[i]>=3&&Math.hypot(xx*TS+6-cx,yy*TS+6-cy)<110)w.push(i);}
       if(!w.length)break;const i=w[rnd(w.length)];x=(i%MW)*TS+6;y=((i/MW)|0)*TS+6;ok=true;}
-    if(!ok)continue;const e=mkEnemy(o.t,x,y);e.alert=u.alert;e.testSpawn=true;enemies.push(e);made++;
+    if(!ok)continue;const e=mkEnemy(o.t,x,y);{const kp=KIT_PRESETS[u.kit||0][1];if(kp&&LOADOUTS[o.t])setKit(e,kp.main?kp:null);}e.alert=u.alert;e.testSpawn=true;enemies.push(e);made++;
     for(let q=0;q<10;q++)parts.push({x,y,vx:rr(-40,40),vy:rr(-40,40),t:0.4,m:0.4,c:'#c9a8ff',s:1});}
   sfx('learn');u.note=made?'released '+made+' '+BEASTINFO[o.t].name.toLowerCase()+(made>1?'s':'')+(u.loc==='near'?' near you':' in the arena'):'no room to place it there';}
 function drawSpawnUI(){
@@ -62,6 +63,7 @@ function drawSpawnUI(){
     else if(o.kind==='loc'){l='Where';r=u.loc==='arena'?'arena pen':'in front of you';}
     else if(o.kind==='alert'){l='Behavior';r=u.alert?'hunting you':'dormant';}
     else if(o.kind==='count'){l='How many';r='x'+u.count;}
+    else if(o.kind==='kit'){l='Kit (guards, husks)';r=KIT_PRESETS[u.kit||0][0];}
     else if(o.kind==='clear'){l='Clear all test creatures';}
     else if(o.kind==='heal'){l='Refill health, armor, stamina';}
     else if(o.kind==='waves'){l='Start a wave event';}

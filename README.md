@@ -32,6 +32,7 @@ src/
     npcs.js                 NPCs
     progress.js             deck grades, run stats, work orders (achievements, tiered levels), point trades, challenge modifiers
     herbs.js                herbs, herbal preparations (poultices, incense, draughts)
+    loadouts.js             armed humans' kits by enemy type and depth, combat tuning, console presets, Codex text
     scenarios.js            sector scenarios: weights, counts and score multipliers, Codex text
     security.js             security camera tuning and Codex text
     route.js                express shafts, vault junctions and archive vaults, deck secured, crawlways
@@ -83,6 +84,7 @@ src/
     40-cameras.js           security cameras: generation, panning, lock-on and alarm, damage, control panels, drawing
     41-scenarios.js         sector scenarios: the roll, scen() and the generation hooks, announcement, map header line
     42-gas.js               tear gas and nerve gas: player and creature effects, riot guard and riot drone canisters, V-look
+    44-loadouts.js          armed humans: kit rolling, kit guns (magazines, reloads), kit melee, quick items, drops, drawing, V-look text
     43-tools.js             industrial blower (air lane and its pushes) and stun gun (zaps, stun, water jolts), arcs drawing
 scripts/build.mjs  the build
 docs/specs/        change request batches

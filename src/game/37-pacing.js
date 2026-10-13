@@ -10,7 +10,7 @@ function trackTick(e,b,los,d,dt){const C=TRACK_CFG;if(!e.alert){e.wasAlert=false
 // smoke: creatures cannot see the player through, into or out of a dense smoke cloud (SMOKE_BLIND)
 function smokeBlocks(x0,y0,x1,y1,masked){const C=SMOKE_BLIND,dx=x1-x0,dy=y1-y0,L2=dx*dx+dy*dy;if(L2<C.near*C.near)return false;
   for(const c of clouds){if(c.kind==='smoke'){if(c.dens<C.dens)continue;}else if(c.kind!=='tear'||masked||c.dens<C.tearDens)continue;const t=Math.max(0,Math.min(1,((c.x-x0)*dx+(c.y-y0)*dy)/L2)),qx=x0+dx*t-c.x,qy=y0+dy*t-c.y,R=c.r*C.core;if(qx*qx+qy*qy<R*R)return true;}return false;}
-function seesPlayer(e){const p=player;return hasLOS(e.x,e.y,p.x,p.y)&&!smokeBlocks(e.x,e.y,p.x,p.y,!!ET[e.type].mask);}
+function seesPlayer(e){const p=player;return hasLOS(e.x,e.y,p.x,p.y)&&!smokeBlocks(e.x,e.y,p.x,p.y,masked(e));}
 // noise() helper: a creature's share of a noise's range (muffled through walls)
 function noiseReach(e,x,y,rad){return hasLOS(e.x,e.y,x,y)?rad:rad*TRACK_CFG.throughWall;}
 

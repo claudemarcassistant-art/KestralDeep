@@ -2,14 +2,14 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v1.03**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v1.04**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
 - **Source lives in `src/`** and is built into **one self-contained HTML file**, `dist/index.html` (about 640 KB). No dependencies, no external assets. All art is drawn procedurally on a canvas; all sound is synthesised with the Web Audio API. The only network request is the optional Silkscreen font from Google Fonts in `src/boot.js` (the game falls back to a built-in font if it fails).
   - `src/index.html` is the page template; the build fills in `{{styles}}` (`src/styles.css`), `{{boot}}` (`src/boot.js`: font loader and the red error overlay) and `{{game}}`.
   - `src/data/*.js` are the content and tuning tables (creatures, weapons, items, recipes, food, crew files, work orders, NPCs, world, events, versions). Balance changes usually only touch these.
-  - `src/game/NN-name.js` are 43 game files, split by system. `README.md` lists what each file holds.
+  - `src/game/NN-name.js` are 44 game files, split by system. `README.md` lists what each file holds.
   - `scripts/build.mjs` is the build (plain Node 20+, no npm install needed).
 - **Play or test:** `npm run dev` serves http://localhost:5173 and rebuilds on every save (refresh the page). `npm run build` writes `dist/index.html`, which can also be opened straight from disk in Chrome or Edge.
 - **Playable link:** https://claudemarcassistant-art.github.io/KestralDeep/ . Every push to `main` is built and deployed by `.github/workflows/pages.yml`; other branches and pull requests are built only, which catches syntax errors.
@@ -38,7 +38,8 @@ Current version: **v1.03**. The game was built iteratively in claude.ai chats up
 3. **Batch 1** (`docs/specs/batch-1.md`): four sessions, done one at a time; the owner playtests and says "continue" between them. All four sessions are done: 1 (deck sizes, v0.79), 2 (run seeds, v0.80), 3 (traps and trap panels, v0.81), 4 (plate doors, crates, item weight, spacebar styles, v0.82).
 4. **Batch 2** (`docs/specs/batch-2.md`): four sessions, same workflow. All four sessions are done: 1 (frozen status, cryo grenade, active reload, v0.83), 2 (herbs and herbalism, v0.84), 3 (express shafts and vault junctions, v0.85), 4 (poison gas traps, toxic vents, deck secured walk-back, ceiling crawlways, v0.86).
 5. **Batch 3** (`docs/specs/batch-3.md`): five sessions, same workflow. Session 1 (damage ranges and glancing hits, tiered work orders, v0.99), Session 2 (security cameras, v1.00), Session 3 (sector scenarios, v1.01), Session 4 (tear gas and nerve gas, v1.02) and Session 5 (industrial blower and stun gun, v1.03) are done: the batch is finished.
-6. **Balance pass** (the owner plays test runs and reports findings). First round done in v0.87: creature memory, muffled noise, fewer creatures on Large decks, arena waves (see "Pacing" below). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
+6. **Batch 4** (`docs/specs/batch-4.md`): three sessions, same workflow; design principle "what it carries is what it does". Session 1 (armed humans, v1.04) is done.
+7. **Balance pass** (the owner plays test runs and reports findings). First round done in v0.87: creature memory, muffled noise, fewer creatures on Large decks, arena waves (see "Pacing" below). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
 
 ## Working conventions
 
@@ -55,7 +56,7 @@ Current version: **v1.03**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v1.03)
+## Architecture overview (as of v1.04)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -180,6 +181,13 @@ Current version: **v1.03**. The game was built iteratively in claude.ai chats up
 - **Measured:** every gas kind pushed ~118 px in 1 s and thinned; a fire at 2 tiles went out, one at 8 stayed; barrel 84 px, crate 51, item 55 in 0.8 s; in 0.7 s wasp 63 px, drone 56, crawler 51, husk 52, brute 12; a glob at 130 px/s slowed to 17; 2 cells in 8 s; recoil 22 px/s. Stun gun: most creatures reel in 0.78-0.97 s (5.5 zaps a second), brutes 1.5-1.9 s; a wet guard at 0.45 s with the jolt reaching a second guard 28 px away in the water; a riot drone lost 2.4 a zap; 2 cells in 4 s; a camera broke and oil caught.
 - **Test range:** the blower at (10,7) and the stun gun at (13,9) in the armory, with power cells on the armory row.
 
+**Armed humans (batch 4 request 21, v1.04):** `src/game/44-loadouts.js`, data in `src/data/loadouts.js` (`LOADOUTS` per type with `chance` and depth `bands` of weighted kits, `LOADOUT_CFG`, `LOADOUT_DESC`, `KIT_PRESETS`). `mkEnemy()` ends in `rollKit()`, so every guard, riot guard and 25% of husks get a kit wherever they are made (generation, so it repeats on the seed; alarm calls, waves and the console too). `setKit(e,k)` sets `e.kit` `{main, armor, head, quick, launcher, gun}`, for guns `e.mag`/`e.reserve` (from `MAGS`; reserve 1-2 magazines), `e.dr` (gear `dr` x `drMul`, applied first thing in `damageEnemy()`), `e.spd` (x `armorSpd`), `e.mask` (gas mask). Names: the request's "wrench" is the crowbar, the riot guard's "canister launcher" is its existing tear canister lob (`launcher` is only a label).
+- **Fighting:** the guard branch calls `kitPre()` first (quick items, reload timer; true while backing off to use a medkit), uses `kitWant()` for how close to stand (melee kits and dry guns close in), and `kitMelee()`/`kitFire()` instead of its old shot. The generic path (husks) calls `kitPre()` and treats a gun kit as ranged (`rng`), firing through `kitFire()`, and a melee kit swings through `kitMelee()`. Kit attacks use their own timer `e.kcd` (the guard branch runs `e.cd` down twice a frame, which is why the old guard fired every ~0.9 s rather than 1.7). Guns: interval = weapon `cd` x `cdMul`, damage per shot = `gunDps` x `gunDpsMul` x interval / pellets, spread `spread` x `spreadMul` + `spreadAdd`, bullets `slug` (fast, so the blower ignores them) at `speed` x `speedMul`. Empty magazine: `e.reloadT` = reload x `reloadMul` with a "reloading" callout and the gun drawn lowered; no reserve: `e.dry`, then a pistol-whip (`whip`). Melee: ARM `dmg` x `dmgMul` every `cd` x `cdMul`, reach + `range` x `reachMul`. Quick items (once each): medkit below `medAt`, backs off for `medBack` s then heals `medHeal`; smoke grenade below `smokeAt` while it sees you within `smokeRange` (a `smokenade` nade with `by`); flare on a dark deck (`cond.light` dark or `powerOff`) while hunting without sight.
+- **Armour, masks:** `glanceChance()` adds `armorGlance` for kit armour; `masked(e)` (ET `mask` or `e.mask`) feeds `seesPlayer()`, the guard cone's `smokeBlocks()` and `gasEnemyTick()` (immune to tear gas, nerve gas x `maskNerve`).
+- **Drops:** `dropKit()` in the death branch of `damageEnemy()`: the weapon always (`it.mag` keeps the magazine; the weapon pickup now adds `it.mag` rounds instead of 10), armour 40%, mask 50%, an unused quick item always; the old generic supply drop is x `genericDrop` for kitted creatures.
+- **Shown:** `drawKit()` (render loop, after `drawEnemy()`; the guard's old gun line is skipped when kitted): the held weapon, darker shoulders for armour, a mask. `kitText()` in V-look. `BEASTINFO` lore for guards, riot guards and husks; a Codex Systems entry (`LOADOUT_DESC`). The creature console has a Kit row (`spawnUI.kit`, `KIT_PRESETS`) for guards, riot guards and husks.
+- **Measured:** kit mixes match the depth bands (guards: pistol, a third with a vest, at depth 1-4; SMG/medkit/flare from 5; SMG or nailer with medkits or smoke from 9; riot guards crowbar then mostly SMG; husks 25%, chainsaw only from 9) and repeat on the seed. Damage per second on a standing player 90 px away over 30 s (infinite reserve): old guard 4.8, sidearm 4.2, SMG 4.2, nailer 4.8. Husks: bare 12.3 (11 a hit), crowbar 12.3 (12.3 a hit), box cutter 15.1 (8.4 a hit). A vest took 10 damage to 9.3. Drops over 1000: mask 52%, vest 38%, weapon and unused medkit always. Creature counts per deck unchanged.
+
 **Crew files view:** the tier details on the right are clipped and scroll (`flScroll`; the wheel scrolls them when the pointer is right of `flDetX`, otherwise it moves the selection). `flAuto` keeps the next tier in view until the wheel moves it, and resets when another file is selected.
 
 **Hacking (v0.97):** numbers in `HACK_CFG` (`src/data/hacking.js`). `startHack()` sets `need` from `hackRounds()`: `win.length` (4) rounds, minus one for each `cut` threshold the hack stat reaches (0.4, 0.8; at least `minRounds` 2). `newHackWindow()` takes the round's window from `win[]` (42, 34, 27, 22 px on a 200 px bar) times (1 + hack), and the cursor speed `speed + round x step x (1 - min(stepCutMax, hack x stepCut))`, times (1 - hack x `slow`). Vault panels still multiply the window by `VAULT_CFG.hackMul`. Measured time inside the window per round: no skill 323/189/117/79 ms (was 354/195/108 over 3 rounds); hack 0.4 (a splicer kit) 514/322/209 ms over 3; hack 0.8, 2 rounds of 765/516 ms. The hack stat comes from the splicer kit (0.4), Surveyor tier 1 (0.25) and Memory (0.05 a point). Stats shows `Hack window` with the round count.
@@ -211,6 +219,7 @@ Current version: **v1.03**. The game was built iteratively in claude.ai chats up
 | `hacking.js` | `HACK_CFG` |
 | `security.js` | `CAM_CFG`, `CAM_DESC` |
 | `scenarios.js` | `SCENARIOS`, `SCEN_IDS`, `SCEN_DESC` |
+| `loadouts.js` | `LOADOUTS`, `LOADOUT_CFG`, `LOADOUT_DESC`, `KIT_PRESETS` |
 | `inspect.js` | `FIX_DESC`, `TILE_DESC` |
 | `status.js` | `FREEZE_CFG`, `ACTIVE_RELOAD`, `SMOKE_BLIND`, `STUN_CFG`, `GLANCE_CFG`, `GAS_CFG`, `GAS_DESC` |
 | `traps.js` | `TRAP_TYPES`, `TRAP_WEIGHTS`, `TRAP_CFG`, `TRAP_PANEL_DESC`, `PLATE_DOOR_CFG`, `CRATE_CFG`, `ITEM_WEIGHT`, `PLATE_DOOR_DESC`, `GAS_TRAP_BIAS`, `TOXIC_VENT_CFG` |
@@ -255,6 +264,7 @@ Current version: **v1.03**. The game was built iteratively in claude.ai chats up
 | sector scenarios: `rollScenario()`, `scenId()`, `scen()`, `scenW()`, `scenTypes()`, `scenTextEv()`, `scenGuardDeck()`, `scenLightLoot()`, `scenFreeze()`, `scenBreaker()`, `scenBreakerOff()`, `announceScenario()`, `scenLine()` | `41-scenarios.js` |
 | tear gas and nerve gas: `cloudK()`, `gasAt()`, `gasPlayerTick()`, `gasEnemyTick()`, `gasJitter()`, `gasLand()`, `lobCanister()`, `riotGuardTick()`, `riotDroneTick()`, `gasLook()`, `irrAimMul()`, `irrStamMul()` | `42-gas.js` |
 | industrial blower and stun gun: `updateBlower()`, `blowK()`, `blowMass()`, `stunZap()`, `addStunB()`, `wetCreature()`, `updateZaps()`, `drawZaps()` | `43-tools.js` |
+| armed humans: `rollKit()`, `setKit()`, `kitTick()`, `kitFire()`, `kitMelee()`, `kitMeleeStats()`, `kitWant()`, `kitPre()`, `dropKit()`, `kitText()`, `drawKit()`, `masked()` | `44-loadouts.js` |
 | reloads: `startReload()`, `updateReload()`, `finishReload()`, `activeReloadPress()` | `22-actions.js` |
 
 To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "const NAME=" src/data/*.js`.
@@ -281,7 +291,8 @@ To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "con
 - Several arcade cabinets in one place take their games from `arcPicks(n)` (distinct games), not independent random picks.
 - Any new chest needs a loot seed `ls:(Math.random()*4294967296)>>>0` where it is created (inside generation), or its contents will not repeat on the same seed. `addChest()` does this for you.
 - When checking that generation repeats, take the fingerprint in the same instant the deck is built: the game loop keeps running between test steps, and creatures move and fires spread.
-- `30-traps.js` to `43-tools.js` load after `29-loop.js`. `42-gas.js` adds `CLOUD.tear` and `CLOUD.nerve` at load. `35-vaults.js` and `40-cameras.js` also add `HACKR.vault` / `HACKR.cams` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
+- `30-traps.js` to `44-loadouts.js` load after `29-loop.js`. `42-gas.js` adds `CLOUD.tear` and `CLOUD.nerve` at load. `35-vaults.js` and `40-cameras.js` also add `HACKR.vault` / `HACKR.cams` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
+- `mkEnemy()` rolls a kit (`rollKit()`), which draws random numbers for guards, riot guards and husks; code that needs a bare creature calls `setKit(e,null)` afterwards. Kit attack timing lives in `e.kcd`, not `e.cd`.
 - `powerOff` is per deck: `enterNode()` resets it for real decks, and since v1.01 `launchTestDeck0()`, `returnToTest()` and `newTest()` do too (before, a breaker thrown on one test deck left the next one dark).
 - A generation tweak for a scenario should only draw a random number when the scenario sets that field (`if(S.x&&Math.random()<S.x)`), so Normal decks keep generating exactly as before.
 - `newTest()`, `newGame()` and `loadRun()` replace the `player` object (`initPlayer()`), so tests must re-read `player` after calling them.

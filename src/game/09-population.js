@@ -1,6 +1,6 @@
 // ---------- population ----------
 function mkEnemy(type,x,y){const b=ET[type],m=1+(depth-1)*0.12;
-  return {seg:b.snake?Array.from({length:8},(_,i)=>({x:x-i*3,y:y+Math.sin(i*0.9)*2})):null,type,x,y,r:b.r,hp:b.hp*m,spd:b.spd*(1+(depth-1)*0.04),alert:false,cd:rr(0,1),flash:0,wx:0,wy:0,wt:0,vx:0,vy:0,ph:Math.random()*6,sd:Math.random()<.5?1:-1,dead:false};}
+  return rollKit({seg:b.snake?Array.from({length:8},(_,i)=>({x:x-i*3,y:y+Math.sin(i*0.9)*2})):null,type,x,y,r:b.r,hp:b.hp*m,spd:b.spd*(1+(depth-1)*0.04),alert:false,cd:rr(0,1),flash:0,wx:0,wy:0,wt:0,vx:0,vy:0,ph:Math.random()*6,sd:Math.random()<.5?1:-1,dead:false});}
 function freeTile(r){for(let t=0;t<30;t++){const tx=r.x+rnd(r.w),ty=r.y+rnd(r.h);
   if(map[ty*MW+tx]===0&&!chasm[ty*MW+tx]&&!(tx===exitT.x&&ty===exitT.y)&&!chests.some(c=>c.tx===tx&&c.ty===ty))return {tx,ty};}return null;}
 function spotIn(r){const t=freeTile(r);return t?{x:t.tx*TS+TS/2+rr(-2,2),y:t.ty*TS+TS/2+rr(-2,2)}:null;}

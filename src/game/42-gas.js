@@ -31,10 +31,10 @@ function gasPlayerTick(dt,tk,nk){const p=player,s=p.st,G=GAS_CFG,m=gasMul();if(!
 // enemy loop, right after enemyFrozen(): nerve damage and seizing for all but drones and ghosts; unmasked creatures
 // (not plants) back out of tear gas instead of acting. Returns true when the creature's AI is skipped this frame.
 function gasEnemyTick(e,b,dt){if(e.tearT>0)e.tearT-=dt;if(!gasN||e.dead||b.dummy||b.drone||b.ghost||e.caged)return false;const G=GAS_CFG,g=gasAt(e.x,e.y);
-  if(g.n>0){const mul=b.plant||b.slug||b.snail?G.nerve.killMul:1;e.nerveAcc=(e.nerveAcc||0)+G.nerve.dps*g.n*mul*dt;while(e.nerveAcc>=1&&!e.dead){e.nerveAcc-=1;damageEnemy(e,1,0,0,0,true);}if(e.dead)return true;
+  if(g.n>0){const mul=(b.plant||b.slug||b.snail?G.nerve.killMul:1)*(masked(e)?LOADOUT_CFG.maskNerve:1);e.nerveAcc=(e.nerveAcc||0)+G.nerve.dps*g.n*mul*dt;while(e.nerveAcc>=1&&!e.dead){e.nerveAcc-=1;damageEnemy(e,1,0,0,0,true);}if(e.dead)return true;
     if(!b.plant){e.szr=(e.szr||0)+G.nerve.szr*g.n*dt;if(e.szr>=100){e.szr=0;e.stun=Math.max(e.stun||0,G.nerve.stun);if(seen[tileIdx(e)])float(e.x,e.y-8,'seizing','#c89ae8');}}}
   else if(e.szr>0)e.szr=Math.max(0,e.szr-G.nerve.szrDecay*dt);
-  if(g.t>0.05&&!b.plant&&!b.mask&&!(e.stun>0)){e.tearT=G.tear.linger;const c=g.tc,dx=e.x-c.x,dy=e.y-c.y,l=Math.hypot(dx,dy)||1,sp=(b.spd||20)*G.tear.flee;
+  if(g.t>0.05&&!b.plant&&!masked(e)&&!(e.stun>0)){e.tearT=G.tear.linger;const c=g.tc,dx=e.x-c.x,dy=e.y-c.y,l=Math.hypot(dx,dy)||1,sp=(b.spd||20)*G.tear.flee;
     move(e,(dx/l*sp+e.vx)*dt,(dy/l*sp+e.vy)*dt);const f=Math.pow(kbFr(),dt);e.vx*=f;e.vy*=f;e.walk=(e.walk||0)+dt*6;if(Math.random()<dt*0.8&&seen[tileIdx(e)])float(e.x,e.y-8,'cough','#e8e4be');return true;}
   return false;}
 // creature shots fired while tear gas stings go wide (once per bullet)
