@@ -13,7 +13,7 @@ function walker(e){const b=ET[e.type];return !e.dead&&!b.fly&&!b.ghost&&!b.plant
 // Dropped items weigh ITEM_WEIGHT (1, gear and weapons 2) and crates CRATE_CFG.weight (3).
 function weightAt(tx,ty){const i=ty*MW+tx,p=player;let w=0;
   if(p&&!p.floating&&tileIdx(p)===i)w+=3;
-  for(const e of enemies)if(walker(e)&&tileIdx(e)===i)w+=3;
+  for(const e of enemies)if(walker(e)&&tileIdx(e)===i)w+=hasTr(e,'hulking')?TRAITS.hulking.weight:3;
   for(const it of items)if(!it.dead&&!(it.fall>0)&&tileIdx(it)===i)w+=itemWeight(it);
   for(const b of barrels)if(b.crate&&!b.dead&&b.tx===tx&&b.ty===ty)w+=CRATE_CFG.weight;
   return w;}

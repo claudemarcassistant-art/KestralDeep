@@ -23,7 +23,7 @@ src/
   data/           content and tuning tables (loaded first)
     character.js            crew files, substats, cores, skills, movement skills, psychic actions, sling, injuries, spacebar styles
     crafting.js             Workbench recipes and upgrades, grinder salvage yields
-    creatures.js            creature stats, bestiary order and text, kill points, threat costs, bosses, hunting memory, arena waves
+    creatures.js            creature stats, bestiary order and text, kill points, threat costs, bosses, hunting memory, arena waves, traits
     events.js               between-deck events, transit stop text
     food.js                 food, raw ingredients, cooking
     hacking.js              hack panel rounds, windows and cursor speed
@@ -84,6 +84,7 @@ src/
     40-cameras.js           security cameras: generation, panning, lock-on and alarm, damage, control panels, drawing
     41-scenarios.js         sector scenarios: the roll, scen() and the generation hooks, announcement, map header line
     42-gas.js               tear gas and nerve gas: player and creature effects, riot guard and riot drone canisters, V-look
+    45-traits.js            creature traits: rolling, effects hooks, volatile bursts, marks, bestiary memory, console presets
     44-loadouts.js          armed humans: kit rolling, kit guns (magazines, reloads), kit melee, quick items, drops, drawing, V-look text
     43-tools.js             industrial blower (air lane and its pushes) and stun gun (zaps, stun, water jolts), arcs drawing
 scripts/build.mjs  the build

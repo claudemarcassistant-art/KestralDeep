@@ -10,6 +10,7 @@ const LVLSTAT=['kills','hacks','items','chests','rare','doors','secrets','dmg'];
 // level pays pts x level. player.ach[id] and META.ach[id] hold the level reached (true in older saves means level I).
 const WO_ROMAN=['I','II','III','IV'];
 const ACH=[
+  {id:'specimen',name:'Specimen collector',desc:'See every creature trait at least once (kept across runs).',pts:3,test:()=>traitsSeenAll()},
   {id:'blood',name:'First blood',desc:'Take out a creature.',pts:1,test:()=>runStat('kills')>=1},
   {id:'exterm',name:'Exterminator',desc:'Take out creatures in one run.',pts:3,lv:[50,100,200,400],cnt:()=>runStat('kills')},
   {id:'deep',name:'Deep diver',desc:'Reach a deep enough deck.',pts:3,lv:[6,10,14,18],cnt:()=>testMode?0:depth},

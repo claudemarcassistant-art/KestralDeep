@@ -19,6 +19,7 @@
 //   loot: pickItem() weights added; locker: locker loot weights added; herbs: herb count x; herbW: herb weights x.
 //   flood: water added to station decks (genLiquid level). darkRooms: chance of dark rooms (normal 0.45).
 //   breaker: chance a deck gets a breaker panel; breakerOff: chance that breaker starts thrown (deck dark).
+//   traitW: creature trait weights x (TRAITS); traitWGuard: the same, for guards and riot guards only.
 //   coldVent/coldRiser: chance a steam vent / riser blows cold (normal 0.2 / 0.25); freeze: chance per deck that
 //   some standing water is frozen over.
 const SCENARIOS={
@@ -29,12 +30,12 @@ const SCENARIOS={
     obj:{defend:1.4},types:{drone:2.5,guard:1.5,riotguard:4,riotdrone:4},typesAdd:{guard:0.45},addFrom:2,threat:1.05,guardFrom:2,guardDeck:0.9,guardCap:1,
     npcs:{locksmith:4,detective:4,scrapper:0.25,quarter:0.5},npcChance:1.3,rooms:{merchant:0.3},
     alert:1.15,alarmExtra:1,cams:{minDepth:2,count:[1,2]},trips:{chance:0.85,mul:2},
-    locker:{rounds:2.5,shells:1.2,key:2,ampoule:0.4},mini:0.65,vaultGuard:0.35},
+    locker:{rounds:2.5,shells:1.2,key:2,ampoule:0.4},traitWGuard:{armoured:2.5,keen:2.5},mini:0.65,vaultGuard:0.35},
   outbreak:{name:'Lab outbreak',weight:13,score:1.2,col:'#8ac04a',
     desc:'Something got out of the labs. Overgrowth and toxic spills spread across the decks, with more plants, bloom wasps, duct spiders, slugs and bog frogs. Laboratories, greenhouses and medbays turn up more, and so do poison gas traps and toxic vents. Herbs grow thick. Subject Nine and the KR-7 android are seen more often, and the lifts pass quarantine checkpoints.',
     haz:{overgrowth:6,toxic:4,fire:0.6,molten:0.6},types:{wasp:0.8,spider:1.8,slug:1.8,toxslug:2,frog:1.8,husk:0.6,crawler:0.7},
     mods:{lab:4,greenhouse:4,medbay:3},modCount:0.25,npcs:{subject:5,android:5},trapW:{gas:3},toxicVent:3,
-    herbs:1.6,locker:{tuft:1.5},events:{quarantine:3}},
+    herbs:1.6,locker:{tuft:1.5},events:{quarantine:3},traitW:{volatile:2.5,venomous:2.5}},
   flooded:{name:'Flooded section',weight:13,score:1.15,col:'#4aa8c8',
     desc:'A main has burst somewhere above. Flooded decks and standing water are far more common, and with them bog frogs, lurkers, graspers and brine snakes. Washrooms and bathhouses turn up more. Low gravity is rarer.',
     junc:{flooded:3.5},haz:{electrical:1.3,fire:0.5},types:{frog:2,snake:2,arcsnake:1.5,husk:0.8},flood:0.18,
@@ -45,7 +46,7 @@ const SCENARIOS={
     darkRooms:0.9,breaker:0.8,breakerOff:0.75,loot:{flare:1.5},lightLoot:0.35},
   coldsnap:{name:'Cold snap',weight:13,score:1.15,col:'#a8d0f0',
     desc:'The coolant loops have failed open. Cold vents and cold risers are everywhere, standing water freezes over, and the Frozen status comes up far more. The lift rides turn frosty. Emberleaf grows where the heat leaks.',
-    haz:{steam:3,fire:0.5,molten:0.5},coldVent:0.75,coldRiser:0.75,freeze:0.6,herbW:{emberleaf:3},herbs:1.2,events:{frost:3,thaw:3}}
+    haz:{steam:3,fire:0.5,molten:0.5},coldVent:0.75,coldRiser:0.75,freeze:0.6,herbW:{emberleaf:3},herbs:1.2,events:{frost:3,thaw:3},traitW:{volatile:2}}
 };
 // the roll order (sector 1 on): every scenario including normal
 const SCEN_IDS=Object.keys(SCENARIOS);

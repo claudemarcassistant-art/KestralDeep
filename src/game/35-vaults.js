@@ -52,7 +52,7 @@ function fillArchive(){const A=archive;if(!A)return;const r=A.room,C=VAULT_CFG;p
   if(vaultDanger('guarded')){const ox=A.tx+A.dir[0]*2,oy=A.ty+A.dir[1]*2,ok=!solid(ox,oy),x=(ok?ox:A.tx+A.dir[0])*TS+6,y=(ok?oy:A.ty+A.dir[1])*TS+6;
     const bi=(biomeOverride!=null?biomeOverride:(depth-1))%6,e=mkEnemy('warden',x,y);e.boss=bi;e.hp=e.mhp=36+depth*4;e.mini=true;e.vaultGuard=true;enemies.push(e);A.guard=e;}}
 // an elite garrison always has at least one heavy creature (populate())
-function eliteHeavy(){if(!vaultDanger('elite'))return;const H=VAULT_CFG.heavy;if(enemies.some(e=>H.includes(e.type)))return;const r=randomRoom(),p=r&&spotIn(r);if(p)enemies.push(mkEnemy(H[rnd(H.length)],p.x,p.y));}
+function eliteHeavy(){if(!vaultDanger('elite'))return;for(const e of enemies)if(!e.tr&&traitOK(e))rollTraits(e,true);const H=VAULT_CFG.heavy;if(enemies.some(e=>H.includes(e.type)))return;const r=randomRoom(),p=r&&spotIn(r);if(p)enemies.push(mkEnemy(H[rnd(H.length)],p.x,p.y));}
 function guardAlive(){return archive&&archive.guard&&!archive.guard.dead;}
 // R on the lock panel: dead while the guardian lives
 function vaultPanelBlocked(pn){if(pn.reward!=='vault')return false;if(guardAlive()){say('the lock panel is dead. whatever guards this vault keeps it that way');sfx('deny');return true;}return false;}

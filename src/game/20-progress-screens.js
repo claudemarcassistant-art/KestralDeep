@@ -113,7 +113,7 @@ function drawBestiary(x,y,w,h){
   if(!known){txt('Unknown',tx,by+2,'#6f7a6a');wrap('Nothing logged yet. Get it in your light to add it here.',tx,by+14,tw,9,'#4f5a55');return;}
   const I=Object.assign({move:'unknown',attack:'unknown'},BEASTINFO[b]),E=ET[b];
   txt(I.name,tx,by+2,AMBER);txt('first seen at depth '+bestiary.seen[b],tx,by+13,'#6f7a6a');
-  const rows=[['Health',Math.round(E.hp*(1+(depth-1)*0.12)*10)/10+' (now)'],['Movement',I.move],['Attack',I.attack+(E.dmg?', '+E.dmg+' dmg':'')],['Points',KILLPTS[b]],['Killed',bestiary.kills[b]||0]];
+  const rows=[['Health',Math.round(E.hp*(1+(depth-1)*0.12)*10)/10+' (now)'],['Movement',I.move],['Attack',I.attack+(E.dmg?', '+E.dmg+' dmg':'')],['Points',KILLPTS[b]],['Killed',bestiary.kills[b]||0]];{const ts=Object.keys((META.traitsSeen||{})[b]||{});if(ts.length)rows.push(['Traits seen',ts.map(k=>TRAITS[k].name).join(', ')]);}
   let yy=by+26;ctx.font='8px '+FONT;for(const [k,v] of rows){const vs=''+v,lw2=ctx.measureText(k).width+8;txt(k,tx,yy,'#8e978b');if(ctx.measureText(vs).width<=tw-lw2){txt(vs,tx+tw,yy,'#c9cfc2','right');yy+=9;}else{yy=wrap(vs,tx+8,yy+9,tw-8,9,'#c9cfc2')+1;}}
   {const ly=Math.max(by+70,yy+4),lines=Math.floor((y+h-6-ly)/9);ctx.save();ctx.beginPath();ctx.rect(dx-2,ly-2,dw+4,y+h-4-ly);ctx.clip();wrap(I.lore,dx,ly,dw,9,'#b9c0b3');ctx.restore();}
 }

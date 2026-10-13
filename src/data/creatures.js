@@ -1,7 +1,7 @@
 // Creatures: stats, bestiary order and text, score values, threat costs, bosses.
 const ET={
   husk:{hp:4,spd:34,r:4.5,dmg:12,col:'#7f8f68',atk:0.9},
-  crawler:{hp:2,spd:74,r:3,dmg:6,col:'#b0714c',atk:0.6},
+  crawler:{hp:2,spd:74,r:3,dmg:6,col:'#b0714c',atk:0.6,simple:true},
   spitter:{hp:5,spd:28,r:4.5,dmg:10,col:'#6c86ad',atk:1.9,ranged:true,swim:1},
   snake:{hp:3,spd:86,r:2.6,dmg:7,col:'#4a9a8a',stripe:'#2a5e54',atk:0.7,snake:true,swim:1.3,land:0.85},
   arcsnake:{hp:4,spd:80,r:2.8,dmg:6,col:'#5a7ad0',stripe:'#c8b040',atk:0.8,snake:true,swim:1.3,land:0.85,pulse:true},
@@ -11,20 +11,20 @@ const ET={
   spider:{hp:6,spd:18,r:5,dmg:1,col:'#3a3640',atk:1.9,spider:true},
   guard:{hp:18,spd:17,r:5,dmg:5,col:'#34445e',atk:1.7,guard:true},
   riotguard:{hp:24,spd:17,r:5.2,dmg:5,col:'#262e3c',atk:1.7,guard:true,riot:true,mask:true},
-  wasp:{hp:2.5,spd:48,r:3,dmg:3,col:'#d8b030',atk:2.2,wasp:true,fly:true},
-  drone:{hp:2,spd:62,r:3,dmg:0,col:'#7a868a',atk:1,drone:true,fly:true},
-  riotdrone:{hp:4,spd:52,r:3.6,dmg:0,col:'#565e64',atk:1,drone:true,fly:true,riot:true,mask:true},
+  wasp:{hp:2.5,spd:48,r:3,dmg:3,col:'#d8b030',atk:2.2,wasp:true,fly:true,simple:true},
+  drone:{hp:2,spd:62,r:3,dmg:0,col:'#7a868a',atk:1,drone:true,fly:true,simple:true},
+  riotdrone:{hp:4,spd:52,r:3.6,dmg:0,col:'#565e64',atk:1,drone:true,fly:true,riot:true,mask:true,simple:true},
   grasper:{hp:12,spd:40,r:6,dmg:10,col:'#7a4a8a',atk:1.1,aquatic:true,swim:1,grasper:true},
-  ghost:{hp:6,spd:30,r:4,dmg:3,col:'#d8e8f0',atk:1,ghost:true,fly:true},
-  snare:{hp:10,spd:0,r:5,dmg:6,col:'#4a7a2a',atk:1,grasper:true,plant:true,biteP:10},
-  pod:{hp:8,spd:0,r:5,dmg:3,col:'#8a4a9a',atk:2.6,plant:true,pod:true},
-  trip:{hp:10,spd:0,r:5,dmg:2,col:'#3a6a22',atk:1,plant:true,trip:true},
+  ghost:{hp:6,spd:30,r:4,dmg:3,col:'#d8e8f0',atk:1,ghost:true,fly:true,simple:true},
+  snare:{hp:10,spd:0,r:5,dmg:6,col:'#4a7a2a',atk:1,grasper:true,plant:true,biteP:10,simple:true},
+  pod:{hp:8,spd:0,r:5,dmg:3,col:'#8a4a9a',atk:2.6,plant:true,pod:true,simple:true},
+  trip:{hp:10,spd:0,r:5,dmg:2,col:'#3a6a22',atk:1,plant:true,trip:true,simple:true},
   lurker:{hp:8,spd:70,r:5,dmg:12,col:'#2a5a6a',atk:1.2,aquatic:true,swim:1},
   slug:{hp:7,spd:18,r:5,dmg:8,col:'#a8b050',atk:1.1,trail:1,slug:true},
   toxslug:{hp:7,spd:18,r:5,dmg:7,col:'#78b030',atk:1.1,trail:2,slug:true,biteP:20},
   snail:{hp:10,spd:12,r:5,dmg:10,col:'#9a8a6a',atk:1.2,trail:1,snail:true,armor:0.4},
   brute:{hp:18,spd:24,r:7,dmg:26,col:'#9a4d5f',atk:1.3},
-  dummy:{hp:1e9,spd:0,r:5,dmg:0,col:'#a89a70',atk:99,dummy:true}
+  dummy:{hp:1e9,spd:0,r:5,dmg:0,col:'#a89a70',atk:99,dummy:true,simple:true}
 };
 const BOSSES=[{name:'Intake Maw',col:'#8a6a3a',move:'charge'},{name:'Pressure Hulk',col:'#5a6a8a',move:'slam'},{name:'The Sorter',col:'#8a7a3a',move:'throw'},{name:'Frost Matron',col:'#8ab0c8',move:'breath'},{name:'Brine Octopus',col:'#8a4a6a',move:'grab'},{name:'Arc Lord',col:'#6a8ac8',move:'pulse'}];
 const KILLPTS={wasp:25,warden:600,guard:120,riotguard:160,riotdrone:80,pod:60,trip:70,spider:70,frog:70,husk:50,crawler:40,spitter:70,brute:150,snake:60,arcsnake:90,charger:120,drone:50,slug:60,toxslug:70,snail:90,lurker:110,grasper:130,ghost:100,snare:80,dummy:0};
@@ -78,3 +78,26 @@ const GHOST_CFG={
   lungeR:62,windup:0.35,lungeSpd:210,lungeT:0.45,cd:3.2, // lunge range, wind-up, speed, duration, cooldown
   driftT:2.6,driftSpd:42,driftDecay:0.55, // after a lunge: seconds coasting on, starting speed, speed kept per second
   fleeSpd:110,fleeAccel:3};
+// Creature traits (v1.05, batch 4 request 22). Code: src/game/45-traits.js. A trait is like a player perk on a beast,
+// with a visible mark. Never on ET simple creatures, wardens, bosses or mini-bosses; armed humans only roll human ones.
+// w: base weight (frenzied about half the others, owner's decision). Numbers each trait uses are on its entry.
+const TRAITS={
+  armoured:{name:'armoured',w:1,dmg:0.8,glance:0.08,kb:0.7,human:true,desc:'Takes 20% less damage, glances your hits more often (+8%) and barely moves when struck. Dull plates on its back.'},
+  frenzied:{name:'frenzied',w:0.5,atk:1.4,spd:1.15,hunt:20,human:true,desc:'Attacks 40% faster and moves 15% faster, and keeps hunting you for 20 seconds after losing sight of you instead of 8. Red tint and a twitching outline.'},
+  regenerating:{name:'regenerating',w:1,hps:0.5,after:3,desc:'Heals 0.5 health a second once it has gone 3 seconds without being hit. Burning stops it. A faint green pulse.'},
+  volatile:{name:'volatile',w:1,cloud:22,t:1.2,desc:'Bursts into a small cloud when it dies: poison on most decks, freezing cryo on cold decks, smoke on hot ones. Swollen, glowing sacs.'},
+  hulking:{name:'hulking',w:1,size:1.2,hp:1.5,spd:0.85,weight:6,desc:'20% larger, 50% more health and 15% slower; heavy enough to set off a trap plate on its own twice over. Drawn bigger.'},
+  venomous:{name:'venomous',w:1,psn:22,desc:'Its hits poison you. Green dripping at the mouth.'},
+  keen:{name:'keen',w:1,sight:1.3,smoke:0.5,hear:1.3,human:true,desc:'Spots you from 30% further, sees through thin smoke (half its blinding effect) and hears noise from 30% further. Bright eyes.'}
+};
+// chance of one trait: none before minDepth, then base rising by perDepth to max; second: chance of a second, different
+// trait from sector secondFrom (1-based, as shown on the sector map). threat: each trait adds this share to the
+// creature's THREAT cost (so traited decks hold fewer creatures) and to its kill points. typeW: weights by creature type
+// (x the trait's base weight; 0 rules a pair out). volatileHot: deck hazards where the burst is smoke.
+const TRAIT_CFG={minDepth:3,base:0.10,perDepth:0.0286,max:0.30,secondFrom:3,second:0.2,threat:0.4,
+  typeW:{snail:{armoured:3,hulking:3},brute:{armoured:3,hulking:3,frenzied:1.5},charger:{armoured:2,hulking:2},
+    slug:{venomous:3,volatile:3,keen:0},toxslug:{venomous:3,volatile:3,keen:0},spider:{keen:3,venomous:2,hulking:0.5},
+    frog:{venomous:2,keen:1.5},snake:{venomous:3,armoured:0.5},arcsnake:{venomous:1.5,armoured:0.5},spitter:{volatile:2,keen:1.5},
+    lurker:{hulking:2,regenerating:2},grasper:{hulking:2,regenerating:2,keen:0}},
+  volatileHot:['fire','molten','volatile']};
+const TRAIT_DESC='Beasts from the third deck down can carry traits, like your perks: armoured, frenzied, regenerating, volatile, hulking, venomous or keen. Each shows a mark on the creature and V-look names it. About 10% have one at depth 3, rising to about 30% by depth 10; from the third sector a traited creature can have a second. Traits make a creature cost more of the deck\'s threat budget, so decks with traited creatures hold fewer of them, and they are worth more points. Crawlers, wasps, drones, plants, ghosts and the dummy never get traits, and nor do hunters or wardens; armed humans can only be armoured, frenzied or keen. The bestiary keeps the traits you have seen on each creature.';

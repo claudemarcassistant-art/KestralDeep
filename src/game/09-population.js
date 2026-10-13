@@ -1,6 +1,6 @@
 // ---------- population ----------
 function mkEnemy(type,x,y){const b=ET[type],m=1+(depth-1)*0.12;
-  return rollKit({seg:b.snake?Array.from({length:8},(_,i)=>({x:x-i*3,y:y+Math.sin(i*0.9)*2})):null,type,x,y,r:b.r,hp:b.hp*m,spd:b.spd*(1+(depth-1)*0.04),alert:false,cd:rr(0,1),flash:0,wx:0,wy:0,wt:0,vx:0,vy:0,ph:Math.random()*6,sd:Math.random()<.5?1:-1,dead:false});}
+  return rollTraits(rollKit({seg:b.snake?Array.from({length:8},(_,i)=>({x:x-i*3,y:y+Math.sin(i*0.9)*2})):null,type,x,y,r:b.r,hp:b.hp*m,spd:b.spd*(1+(depth-1)*0.04),alert:false,cd:rr(0,1),flash:0,wx:0,wy:0,wt:0,vx:0,vy:0,ph:Math.random()*6,sd:Math.random()<.5?1:-1,dead:false}));}
 function freeTile(r){for(let t=0;t<30;t++){const tx=r.x+rnd(r.w),ty=r.y+rnd(r.h);
   if(map[ty*MW+tx]===0&&!chasm[ty*MW+tx]&&!(tx===exitT.x&&ty===exitT.y)&&!chests.some(c=>c.tx===tx&&c.ty===ty))return {tx,ty};}return null;}
 function spotIn(r){const t=freeTile(r);return t?{x:t.tx*TS+TS/2+rr(-2,2),y:t.ty*TS+TS/2+rr(-2,2)}:null;}
@@ -27,7 +27,7 @@ function populate(startR,exitR){
   {const S=scen();let budget=(4+depth*1.6)*AREA*Math.min(1.1,S.threat||1)*(runMods.swarm?1.33:1)*(levelMods.enemyMul||1)*(vaultDanger('elite')?VAULT_CFG.eliteMul:1)*(THREAT_SIZE_MUL[deckSize]||1)*rr(0.9,1.1);const caps={brute:depth<3?0:1+Math.floor((depth-3)/3),guard:depth<(S.guardFrom||4)?0:1+Math.floor(Math.max(0,depth-4)/3)+(S.guardCap||0),riotguard:depth<6?0:1+Math.floor((depth-6)/3)+(S.guardCap||0),charger:1+Math.floor(depth/4),grasper:1+Math.floor(depth/4)},cnt={};
     const pool=rooms.filter(r=>r!==startR);const wts=pool.map(r=>Math.max(1,r.w*r.h/12)+(r===exitR?2:0));let guard=0;
     while(budget>0.5&&pool.length&&guard++<200*AREA){let t=pickType();if(caps[t]!=null&&(cnt[t]||0)>=caps[t])t=depth>=3&&Math.random()<0.5?'crawler':'husk';const c=THREAT[t]||1.5;if(c>budget+0.5)t='husk';
-      let x=Math.random()*wts.reduce((a,b)=>a+b,0),ri=0;while(x>wts[ri]&&ri<wts.length-1){x-=wts[ri];ri++;}const p=spotIn(pool[ri]);if(!p)continue;enemies.push(mkEnemy(t,p.x,p.y));cnt[t]=(cnt[t]||0)+1;budget-=THREAT[t]||1.5;
+      let x=Math.random()*wts.reduce((a,b)=>a+b,0),ri=0;while(x>wts[ri]&&ri<wts.length-1){x-=wts[ri];ri++;}const p=spotIn(pool[ri]);if(!p)continue;const ne=mkEnemy(t,p.x,p.y);enemies.push(ne);cnt[t]=(cnt[t]||0)+1;budget-=threatOf(ne);
       if(t==='wasp'&&Math.random()<0.6){const extra=1+rnd(3);for(let k=0;k<extra;k++){enemies.push(mkEnemy('wasp',p.x+rr(-10,10),p.y+rr(-10,10)));budget-=THREAT.wasp;}}}scenGuardDeck(startR);}
   for(const r of rooms){if(r===startR)continue;
     const ni=rnd(3);
