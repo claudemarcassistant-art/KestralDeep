@@ -1,7 +1,7 @@
 // ---------- herbs and herbalism ----------
 // Herb tufts are items {type:'tuft',tuft:id} picked up into player.herbs. Preparations (HERBAL in src/data/herbs.js)
-// are made in the Food tab's Herbalism view (fdMode 2). Poultices and incense are quick items (QUICK entries added
-// below, counts in player.inv); draughts are FOOD entries eaten from the Pouch, giving timed buffs (player.tbuffs,
+// are made in Craft's Herbalism view (fdMode 2). Poultices and incense are quick items (QUICK entries added
+// below, counts in player.inv); draughts are FOOD entries eaten from Craft > Food, giving timed buffs (player.tbuffs,
 // added to stats in refreshStats()). Heal-over-time is player.hots. Burning incense sticks are in `incense`.
 Object.assign(FOOD,DRAUGHTS);
 for(const h of HERBAL)if(h.kind!=='draught')QUICK[h.id]={name:h.name,desc:h.desc,n:()=>player.inv[h.id]||0,use:()=>usePrep(h.id)};

@@ -1,5 +1,5 @@
-// Herbs and herbalism: wild herbs (stored in player.herbs, shown in the Food tab) and the preparations made from them
-// in the Food tab's Herbalism view. Poultices and incense are quick items (player.inv); draughts are drunk like food
+// Herbs and herbalism: wild herbs (stored in player.herbs, shown in Craft > Food) and the preparations made from them
+// in Craft's Herbalism view. Poultices and incense are quick items (player.inv); draughts are drunk like food
 // (FOOD entries with draught:true) and give timed buffs (player.tbuffs) instead of per-deck food buffs.
 const HERBS={
   redroot:{name:'Redroot',col:'#c8402e',look:'red stalks',desc:'Red stalks with a bitter sap. The base of most healing preparations.'},

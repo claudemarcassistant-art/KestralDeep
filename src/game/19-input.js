@@ -86,10 +86,13 @@ function onPress(code){
   else if((code==='ShiftLeft'||code==='ShiftRight')&&hasMove('blink'))blink();
   else if((code==='ShiftLeft'||code==='ShiftRight')&&hasMove('dash'))dash();
 }
+// Q/E step through the tab row (MENU_TABS); the food views count as Craft
+function menuTabStep(d){const ids=MENU_TABS.map(t=>t[1]),i=ids.indexOf(menuTab===3?2:menuTab);menuTab=ids[(i+d+ids.length)%ids.length];}
 function menuKey(code){
   mouse.moved=false;
-  if(code==='KeyQ'||(code==='ArrowLeft'||code==='KeyA')&&menuTab!==0&&menuTab!==5&&menuTab!==3&&menuTab!==6&&menuTab!==4){menuTab=(menuTab+6)%7;sfx('click');return;}
-  if(code==='KeyE'||(code==='ArrowRight'||code==='KeyD')&&menuTab!==0&&menuTab!==5&&menuTab!==3&&menuTab!==6&&menuTab!==4){menuTab=(menuTab+1)%7;sfx('click');return;}
+  if(code==='KeyQ'||(code==='ArrowLeft'||code==='KeyA')&&menuTab===1){menuTabStep(-1);sfx('click');return;}
+  if(code==='KeyE'||(code==='ArrowRight'||code==='KeyD')&&menuTab===1){menuTabStep(1);sfx('click');return;}
+  if((menuTab===2||menuTab===3)&&(code==='KeyA'||code==='KeyD'||code==='ArrowLeft'||code==='ArrowRight')){setCraftView(craftView()+(code==='KeyA'||code==='ArrowLeft'?-1:1));sfx('click');return;}
   const up=code==='ArrowUp'||code==='KeyW',down=code==='ArrowDown'||code==='KeyS',go=code==='Enter'||code==='KeyR'||code==='Space';
   if(menuTab===2){
     if(code==='KeyX'){onlyCraftable=!onlyCraftable;wbSel=0;wbScroll=0;sfx('click');return;}
@@ -109,7 +112,7 @@ function menuKey(code){
     const L=skillList();if(up)skSel=Math.max(0,skSel-1);if(down)skSel=Math.min(L.length-1,skSel+1);
     if(go&&L[skSel])bindSkill(L[skSel]);
   }else if(menuTab===3&&fdMode===1&&code==='KeyX'){cookOnly=!cookOnly;fdSel=0;sfx('click');
-  }else if(menuTab===3){if(code==='KeyA'||code==='KeyD'||code==='ArrowLeft'||code==='ArrowRight'){fdMode=(fdMode+(code==='KeyA'||code==='ArrowLeft'?2:1))%3;fdSel=0;sfx('click');return;}const L=foodList();if(up)fdSel=Math.max(0,fdSel-1);if(down)fdSel=Math.min(L.length-1,fdSel+1);if(go&&L[fdSel])useFoodRow(L[fdSel]);}
+  }else if(menuTab===3){const L=foodList();if(up)fdSel=Math.max(0,fdSel-1);if(down)fdSel=Math.min(L.length-1,fdSel+1);if(go&&L[fdSel])useFoodRow(L[fdSel]);}
   else if(code==='KeyA'||code==='KeyD'||code==='ArrowLeft'||code==='ArrowRight'){progMode=1-progMode;sfx('click');}
   else{if(up)bxSel=Math.max(0,bxSel-1);if(down)bxSel=Math.min(BEASTS.length-1,bxSel+1);}
 }

@@ -5,7 +5,7 @@ function foodList(){if(fdMode===2)return HERBAL.map(h=>({prep:h}));if(fdMode===1
 function useFoodRow(r){if(r.prep)return makePrep(r.prep);if(r.cook)return cook(r.cook);if(r.emetic){if(player.sat<=0&&!player.buffs.length){say('nothing to bring up');sfx('click');return;}player.inv.emetic--;vomit('you drink the syrup. that was unpleasant');return;}eatFood(r.k);}
 function drawFood(x,y,w,h){
   const P=player,L=foodList();fdSel=Math.max(0,Math.min(fdSel,L.length-1));const lx=x+8,lw=180;
-  ['Pouch','Cook','Herbalism'].forEach((n,i)=>{const bw=i===2?56:40,bx=lx+i*44,act=fdMode===i;ui(bx,y+2,bw,11,{click:()=>{fdMode=i;fdSel=0;sfx('click');}});F(act?'#1c2220':'#0a0d0c',bx,y+2,bw,11);F(act?AMBER:'#2a302e',bx,y+12,bw,1);txt(n,bx+bw/2,y+4,act?AMBER:'#8e978b','center');});
+  // the view buttons (Workbench, Food, Cook, Herbalism) are drawn by drawCraftViews() in 27-menus.js
   txt(fdMode===2?'A D  R make':fdMode?'A D  R cook':'A D  R eat',lx+lw,y+h-26,'#3f4642','right');
   if(fdMode===2)return drawHerbalism(x,y,w,h,L);
   if(fdMode===1){{const fh=ui(lx-2,y+15,lw+4,11,{click:()=>{cookOnly=!cookOnly;fdSel=0;sfx('click');}});txt('X  only cookable: '+(cookOnly?'on':'off'),lx,y+17,cookOnly?AMBER:fh?'#c9cfc2':'#8e978b');}
