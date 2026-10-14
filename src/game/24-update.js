@@ -38,7 +38,7 @@ function updatePlay(dt){
     if(Math.random()<dt*10)parts.push({x:p.x+rr(-4,4),y:p.y+5,vx:rr(-6,6),vy:rr(4,10),t:0.35,m:0.35,c:'#b8a8e8',s:1});}
   const base=70*(1+S.spd)*(p.adrenT>0?1.4:1)*(p.stimT>0?1.1:1);
   const pl=p.floating?0:liqAt(p.x,p.y);p.liq=pl;
-  {const wi=Math.floor(p.y/TS)*MW+Math.floor(p.x/TS);if(webs[wi]&&!p.floating){p.inWeb=wi;}else if(p.inWeb!=null&&p.inWeb!==wi){if(webs[p.inWeb]){tearWeb(p.inWeb);say('you tear through the web');}p.inWeb=null;}}
+  {const wi=Math.floor(p.y/TS)*MW+Math.floor(p.x/TS);if(webs[wi]&&!p.floating){p.inWeb=wi;}else if(p.inWeb!=null&&p.inWeb!==wi){if(webs[p.inWeb]){tearWeb(p.inWeb);addStatus('stk',WEB_CFG.stick);say('you tear through the web. strands cling to you');}p.inWeb=null;}}
   let mv=base*(p.slChg>0.12?0.8:1)*(p.chg>0.12&&p.arms[p.armSet].main==='bow'?0.75:1)*(webs[Math.floor(p.y/TS)*MW+Math.floor(p.x/TS)]&&!p.floating?0.4:1)*(rubble[Math.floor(p.y/TS)*MW+Math.floor(p.x/TS)]&&!p.floating?TRAP_CFG.rubbleSlow:1)*(p.chg>0.12?0.75:1)*(p.floating?1.2:p.sprinting?(1.55+0.08*U('sprint')):p.creeping?0.9:1)*(p.grabbedBy?0.35:1)*(p.tackleT>0?1.3:1)*(p.blocking?(_set.off==='shield'?0.8:0.6):1)*LIQ[pl]*(!p.floating&&hz[Math.floor(p.y/TS)*MW+Math.floor(p.x/TS)]===2?0.7:1)*((p.shockT||0)>0?0.35:1)*(1-0.55*((p.st&&p.st.stk)||0)/100)*(1-0.5*((p.st&&p.st.frz)||0)/100);
   if(p.aiming&&il&&p.adrenT<=0){const dot=ix*Math.cos(p.ang)+iy*Math.sin(p.ang);if(dot<0)mv*=1+dot*0.55*(1-S.backpedal);}
   p.moveMul=p.sprinting?1:mv/base;

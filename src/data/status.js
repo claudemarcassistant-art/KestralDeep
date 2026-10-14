@@ -25,6 +25,9 @@ const SMOKE_BLIND={dens:0.3,tearDens:0.35,core:0.8,near:16,memMul:3};
 // Player stun (v0.94): every non-quiet hit adds perHit plus perDmg x damage; the meter drains decay per second.
 // About 10 hits of any size inside ~2-3 s fill it (1-damage hits: 10 x 13 = 130 against ~30 drained).
 // An explosion within blastNear x its radius stuns outright (blastFull, before resistances); further out it adds blast.
+// Spider webs (v1.06.5): tearing all the way through a web tile adds stick to the sticky meter (half of it, before
+// status resistances); stuck strands slow you like slime
+const WEB_CFG={stick:50};
 const STUN_CFG={perHit:11,perDmg:2,decay:12,blast:25,blastNear:0.35,blastFull:250};
 
 // Glancing hits (v0.99, batch 3 request 17): the opposite of a crit, decided in the same roll so the two never stack.

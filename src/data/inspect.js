@@ -37,6 +37,6 @@ const TILE_DESC={
   oil:{name:'Oil',desc:'Slippery, and it burns.'},
   slime:{name:'Slime',desc:'Sticky trail left by something. Slows you down.'},
   ice:{name:'Ice',desc:'Slippery underfoot.'},
-  web:{name:'Web',desc:'Sticky strands that slow anything wading through. Tears after one pass; fire clears it.'},
+  web:{name:'Web',desc:'Sticky strands that slow anything wading through. Tears after one pass, and the strands that cling to you fill half your sticky meter; fire clears it.'},
   rubble:{name:'Rubble',desc:'Fallen debris. Slows you down until it is cleared.'},
   water:{name:'Water',desc:'Wets you. Deep water slows you and uses up air.'}};

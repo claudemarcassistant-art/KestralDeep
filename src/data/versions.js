@@ -1,5 +1,6 @@
 // Version history shown in game (newest first). Also update the changelog at the bottom of src/index.html.
-const VERSIONS=[['1.06.4','Crates are less slippery: every push starts them a little slower and they stop sooner. A full shove slides one about 6 tiles instead of 8. Barrels are unchanged.'],
+const VERSIONS=[['1.06.5','Spider webs cling: walking all the way through a web tears it and fills half your sticky meter, so a second web or a slime patch soon after can glue you down.'],
+  ['1.06.4','Crates are less slippery: every push starts them a little slower and they stop sooner. A full shove slides one about 6 tiles instead of 8. Barrels are unchanged.'],
   ['1.06.3','Stats rows regrouped again: Shove and Shove push sit under Melee dmg, then Fire rate, Aim spread, Gun dmg, Gunfire noise and Ammo per pickup. The stat tip now goes away when the pointer leaves the rows (W/S brings a row back from the keyboard).'],
   ['1.06.2','The Food tab is folded into Craft. Craft now has four views along its top: Workbench, Food (what was the Pouch: eat, active buffs, food level), Cook and Herbalism. A and D move between them; Q and E still change tabs, and C still opens the Workbench.'],
   ['1.06.1','Stats tab rows regrouped: Regeneration, Status build-up and Stun resistance now sit under Damage taken, Backpedal slow under Acceleration, and Gunfire noise under Gun dmg.'],
