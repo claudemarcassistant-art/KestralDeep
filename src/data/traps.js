@@ -43,7 +43,9 @@ const PLATE_DOOR_CFG={
   kinds:[['loot',2],['vault',1],['shortcut',1]]};
 // pushable crates: barrel physics, but they never burn or explode. Wooden ones break under a sledgehammer, a heavy
 // charged hit (2x damage or more) or an explosion, dropping a little scrap.
-const CRATE_CFG={weight:3,heavyMult:2,scrap:[1,3]};
+// push: every push on a crate (shove, kick, blasts, blower, fans...) x this; fric: the share of its speed a crate keeps
+// after a second of sliding (barrels keep 0.03), so crates start a little slower and stop a little sooner (v1.06.4)
+const CRATE_CFG={weight:3,heavyMult:2,scrap:[1,3],push:0.85,fric:0.02};
 // weight of a dropped item on a plate; anything not listed weighs 1
 const ITEM_WEIGHT={gear:2,weapon:2};
 const PLATE_DOOR_DESC='A heavy door wired to a floor plate nearby. It stays open only while the plate holds enough weight: you, a creature, a crate, or a pile of dropped items (most items weigh 1, gear and weapons 2, a crate 3). Step off and it grinds shut a second later. There is always a crate or enough loose junk close by.';

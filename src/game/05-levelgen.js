@@ -132,7 +132,7 @@ function setDeckSize(k){if(!DECK_SIZES[k])k='m';deckSize=k;const D=DECK_SIZES[k]
   flow=new Int16Array(N).fill(-1);flowB=new Int16Array(N);flowQ=new Int32Array(N);flowJob=null;oilCur=0;moltenCur=0;}
 function resetHidden(){secCams=[];crawls=[];crawlAsk=null;deckSecured=false;secureT=0;fadeFx=null;gasJets=[];archive=null;incense=[];plateDoors=[];traps=[];darts=[];trapJets=[];falls=[];rubbleL=[];rubble=new Uint8Array(MW*MH);furn=new Uint8Array(MW*MH);lamps=[];arrival=null;trips=[];secT=0;molten=new Uint8Array(MW*MH);chasm=new Uint8Array(MW*MH);webs=new Uint8Array(MW*MH);ice=new Uint8Array(MW*MH);fans=[];plants=[];mists=[];sprinkT=0;sprWait=rr(25,45);freightT=null;pendingSkip=0;modules=[];fixtures=[];modDoors=new Map();flot=new Uint8Array(MW*MH);slime=new Uint8Array(MW*MH);oil=new Uint8Array(MW*MH);oilIgnite=[];slimeK=new Uint8Array(MW*MH);ventRooms=[];hatchRooms=[];hatches=[];levers=[];cages=[];openVent=new Uint8Array(MW*MH);cables=[];cableMap=new Map();barrels=[];risers=[];}
 function mkBarrel(tx,ty){return {tx,ty,x:tx*TS+6,y:ty*TS+6,vx:0,vy:0,hp:4,fuse:-1,dead:false,ph:Math.random()*6,roll:0};}
-function pushBarrel(b,dx,dy,f){if(!b||b.dead)return;const l=Math.hypot(dx,dy)||1;b.vx+=dx/l*f;b.vy+=dy/l*f;}
+function pushBarrel(b,dx,dy,f){if(!b||b.dead)return;const l=Math.hypot(dx,dy)||1;if(b.crate)f*=CRATE_CFG.push;b.vx+=dx/l*f;b.vy+=dy/l*f;}
 function barrelWall(x,y){const tx=Math.floor(x/TS),ty=Math.floor(y/TS);if(tx<0||ty<0||tx>=MW||ty>=MH)return true;return map[ty*MW+tx]!==0;}
 function updateBarrels(dt){const R=4.5;
   for(const b of barrels){if(b.dead)continue;
@@ -143,7 +143,7 @@ function updateBarrels(dt){const R=4.5;
       b.x=nx;b.y=ny;b.roll+=sp*dt*0.4;
       if(hit&&sp>150){sfx('thud');hitBarrel(b,1);}
       for(const e of enemies){if(e.dead||sp<90)continue;const d=Math.hypot(e.x-b.x,e.y-b.y);if(d<e.r+R){damageEnemy(e,Math.min(6,sp/60),e.x-b.x,e.y-b.y,sp*0.6);b.vx*=0.4;b.vy*=0.4;}}
-      const fr=Math.pow(ice[Math.floor(b.y/TS)*MW+Math.floor(b.x/TS)]||lowGrav()?0.5:0.03,dt);b.vx*=fr;b.vy*=fr;}
+      const fr=Math.pow(ice[Math.floor(b.y/TS)*MW+Math.floor(b.x/TS)]||lowGrav()?0.5:b.crate?CRATE_CFG.fric:0.03,dt);b.vx*=fr;b.vy*=fr;}
     else{b.vx=0;b.vy=0;}
     b.tx=Math.floor(b.x/TS);b.ty=Math.floor(b.y/TS);const ti=b.ty*MW+b.tx;
     {const hot=!b.crate&&(hz[ti]===1&&!hazOff||fires.some(f=>f.tx===b.tx&&f.ty===b.ty));if(hot){b.heat=(b.heat||0)+dt;if(Math.random()<0.3)parts.push({x:b.x+rr(-3,3),y:b.y+2,vx:rr(-6,6),vy:rr(-30,-10),t:0.3,m:0.3,c:'#ff9a4a',s:1});
