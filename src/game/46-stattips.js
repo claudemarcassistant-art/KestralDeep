@@ -47,6 +47,7 @@ function statsKey(k){const nL=Object.keys(CORES).reduce((a,c)=>a+1+CORES[c].subs
   if(k==='KeyA'||k==='ArrowLeft'){stCol=0;return true;}
   if(k==='KeyD'||k==='ArrowRight'){stCol=1;statsKeepVis();return true;}
   const d=(k==='KeyW'||k==='ArrowUp')?-1:(k==='KeyS'||k==='ArrowDown')?1:0;if(!d)return false;mouse.moved=false;
+  if(stCol===-1){stCol=1;statsKeepVis();return true;}
   if(stCol===0)stSel=(stSel+d+nL)%nL;else{stRow=(stRow+d+nR)%nR;statsKeepVis();}return true;}
 // keep the keyboard row in view: the visible count is worked out the same way drawStats() does
 function statsKeepVis(){const vis=Math.max(1,Math.floor((menuRect().ph-14-18)/9));if(stRow<stScroll)stScroll=stRow;else if(stRow>=stScroll+vis)stScroll=stRow-vis+1;}

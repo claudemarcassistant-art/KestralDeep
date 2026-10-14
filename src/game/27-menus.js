@@ -284,25 +284,25 @@ function statRows(){const P=player,m=melee();
     ['Backpedal slow',Math.round(55*(1-S.backpedal))+'%',S.backpedal>0],
     ['Stamina',Math.round(maxStam()),S.stamina>0],
     ['Stamina recovery',regen.toFixed(0)+' / s',regen>22.5],
-    ['Fire rate',S.rof?pct(S.rof):'normal',S.rof>0],
-    ['Ammo per pickup',S.ammoBonus?pct(S.ammoBonus):'normal',S.ammoBonus>0],
     ['Melee dmg',(()=>{const mn=P.arms[P.armSet].main||'fists',b=mn==='fists'?FIST.dmg:ARM[mn]&&ARM[mn].melee?ARM[mn].melee.dmg:null;return b==null?'-':dmgRangeText(mn,b+(S.meleeDmg||0)).replace('damage ','').replace(/[()]/g,'');})(),(S.meleeDmg||0)>0],
+    ['Shove',(Math.round(m.dmg*10)/10)+' dmg, '+m.range+' reach',m.dmg>1||m.range>18],
+    ['Shove push',Math.round(m.kb)+', arc '+Math.round(m.arc*114)+'\u00b0',m.kb>170||m.arc>1.1],
+    ['Fire rate',S.rof?pct(S.rof):'normal',S.rof>0],
+    ['Aim spread',Math.round(aimMul()*100)+'% of base',aimMul()!==1],
     ['Gun dmg',(()=>{const st=P.arms[P.armSet],g=st.off&&ARM[st.off].gun?st.off:st.main&&WPN[st.main]?st.main:null;return g?dmgRangeText(g).replace('damage ','').replace(/[()]/g,''):'-';})(),false],
     ['Gunfire noise',S.quiet?'-'+Math.round(S.quiet*100)+'%':'normal',S.quiet>0],
+    ['Ammo per pickup',S.ammoBonus?pct(S.ammoBonus):'normal',S.ammoBonus>0],
     ['Crits',(()=>{const st=P.arms[P.armSet],g=st.off&&ARM[st.off].gun?st.off:null,mn=st.main||'fists';return Math.round(critChance(mn)*100)+'% melee'+(g?', '+Math.round(critChance(g)*100)+'% gun':'');})(),S.crit>0],
     ['Glances',Math.round(glanceBase()*1000)/10+'%, armoured +'+Math.round(GLANCE_CFG.armoured*100)+'%',glanceBase()<GLANCE_CFG.base],
     ['Glance off you',Math.round(glancePlayerChance()*100)+'%',glancePlayerChance()>GLANCE_CFG.vsPlayer.base],
     ['Enemy drop chance',Math.round((0.3+S.luck)*100)+'%',S.luck>0],
     ['Skill recharge',Math.round(mindCd()*100)+'% of base',mindCd()<1],
-    ['Aim spread',Math.round(aimMul()*100)+'% of base',aimMul()!==1],
     ['Light radius',Math.round(lr)+' px'+(beam?', beam '+beam:''),beam>0||lr!==BASE_R],
     ['Hack window',(S.hack?pct(S.hack)+', ':'')+hackRounds()+' rounds',S.hack>0],
-    ['Shove',(Math.round(m.dmg*10)/10)+' dmg, '+m.range+' reach',m.dmg>1||m.range>18],
-    ['Shove push',Math.round(m.kb)+', arc '+Math.round(m.arc*114)+'\u00b0',m.kb>170||m.arc>1.1],
     ['Run','depth '+depth+', '+kills+' down',false]
   ];
   return rows;}
-let stSel=0,stCol=0,stRow=0;
+let stSel=0,stCol=0,stRow=0;  // stCol: 0 left list, 1 right rows, -1 nothing picked (the mouse left the rows)
 function drawStats(x,y,w,h){
   {const lx=x+10,lw=176;let yy=y+4;txt('Core',lx,yy,AMBER);txt('3 points per level',lx+lw,yy,'#3f4642','right');yy+=13;const keys=[];
     for(const c in CORES){const C=CORES[c],lv=coreLv(c),pr=coreProg(c);const hov=ui(lx-2,yy-2,lw+4,11,{click:()=>{stSel=keys.length;stCol=0;}});keys.push({c});if(hov&&mouse.moved){stSel=keys.length-1;stCol=0;}
@@ -318,12 +318,14 @@ function drawStats(x,y,w,h){
   // the list scrolls with the wheel when it is taller than the panel (stScroll)
   const top=y+15,vis=Math.max(1,Math.floor((h-18)/9)),maxS=Math.max(0,rows.length-vis);stScroll=Math.max(0,Math.min(stScroll,maxS));
   if(maxS)txt((stScroll+1)+'-'+Math.min(rows.length,stScroll+vis)+' of '+rows.length+'  wheel',sx+sw,y+4,'#4f5a55','right');
-  stRow=Math.max(0,Math.min(stRow,rows.length-1));stRowKey=stCol===1?rows[stRow][0]:null;
+  stRow=Math.max(0,Math.min(stRow,rows.length-1));stRowKey=stCol===1?rows[stRow][0]:null;let onRow=false;
   rows.forEach(([k,v,mod],i)=>{if(i<stScroll||i>=stScroll+vis)return;const ry=top+(i-stScroll)*9;
-    const hv=ui(sx-3,ry-1,sw+6,9,{click:()=>{stCol=1;stRow=i;}});if(hv&&mouse.moved){stCol=1;stRow=i;stRowKey=k;}
+    const hv=ui(sx-3,ry-1,sw+6,9,{click:()=>{stCol=1;stRow=i;}});if(hv)onRow=true;if(hv&&mouse.moved){stCol=1;stRow=i;stRowKey=k;}
     if(stCol===1&&i===stRow)F('#141917',sx-3,ry-1,sw+6,9);
     else if(stCol===0&&stFeeds(k,stLeftKey)){ctx.strokeStyle=AMBER;ctx.lineWidth=1;ctx.strokeRect(sx-2.5,ry-1.5,sw+5,9);}
     txt(k,sx,ry,'#8e978b');txt(''+v,sx+sw,ry,mod?AMBER:'#c9cfc2','right');});
+  // the mouse moved off the rows: drop the row (and its tip); a key press clears mouse.moved, so keyboard picks stay
+  if(stCol===1&&mouse.moved&&!onRow){stCol=-1;stRowKey=null;}
   if(stCol===1)drawStatTip(rows[stRow][0],sx,top+(stRow-stScroll)*9,x,y,w,h);
 }
 let stScroll=0;
