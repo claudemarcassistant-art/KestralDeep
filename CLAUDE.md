@@ -2,14 +2,14 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v1.05**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v1.06**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
 - **Source lives in `src/`** and is built into **one self-contained HTML file**, `dist/index.html` (about 640 KB). No dependencies, no external assets. All art is drawn procedurally on a canvas; all sound is synthesised with the Web Audio API. The only network request is the optional Silkscreen font from Google Fonts in `src/boot.js` (the game falls back to a built-in font if it fails).
   - `src/index.html` is the page template; the build fills in `{{styles}}` (`src/styles.css`), `{{boot}}` (`src/boot.js`: font loader and the red error overlay) and `{{game}}`.
   - `src/data/*.js` are the content and tuning tables (creatures, weapons, items, recipes, food, crew files, work orders, NPCs, world, events, versions). Balance changes usually only touch these.
-  - `src/game/NN-name.js` are 45 game files, split by system. `README.md` lists what each file holds.
+  - `src/game/NN-name.js` are 46 game files, split by system. `README.md` lists what each file holds.
   - `scripts/build.mjs` is the build (plain Node 20+, no npm install needed).
 - **Play or test:** `npm run dev` serves http://localhost:5173 and rebuilds on every save (refresh the page). `npm run build` writes `dist/index.html`, which can also be opened straight from disk in Chrome or Edge.
 - **Playable link:** https://claudemarcassistant-art.github.io/KestralDeep/ . Every push to `main` is built and deployed by `.github/workflows/pages.yml`; other branches and pull requests are built only, which catches syntax errors.
@@ -38,7 +38,7 @@ Current version: **v1.05**. The game was built iteratively in claude.ai chats up
 3. **Batch 1** (`docs/specs/batch-1.md`): four sessions, done one at a time; the owner playtests and says "continue" between them. All four sessions are done: 1 (deck sizes, v0.79), 2 (run seeds, v0.80), 3 (traps and trap panels, v0.81), 4 (plate doors, crates, item weight, spacebar styles, v0.82).
 4. **Batch 2** (`docs/specs/batch-2.md`): four sessions, same workflow. All four sessions are done: 1 (frozen status, cryo grenade, active reload, v0.83), 2 (herbs and herbalism, v0.84), 3 (express shafts and vault junctions, v0.85), 4 (poison gas traps, toxic vents, deck secured walk-back, ceiling crawlways, v0.86).
 5. **Batch 3** (`docs/specs/batch-3.md`): five sessions, same workflow. Session 1 (damage ranges and glancing hits, tiered work orders, v0.99), Session 2 (security cameras, v1.00), Session 3 (sector scenarios, v1.01), Session 4 (tear gas and nerve gas, v1.02) and Session 5 (industrial blower and stun gun, v1.03) are done: the batch is finished.
-6. **Batch 4** (`docs/specs/batch-4.md`): three sessions, same workflow; design principle "what it carries is what it does". Session 1 (armed humans, v1.04) and Session 2 (creature traits, v1.05) are done.
+6. **Batch 4** (`docs/specs/batch-4.md`): three sessions, same workflow; design principle "what it carries is what it does". All three sessions are done: 1 (armed humans, v1.04), 2 (creature traits, v1.05), 3 (Stats tab links and tooltips, v1.06).
 7. **Balance pass** (the owner plays test runs and reports findings). First round done in v0.87: creature memory, muffled noise, fewer creatures on Large decks, arena waves (see "Pacing" below). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
 
 ## Working conventions
@@ -56,7 +56,7 @@ Current version: **v1.05**. The game was built iteratively in claude.ai chats up
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v1.05)
+## Architecture overview (as of v1.06)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -194,6 +194,8 @@ Current version: **v1.05**. The game was built iteratively in claude.ai chats up
 - **Shown:** `drawTraits()` after `drawEnemy()` in `render()`; V-look names traits first ("armoured, frenzied bog frog"); `noteTraits()` records seen traits per creature type in `META.traitsSeen` (bestiary row "Traits seen"); work order `specimen` (`traitsSeenAll()`); Codex Traits category and a Systems entry. `eliteHeavy()` gives every eligible creature on an elite vault deck at least one trait. Console: Traits row (`spawnUI.trait`, `TRAIT_PRESETS()`).
 - **Measured:** never on simple creatures or wardens (0 of 1800 rolls), never a non-human trait on a guard (0 of 500); husk mix even except frenzied about half; armoured took 10 to 8; hulking 1.2x radius, 1.5x health, 0.85x speed, plate weight 6; volatile slug left a poison cloud; venomous hit added 22 poison; regeneration 0.77 health over 4.5 s after a hit; frenzied hunt memory 20 s and 13 hits in 8 s against 8; elite vault deck: every eligible creature traited; outbreak frogs: venomous 470 and volatile 234 per 4000 (normal 317 and 125). Same seed, same traits; creatures per deck 11.8 to 11.5.
 
+**Stats tab links and tooltips (batch 4 request 23, v1.06):** `src/game/46-stattips.js`, tables `STAT_LINKS` and `STAT_TIPS` (`src/data/character.js`). The rows are built by `statRows()` (27-menus.js, `[label, value, modified]`); labels key both tables. `STAT_LINKS[row]` maps each core or substat that changes the row to `[per point amount, unit]`, read from the formulas (`refreshStats()`, `baseMaxHp()`, `aimMul()`, `mindCd()`, `melee()`, `glanceBase()`, `addStatus()` via `statusBuildMul()`); `STAT_TIPS[row]` has `d` (description), `key` (the `S` key whose gear, file tier, food, draught and injury shares `statSources()` lists), `neg` (show those as reductions) and `also` (other sources by name). State: `stCol` (0 left, 1 right), `stSel` (left), `stRow` (right), `stLeftKey`/`stRowKey` set while drawing. An active right row fills the linked left rows with the core colour (`stLit()`) and draws `drawStatTip()` on the right half (below the row, or above it), so the lit rows stay visible; an active left item outlines its rows in amber (`stFeeds()`). Keys: `statsKey()` (A/D columns, W/S rows, keeps the row in view with `statsKeepVis()`); `menuKey()` no longer switches tabs on A/D in Stats (Q/E do). New rows Status build-up, Skill recharge, Aim spread, Stun resistance; Glances shows one decimal (perception's 0.5% was rounded away). **A stat formula change must update `STAT_LINKS`**; the test sets `subBonus`/`coreBonus` to 1 for each and checks the changed rows match the table exactly (all 12 match).
+
 **Crew files view:** the tier details on the right are clipped and scroll (`flScroll`; the wheel scrolls them when the pointer is right of `flDetX`, otherwise it moves the selection). `flAuto` keeps the next tier in view until the wheel moves it, and resets when another file is selected.
 
 **Hacking (v0.97):** numbers in `HACK_CFG` (`src/data/hacking.js`). `startHack()` sets `need` from `hackRounds()`: `win.length` (4) rounds, minus one for each `cut` threshold the hack stat reaches (0.4, 0.8; at least `minRounds` 2). `newHackWindow()` takes the round's window from `win[]` (42, 34, 27, 22 px on a 200 px bar) times (1 + hack), and the cursor speed `speed + round x step x (1 - min(stepCutMax, hack x stepCut))`, times (1 - hack x `slow`). Vault panels still multiply the window by `VAULT_CFG.hackMul`. Measured time inside the window per round: no skill 323/189/117/79 ms (was 354/195/108 over 3 rounds); hack 0.4 (a splicer kit) 514/322/209 ms over 3; hack 0.8, 2 rounds of 765/516 ms. The hack stat comes from the splicer kit (0.4), Surveyor tier 1 (0.25) and Memory (0.05 a point). Stats shows `Hack window` with the round count.
@@ -210,7 +212,7 @@ Current version: **v1.05**. The game was built iteratively in claude.ai chats up
 
 | File | Tables |
 |---|---|
-| `character.js` | `SKILLS`, `ACTS`, `SLING`, `FT()`, `FILES`, `MOVES`, `CORES`, `SUBS`, `FILESUB`, `INJ`, `SPACE_STYLES` |
+| `character.js` | `SKILLS`, `ACTS`, `SLING`, `FT()`, `FILES`, `MOVES`, `CORES`, `SUBS`, `FILESUB`, `INJ`, `SPACE_STYLES`, `STAT_LINKS`, `STAT_TIPS` |
 | `crafting.js` | `RECIPES` (with `upgRecipe()`, `ROMAN`), `UPGS`, grinder yields `GEARY`, `ARMY`, `CONY`, `AMMOY` |
 | `creatures.js` | `ET`, `BOSSES`, `KILLPTS`, `THREAT`, `BEASTS`, `BEASTINFO`, `TRACK_CFG`, `THREAT_SIZE_MUL`, `ARENA_WAVES`, `GHOST_CFG`, `TRAITS`, `TRAIT_CFG`, `TRAIT_DESC` |
 | `events.js` | `TEXTEV` (scenario-only events have `id` and `scen`), `ROOMDESC` |
@@ -271,6 +273,7 @@ Current version: **v1.05**. The game was built iteratively in claude.ai chats up
 | tear gas and nerve gas: `cloudK()`, `gasAt()`, `gasPlayerTick()`, `gasEnemyTick()`, `gasJitter()`, `gasLand()`, `lobCanister()`, `riotGuardTick()`, `riotDroneTick()`, `gasLook()`, `irrAimMul()`, `irrStamMul()` | `42-gas.js` |
 | industrial blower and stun gun: `updateBlower()`, `blowK()`, `blowMass()`, `stunZap()`, `addStunB()`, `wetCreature()`, `updateZaps()`, `drawZaps()` | `43-tools.js` |
 | armed humans: `rollKit()`, `setKit()`, `kitTick()`, `kitFire()`, `kitMelee()`, `kitMeleeStats()`, `kitWant()`, `kitPre()`, `dropKit()`, `kitText()`, `drawKit()`, `masked()` | `44-loadouts.js` |
+| Stats tab links and tooltips: `statSources()`, `drawStatTip()`, `statsKey()`, `statusBuildMul()`, `stLit()`, `stFeeds()` (`statRows()` is in `27-menus.js`) | `46-stattips.js` |
 | creature traits: `rollTraits()`, `setTraits()`, `traitOK()`, `traitWeights()`, `threatOf()`, `traitMul()`, `hasTr()`, `sightMul()`, `traitTick()`, `traitDeath()`, `traitHit()`, `traitNames()`, `noteTraits()`, `traitsSeenAll()`, `drawTraits()`, `TRAIT_PRESETS` | `45-traits.js` |
 | reloads: `startReload()`, `updateReload()`, `finishReload()`, `activeReloadPress()` | `22-actions.js` |
 
@@ -298,7 +301,7 @@ To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "con
 - Several arcade cabinets in one place take their games from `arcPicks(n)` (distinct games), not independent random picks.
 - Any new chest needs a loot seed `ls:(Math.random()*4294967296)>>>0` where it is created (inside generation), or its contents will not repeat on the same seed. `addChest()` does this for you.
 - When checking that generation repeats, take the fingerprint in the same instant the deck is built: the game loop keeps running between test steps, and creatures move and fires spread.
-- `30-traps.js` to `45-traits.js` load after `29-loop.js`. `42-gas.js` adds `CLOUD.tear` and `CLOUD.nerve` at load. `35-vaults.js` and `40-cameras.js` also add `HACKR.vault` / `HACKR.cams` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
+- `30-traps.js` to `46-stattips.js` load after `29-loop.js`. `42-gas.js` adds `CLOUD.tear` and `CLOUD.nerve` at load. `35-vaults.js` and `40-cameras.js` also add `HACKR.vault` / `HACKR.cams` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
 - `mkEnemy()` rolls a kit (`rollKit()`), which draws random numbers for guards, riot guards and husks; code that needs a bare creature calls `setKit(e,null)` afterwards. Kit attack timing lives in `e.kcd`, not `e.cd`.
 - `powerOff` is per deck: `enterNode()` resets it for real decks, and since v1.01 `launchTestDeck0()`, `returnToTest()` and `newTest()` do too (before, a breaker thrown on one test deck left the next one dark).
 - A generation tweak for a scenario should only draw a random number when the scenario sets that field (`if(S.x&&Math.random()<S.x)`), so Normal decks keep generating exactly as before.

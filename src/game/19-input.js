@@ -88,14 +88,14 @@ function onPress(code){
 }
 function menuKey(code){
   mouse.moved=false;
-  if(code==='KeyQ'||(code==='ArrowLeft'||code==='KeyA')&&menuTab!==0&&menuTab!==5&&menuTab!==3&&menuTab!==6){menuTab=(menuTab+6)%7;sfx('click');return;}
-  if(code==='KeyE'||(code==='ArrowRight'||code==='KeyD')&&menuTab!==0&&menuTab!==5&&menuTab!==3&&menuTab!==6){menuTab=(menuTab+1)%7;sfx('click');return;}
+  if(code==='KeyQ'||(code==='ArrowLeft'||code==='KeyA')&&menuTab!==0&&menuTab!==5&&menuTab!==3&&menuTab!==6&&menuTab!==4){menuTab=(menuTab+6)%7;sfx('click');return;}
+  if(code==='KeyE'||(code==='ArrowRight'||code==='KeyD')&&menuTab!==0&&menuTab!==5&&menuTab!==3&&menuTab!==6&&menuTab!==4){menuTab=(menuTab+1)%7;sfx('click');return;}
   const up=code==='ArrowUp'||code==='KeyW',down=code==='ArrowDown'||code==='KeyS',go=code==='Enter'||code==='KeyR'||code==='Space';
   if(menuTab===2){
     if(code==='KeyX'){onlyCraftable=!onlyCraftable;wbSel=0;wbScroll=0;sfx('click');return;}
     if(up)wbSel--;if(down)wbSel++;
     if(go){const sel=wbRows().filter(r=>r.r);craft(sel[Math.max(0,Math.min(wbSel,sel.length-1))]&&sel[Math.max(0,Math.min(wbSel,sel.length-1))].r);}
-  }else if(menuTab===4){
+  }else if(menuTab===4){if(statsKey(code))sfx('click');
   }else if(menuTab===5&&fileMode===1&&!(code==='KeyA'||code==='KeyD'||code==='ArrowLeft'||code==='ArrowRight')){if(up)upSel=Math.max(0,upSel-1);if(down)upSel++;if(go){const sel=upPerkRows().filter(r=>!r.hdr);const r=sel[Math.min(upSel,sel.length-1)];if(r&&r.u)buyUpgrade(r.u);}
   }else if(menuTab===1){if(eqPopup){const O=popupOpts();if(up)epSel=(epSel+O.length-1)%O.length;if(down)epSel=(epSel+1)%O.length;if(go&&O[epSel])O[epSel].act();}
   }else if(menuTab===0&&(code==='KeyA'||code==='KeyD'||code==='ArrowLeft'||code==='ArrowRight')){pkMode=(pkMode+(code==='KeyA'||code==='ArrowLeft'?2:1))%3;pkSel=0;pkScroll=0;sfx('click');

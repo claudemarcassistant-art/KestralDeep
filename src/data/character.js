@@ -71,3 +71,60 @@ const SPACE_STYLES={
     desc:'A narrow kick with a longer reach: 3 damage plus your melee bonuses and twice a shove\'s knockback. It counts as a melee hit for combos and crits. 12 stamina. Sprint into it for a flying kick.'},
   repulse:{name:'Repulse',r:40,kbMul:0.7,dmg:1,stam:15,cd:4,
     desc:'A psychic burst all around you that throws creatures, barrels, crates, loose items and gas clouds away. 1 damage, but things slammed into walls take impact damage. 15 stamina (the rest comes out of your health), 4 second recharge, faster with the Focus upgrade.'}};
+// Stats tab (v1.06, batch 4 request 23). Code: src/game/46-stattips.js and drawStats() in 27-menus.js.
+// STAT_LINKS: for each Stats row, the substats and cores that change it, read from the formulas (refreshStats(),
+// baseMaxHp(), aimMul(), mindCd(), melee(), glanceBase(), addStatus(), the Stats row code), with the amount one point
+// or level adds: [amount, unit]. Hovering a row lights these up on the left; hovering one on the left outlines its rows.
+const STAT_LINKS={
+  'Health':{vit:[4,''],body:[5,'']},
+  'Damage taken':{grit:[-2,'%']},
+  'Move speed':{agility:[2,'%'],body:[2,'%']},
+  'Acceleration':{agility:[5,'% quicker']},
+  'Stamina':{wind:[6,'%'],spirit:[5,'%']},
+  'Stamina recovery':{wind:[3,'%'],spirit:[2.5,'%']},
+  'Fire rate':{dex:[2,'%'],mind:[3,'%']},
+  'Crits':{perc:[1,'%'],dex:[0.5,'%'],mind:[1,'%']},
+  'Glances':{dex:[-1,'%'],perc:[-0.5,'%']},
+  'Enemy drop chance':{perc:[3,'%']},
+  'Regeneration':{vit:[0.03,' hp/s']},
+  'Light radius':{perc:[6,' px'],mind:[5,' px']},
+  'Hack window':{mem:[5,'%']},
+  'Shove':{might:[6,'% harder']},
+  'Shove push':{might:[8,'% further']},
+  'Status build-up':{resolve:[-5,'%'],spirit:[-5,'%']},
+  'Skill recharge':{mem:[-4,'%'],mind:[-3,'%']},
+  'Aim spread':{dex:[-5,'%'],mind:[-4,'%']},
+  'Stun resistance':{grit:[5,'%']}
+};
+// STAT_TIPS: what each Stats row does (d), the S key that gear, crew file tiers, food and draught buffs add to (key;
+// their current contributions are listed; neg: shown as a reduction, since the row counts down), and the other sources
+// by name (also).
+const STAT_TIPS={
+  'Health':{d:'How much punishment you can take. Lost max health from injuries shows greyed out on the bar.',also:'injuries (some take max health away), the Glass cannon run modifier (halves it)'},
+  'Armor':{d:'Soaks hits before health does. Picked up as plating; tops out at 50.',also:'armor plates you pick up and craft'},
+  'Damage taken':{key:'dr',neg:true,d:'Takes a share off every hit that gets through your armor. Capped at 50%.',also:'gear (hard hat, work vest, plate rig, pauldrons), the Toughness upgrade (5% a level, not shown in the number), crew file tiers'},
+  'Move speed':{key:'spd',d:'How fast you walk and run.',also:'gear (runner boots, plate rig), crew file tiers, food buffs, injuries (ankle, burns)'},
+  'Acceleration':{key:'accel',d:'How quickly you reach full speed and stop. Lower is snappier.',also:'gear (cleats, runner boots, plate rig), the Footwork upgrade, stims and adrenaline'},
+  'Stamina':{key:'stamina',d:'Fuel for sprinting, dashing, shoving and swinging.',also:'gear (breath trainer), the Endurance upgrade, crew file tiers, food buffs, injuries (cracked ribs)'},
+  'Stamina recovery':{key:'stamina',d:'How fast stamina comes back once you stop using it.',also:'gear (breath trainer), stims, herbal draughts, being irritated by tear gas (halves it)'},
+  'Backpedal slow':{key:'backpedal',neg:true,d:'How much aiming slows you while you walk backwards.',also:'gear (knee pads), crew file tiers'},
+  'Fire rate':{key:'rof',d:'How fast every gun fires.',also:'gear (loader gloves), the Trigger work upgrade, crew file tiers, injuries (nerve damage)'},
+  'Ammo per pickup':{key:'ammoBonus',d:'Extra rounds from every ammo pickup.',also:'gear (cargo pants, saddlebag), crew file tiers'},
+  'Gunfire noise':{key:'quiet',neg:true,d:'How far your shots carry to creatures that can hear them.',also:'gear (quiet soles), crew file tiers'},
+  'Melee dmg':{key:'meleeDmg',d:'The damage range of your main-hand weapon, or fists, per hit.',also:'your weapon, gear (grip gloves), crew file tiers, food buffs'},
+  'Gun dmg':{d:'The damage range of your gun per shot (per pellet for the scattergun).',also:'your gun, the Hot loads upgrade, a laser sight while aiming'},
+  'Crits':{key:'crit',d:'Chance a hit does double damage. Each weapon has its own base chance.',also:'your weapon, gear (marksman loupe, lucky tag), crew file tiers'},
+  'Glances':{d:'Chance your hit only grazes, for half damage and little knockback. Armoured targets glance more.',also:'the target (armour, plating, traits)'},
+  'Glance off you':{d:'Chance a creature\'s hit only grazes you, for half damage and half stun.',also:'your armor (up to a cap), blocking with a riot shield'},
+  'Enemy drop chance':{key:'luck',d:'Chance a creature drops supplies when it goes down.',also:'gear (lucky tag), crew file tiers'},
+  'Regeneration':{key:'regen',d:'Health you get back every second without doing anything.',also:'gear (slow injector), crew file tiers, food buffs'},
+  'Light radius':{d:'How far your own light reaches, and any beam you carry.',also:'gear (back lantern, night optics, headlamp, barrel light), the deck\'s lighting, fog'},
+  'Hack window':{key:'hack',d:'How wide the green window is on hack panels, and how many rounds a hack takes.',also:'gear (splicer kit), crew file tiers'},
+  'Shove':{d:'Shove damage and reach.',also:'the Spiked knuckles and Long haft upgrades, gear (grip gloves)'},
+  'Shove push':{d:'How far a shove knocks things back, and how wide it sweeps.',also:'the Weighted sleeve and Wide swing upgrades'},
+  'Status build-up':{d:'How fast poison, shock, burning, cold and the rest fill up on you. Lower is better.',also:'the Resilience upgrade'},
+  'Skill recharge':{d:'How fast your E and F abilities and psychic actions come back. Lower is quicker.',also:'the Focus upgrade (psychic actions)'},
+  'Aim spread':{key:'steady',neg:true,d:'How far your shots scatter. Lower is tighter.',also:'aiming with right click, the Steady hands upgrade, a laser sight, ironmoss draughts (steady), injuries (concussion), being irritated by tear gas'},
+  'Stun resistance':{key:'stunRes',d:'How slowly hits build up stun on you, before you are dazed.',also:'gear (padded jacket, pauldrons), crew file tiers'},
+  'Run':{d:'How deep you are and how many creatures you have put down this run.',also:''}
+};

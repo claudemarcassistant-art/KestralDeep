@@ -256,19 +256,8 @@ function drawActBar(x,y,w,h){const P=player,sets=[];if(P.acts.length)sets.push('
   C.list.forEach((a,k)=>{const A=C.defs[a],on=C.bar.includes(a);const hov=ui(x-2,yy-2,w+2,11,{click:()=>{const j=C.bar.indexOf(a);if(j>=0)C.bar[j]=null;C.bar[actSel]=a;actPick=k;sfx('click');}});if(hov&&mouse.moved)actPick=k;
     if(k===actPick)F('#141917',x-2,yy-2,w+2,11);F(A.col,x,yy+1,3,5);txt(A.name,x+6,yy,on?'#e3e6dc':'#8e978b');txt(C.right(a),x+w,yy,'#5d655f','right');yy+=11;});
   const A=C.defs[C.list[Math.min(actPick,C.list.length-1)]];if(A)wrap(A.desc,x,yy+4,w,9,'#b9c0b3');}
-let stSel=0;
-function drawStats(x,y,w,h){
-  {const lx=x+10,lw=176;let yy=y+4;txt('Core',lx,yy,AMBER);txt('3 points per level',lx+lw,yy,'#3f4642','right');yy+=13;const keys=[];
-    for(const c in CORES){const C=CORES[c],lv=coreLv(c),pr=coreProg(c);const hov=ui(lx-2,yy-2,lw+4,11,{click:()=>{stSel=keys.length;}});keys.push({c});if(hov&&mouse.moved)stSel=keys.length-1;
-      if(stSel===keys.length-1)F('#141917',lx-2,yy-2,lw+4,11);txt(C.name,lx,yy,C.col);txt('level '+lv,lx+90,yy,'#e3e6dc');for(let q=0;q<3;q++)F(q<pr?C.col:'#2a302e',lx+lw-26+q*9,yy+2,7,4);yy+=11;
-      for(const k of C.subs){const n=subPts(k);const hv=ui(lx-2,yy-2,lw+4,10,{click:()=>{stSel=keys.length;}});keys.push({k});if(hv&&mouse.moved)stSel=keys.length-1;
-        if(stSel===keys.length-1)F('#141917',lx-2,yy-2,lw+4,10);txt(SUBS[k].name,lx+10,yy,n?'#c9cfc2':'#5d655f');txt(''+n,lx+lw,yy,n?'#e3e6dc':'#3f4642','right');yy+=10;}yy+=4;}
-    const sel=keys[Math.min(stSel,keys.length-1)];F('#1f2524',lx,yy,lw,1);yy+=5;
-    if(sel.c){txt(CORES[sel.c].name,lx,yy,CORES[sel.c].col);yy=wrap(CORES[sel.c].desc,lx,yy+10,lw,9,'#b9c0b3');}
-    else{txt(SUBS[sel.k].name,lx,yy,CORES[SUBS[sel.k].core].col);yy=wrap(SUBS[sel.k].desc,lx,yy+10,lw,9,'#b9c0b3');const fr=Object.keys(FILESUB).filter(f=>FILESUB[f].includes(sel.k)).map(f=>FILEBY[f].name);wrap('Trained by: '+fr.join(', ')+'.',lx,yy+2,lw,9,'#5d655f');}}
-  F('#1f2524',x+194,y+4,1,h-10);
-  const sx=x+204,sw=w-214,P=player,m=melee();
-  txt('Stats',sx,y+4,AMBER);
+// the Stats tab's rows [label, value, modified]; labels key STAT_LINKS and STAT_TIPS (src/data/character.js)
+function statRows(){const P=player,m=melee();
   const pct=v=>(v>0?'+':'')+Math.round(v*100)+'%';
   const accel=0.16/Math.max(0.3,1+S.accel+(P.stimT>0?0.6:0)+(P.adrenT>0?1:0));
   const regen=22*(1+S.stamina*0.5)*(P.stimT>0?2:1);
@@ -289,20 +278,44 @@ function drawStats(x,y,w,h){
     ['Melee dmg',(()=>{const mn=P.arms[P.armSet].main||'fists',b=mn==='fists'?FIST.dmg:ARM[mn]&&ARM[mn].melee?ARM[mn].melee.dmg:null;return b==null?'-':dmgRangeText(mn,b+(S.meleeDmg||0)).replace('damage ','').replace(/[()]/g,'');})(),(S.meleeDmg||0)>0],
     ['Gun dmg',(()=>{const st=P.arms[P.armSet],g=st.off&&ARM[st.off].gun?st.off:st.main&&WPN[st.main]?st.main:null;return g?dmgRangeText(g).replace('damage ','').replace(/[()]/g,''):'-';})(),false],
     ['Crits',(()=>{const st=P.arms[P.armSet],g=st.off&&ARM[st.off].gun?st.off:null,mn=st.main||'fists';return Math.round(critChance(mn)*100)+'% melee'+(g?', '+Math.round(critChance(g)*100)+'% gun':'');})(),S.crit>0],
-    ['Glances',Math.round(glanceBase()*100)+'%, armoured +'+Math.round(GLANCE_CFG.armoured*100)+'%',glanceBase()<GLANCE_CFG.base],
+    ['Glances',Math.round(glanceBase()*1000)/10+'%, armoured +'+Math.round(GLANCE_CFG.armoured*100)+'%',glanceBase()<GLANCE_CFG.base],
     ['Glance off you',Math.round(glancePlayerChance()*100)+'%',glancePlayerChance()>GLANCE_CFG.vsPlayer.base],
     ['Enemy drop chance',Math.round((0.3+S.luck)*100)+'%',S.luck>0],
     ['Regeneration',S.regen?(S.regen).toFixed(2)+' hp/s':'none',S.regen>0],
+    ['Status build-up',Math.round(statusBuildMul()*100)+'% speed',statusBuildMul()<1],
+    ['Skill recharge',Math.round(mindCd()*100)+'% of base',mindCd()<1],
+    ['Aim spread',Math.round(aimMul()*100)+'% of base',aimMul()!==1],
+    ['Stun resistance',S.stunRes?Math.round(S.stunRes*100)+'%':'none',S.stunRes>0],
     ['Light radius',Math.round(lr)+' px'+(beam?', beam '+beam:''),beam>0||lr!==BASE_R],
     ['Hack window',(S.hack?pct(S.hack)+', ':'')+hackRounds()+' rounds',S.hack>0],
     ['Shove',(Math.round(m.dmg*10)/10)+' dmg, '+m.range+' reach',m.dmg>1||m.range>18],
     ['Shove push',Math.round(m.kb)+', arc '+Math.round(m.arc*114)+'\u00b0',m.kb>170||m.arc>1.1],
     ['Run','depth '+depth+', '+kills+' down',false]
   ];
+  return rows;}
+let stSel=0,stCol=0,stRow=0;
+function drawStats(x,y,w,h){
+  {const lx=x+10,lw=176;let yy=y+4;txt('Core',lx,yy,AMBER);txt('3 points per level',lx+lw,yy,'#3f4642','right');yy+=13;const keys=[];
+    for(const c in CORES){const C=CORES[c],lv=coreLv(c),pr=coreProg(c);const hov=ui(lx-2,yy-2,lw+4,11,{click:()=>{stSel=keys.length;stCol=0;}});keys.push({c});if(hov&&mouse.moved){stSel=keys.length-1;stCol=0;}
+      const lit=stLit(c);if(lit)F(C.col,lx-2,yy-2,lw+4,11);else if(stCol===0&&stSel===keys.length-1)F('#141917',lx-2,yy-2,lw+4,11);txt(C.name,lx,yy,lit?'#0a0c0b':C.col);txt('level '+lv,lx+90,yy,lit?'#0a0c0b':'#e3e6dc');for(let q=0;q<3;q++)F(q<pr?C.col:'#2a302e',lx+lw-26+q*9,yy+2,7,4);yy+=11;
+      for(const k of C.subs){const n=subPts(k);const hv=ui(lx-2,yy-2,lw+4,10,{click:()=>{stSel=keys.length;stCol=0;}});keys.push({k});if(hv&&mouse.moved){stSel=keys.length-1;stCol=0;}
+        const lit=stLit(k);if(lit)F(C.col,lx-2,yy-2,lw+4,10);else if(stCol===0&&stSel===keys.length-1)F('#141917',lx-2,yy-2,lw+4,10);txt(SUBS[k].name,lx+10,yy,lit?'#0a0c0b':n?'#c9cfc2':'#5d655f');txt(''+n,lx+lw,yy,lit?'#0a0c0b':n?'#e3e6dc':'#3f4642','right');yy+=10;}yy+=4;}
+    stSel=Math.max(0,Math.min(stSel,keys.length-1));const sel=keys[stSel];stLeftKey=sel.c||sel.k;F('#1f2524',lx,yy,lw,1);yy+=5;
+    if(sel.c){txt(CORES[sel.c].name,lx,yy,CORES[sel.c].col);yy=wrap(CORES[sel.c].desc,lx,yy+10,lw,9,'#b9c0b3');}
+    else{txt(SUBS[sel.k].name,lx,yy,CORES[SUBS[sel.k].core].col);yy=wrap(SUBS[sel.k].desc,lx,yy+10,lw,9,'#b9c0b3');const fr=Object.keys(FILESUB).filter(f=>FILESUB[f].includes(sel.k)).map(f=>FILEBY[f].name);wrap('Trained by: '+fr.join(', ')+'.',lx,yy+2,lw,9,'#5d655f');}}
+  F('#1f2524',x+194,y+4,1,h-10);
+  const sx=x+204,sw=w-214,rows=statRows();
+  txt('Stats',sx,y+4,AMBER);
   // the list scrolls with the wheel when it is taller than the panel (stScroll)
   const top=y+15,vis=Math.max(1,Math.floor((h-18)/9)),maxS=Math.max(0,rows.length-vis);stScroll=Math.max(0,Math.min(stScroll,maxS));
   if(maxS)txt((stScroll+1)+'-'+Math.min(rows.length,stScroll+vis)+' of '+rows.length+'  wheel',sx+sw,y+4,'#4f5a55','right');
-  rows.forEach(([k,v,mod],i)=>{if(i<stScroll||i>=stScroll+vis)return;const ry=top+(i-stScroll)*9;txt(k,sx,ry,'#8e978b');txt(''+v,sx+sw,ry,mod?AMBER:'#c9cfc2','right');});
+  stRow=Math.max(0,Math.min(stRow,rows.length-1));stRowKey=stCol===1?rows[stRow][0]:null;
+  rows.forEach(([k,v,mod],i)=>{if(i<stScroll||i>=stScroll+vis)return;const ry=top+(i-stScroll)*9;
+    const hv=ui(sx-3,ry-1,sw+6,9,{click:()=>{stCol=1;stRow=i;}});if(hv&&mouse.moved){stCol=1;stRow=i;stRowKey=k;}
+    if(stCol===1&&i===stRow)F('#141917',sx-3,ry-1,sw+6,9);
+    else if(stCol===0&&stFeeds(k,stLeftKey)){ctx.strokeStyle=AMBER;ctx.lineWidth=1;ctx.strokeRect(sx-2.5,ry-1.5,sw+5,9);}
+    txt(k,sx,ry,'#8e978b');txt(''+v,sx+sw,ry,mod?AMBER:'#c9cfc2','right');});
+  if(stCol===1)drawStatTip(rows[stRow][0],sx,top+(stRow-stScroll)*9,x,y,w,h);
 }
 let stScroll=0;
 function drawMap(){
