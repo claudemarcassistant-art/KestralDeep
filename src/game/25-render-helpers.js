@@ -201,9 +201,22 @@ function drawPlayer(){
   drawPlayerBody();ctx.globalAlpha=1;
   if(player.cloakT>0&&Math.random()<0.4)F('#9fc3ff',Math.round(player.x-camX)+rnd(9)-4,Math.round(player.y-camY)+rnd(9)-4,1,1);
 }
+// the player: the survey tech drawn by person() (47-sprites.js; pose from playerPose()), holding the weapon drawn by
+// drawPlayerWeapon() (called from inside person(), back in screen space, so it sits between the arms and the head);
+// the overlays (shield and block arcs, beam dot, muzzle flash, shove, charge ring, swing arc) are drawn on top
 function drawPlayerBody(){
   const p=player,x=Math.round(p.x-camX),y=Math.round(p.y-camY),ca=Math.cos(p.ang),sa=Math.sin(p.ang),len=GUNLEN[p.weapon]||4,set=p.arms[p.armSet];
-  F('rgba(0,0,0,0.4)',x-4,y+3,8,2);
+  const o=playerPose();o.prop=g=>{g.save();g.rotate(-p.ang);g.translate(-x,-y);drawPlayerWeapon(x,y,ca,sa,len,set);g.restore();};
+  person(ctx,x,y,p.ang,T,spriteLight(p.x,p.y),playerCfg(),o);
+  if(p.blocking){const g=p.guardMax?p.guard/p.guardMax:0;ctx.strokeStyle=`rgba(190,228,255,${0.35+0.5*g})`;ctx.lineWidth=set.off==='shield'?3:2;ctx.beginPath();ctx.arc(x,y,8,p.ang-1.1,p.ang+1.1);ctx.stroke();}
+  else if(set.off==='shield'){ctx.strokeStyle='#5a666c';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,6,p.ang-2.2,p.ang-1.2);ctx.stroke();}
+  if(S.beams.some(b=>b.r>170)){F('#d8dcd4',Math.round(x+ca*(len-2)),Math.round(y+sa*(len-2)),1,1);}
+  if(p.flashT>0){const fx=x+ca*(len+2),fy=y+sa*(len+2);ctx.fillStyle=p.weapon==='bolt'?'#bfe4ff':'#ffe39a';circ(fx,fy,p.weapon==='nailer'?2:3);ctx.fillStyle='#fff';circ(fx,fy,1.5);}
+  if(p.shoveT>0){const m=melee(),tk=p.tackleT>0;ctx.strokeStyle=tk?'rgba(255,200,140,0.85)':'rgba(230,220,190,0.7)';ctx.lineWidth=tk?2:1;ctx.beginPath();ctx.arc(x,y,m.range-3+(tk?5:0),p.ang-m.arc*(tk?0.8:1),p.ang+m.arc*(tk?0.8:1));ctx.stroke();}
+  if(p.chg>0){const c=Math.min(1,p.chg),win=p.chgFull>0&&p.chgFull<=0.2,col=win?(Math.sin(T*40)>0?'#ffffff':'#fff0a0'):c>=1?'#e0a040':'#d9a441';ctx.strokeStyle=col;ctx.lineWidth=win?2:1;ctx.beginPath();ctx.arc(x,y,9,-Math.PI/2,-Math.PI/2+6.283*c);ctx.stroke();}
+  if(p.swingT>0&&set.main!=='chainsaw'&&set.main!=='whip'){ctx.strokeStyle='rgba(255,240,210,0.8)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,p.swingR-2,p.ang-p.swingA,p.ang+p.swingA);ctx.stroke();}
+}
+function drawPlayerWeapon(x,y,ca,sa,len,set){const p=player;
   if(p.weapon){ctx.strokeStyle=p.weapon==='bolt'?'#2a3a46':p.weapon==='nailer'?'#3a3320':'#121514';ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(x+ca*2,y+sa*2);ctx.lineTo(x+ca*len,y+sa*len);ctx.stroke();
     if(p.weapon==='blower'){const j=p.blowing?rr(-0.4,0.4):0;ctx.strokeStyle='#4a5258';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x+ca*4+j,y+sa*4+j);ctx.lineTo(x+ca*9+j,y+sa*9+j);ctx.stroke();F('#8a7a40',Math.round(x-sa*3-ca*1)-1,Math.round(y+ca*3-sa*1)-1,3,3);F('#c8ccc4',Math.round(x+ca*9)-1,Math.round(y+sa*9)-1,2,2);}}
@@ -227,16 +240,6 @@ function drawPlayerBody(){
     if(rev&&Math.random()<0.12)parts.push({x:p.x+ca*15-sa*3,y:p.y+sa*15+ca*3,vx:ca*rr(20,60)+rr(-30,30),vy:sa*rr(20,60)+rr(-30,30),t:0.25,m:0.25,c:'#ffd070',s:1});}
   else if(set.main){const two=ARM[set.main].hand==='two',a2=p.ang+(p.swingT>0?-0.6+(0.12-p.swingT)*10:two?0:0.7),L2=two?12:set.main==='cutter'?6:9;
     ctx.strokeStyle=set.main==='bat'?'#6a4a2a':'#6a7478';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+Math.cos(a2)*3,y+Math.sin(a2)*3);ctx.lineTo(x+Math.cos(a2)*L2,y+Math.sin(a2)*L2);ctx.stroke();}
-  if(p.blocking){const g=p.guardMax?p.guard/p.guardMax:0;ctx.strokeStyle=`rgba(190,228,255,${0.35+0.5*g})`;ctx.lineWidth=set.off==='shield'?3:2;ctx.beginPath();ctx.arc(x,y,8,p.ang-1.1,p.ang+1.1);ctx.stroke();}
-  else if(set.off==='shield'){ctx.strokeStyle='#5a666c';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,6,p.ang-2.2,p.ang-1.2);ctx.stroke();}
-  if(S.beams.some(b=>b.r>170)){F('#d8dcd4',Math.round(x+ca*(len-2)),Math.round(y+sa*(len-2)),1,1);}
-  ctx.fillStyle='#0d0f0e';circ(x,y,5);ctx.fillStyle=p.hurtT>0.2?'#e0a090':p.adrenT>0?'#b0a070':'#8b8468';circ(x,y,4);
-  ctx.fillStyle=player.gear.head==='nvg'?'#4a6a4a':'#c9c1a0';circ(x+ca*0.8,y+sa*0.8,2.4);
-  F(player.gear.head==='nvg'?'#7fff8a':AMBER,Math.round(x+ca*2),Math.round(y+sa*2),1,1);
-  if(p.flashT>0){const fx=x+ca*(len+2),fy=y+sa*(len+2);ctx.fillStyle=p.weapon==='bolt'?'#bfe4ff':'#ffe39a';circ(fx,fy,p.weapon==='nailer'?2:3);ctx.fillStyle='#fff';circ(fx,fy,1.5);}
-  if(p.shoveT>0){const m=melee(),tk=p.tackleT>0;ctx.strokeStyle=tk?'rgba(255,200,140,0.85)':'rgba(230,220,190,0.7)';ctx.lineWidth=tk?2:1;ctx.beginPath();ctx.arc(x,y,m.range-3+(tk?5:0),p.ang-m.arc*(tk?0.8:1),p.ang+m.arc*(tk?0.8:1));ctx.stroke();}
-  if(p.chg>0){const c=Math.min(1,p.chg),win=p.chgFull>0&&p.chgFull<=0.2,col=win?(Math.sin(T*40)>0?'#ffffff':'#fff0a0'):c>=1?'#e0a040':'#d9a441';ctx.strokeStyle=col;ctx.lineWidth=win?2:1;ctx.beginPath();ctx.arc(x,y,9,-Math.PI/2,-Math.PI/2+6.283*c);ctx.stroke();}
-  if(p.swingT>0&&set.main!=='chainsaw'&&set.main!=='whip'){ctx.strokeStyle='rgba(255,240,210,0.8)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,p.swingR-2,p.ang-p.swingA,p.ang+p.swingA);ctx.stroke();}
 }
 function circleR(){let r=S.lantern?108:BASE_R;if(cond.light==='lit')r=Math.max(r,170);else if(cond.light==='dark')r=S.lantern?85:22;if(S.nvg)r=Math.max(r,175);if(cond.haz==='fog'&&!hazOff)r=Math.min(r*0.55,100);return r;}
 function drawLaser(){

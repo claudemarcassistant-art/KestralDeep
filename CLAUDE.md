@@ -2,14 +2,14 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v1.06.5**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v1.07**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
 - **Source lives in `src/`** and is built into **one self-contained HTML file**, `dist/index.html` (about 640 KB). No dependencies, no external assets. All art is drawn procedurally on a canvas; all sound is synthesised with the Web Audio API. The only network request is the optional Silkscreen font from Google Fonts in `src/boot.js` (the game falls back to a built-in font if it fails).
   - `src/index.html` is the page template; the build fills in `{{styles}}` (`src/styles.css`), `{{boot}}` (`src/boot.js`: font loader and the red error overlay) and `{{game}}`.
   - `src/data/*.js` are the content and tuning tables (creatures, weapons, items, recipes, food, crew files, work orders, NPCs, world, events, versions). Balance changes usually only touch these.
-  - `src/game/NN-name.js` are 46 game files, split by system. `README.md` lists what each file holds.
+  - `src/game/NN-name.js` are 47 game files, split by system. `README.md` lists what each file holds.
   - `scripts/build.mjs` is the build (plain Node 20+, no npm install needed).
 - **Play or test:** `npm run dev` serves http://localhost:5173 and rebuilds on every save (refresh the page). `npm run build` writes `dist/index.html`, which can also be opened straight from disk in Chrome or Edge.
 - **Playable link:** https://claudemarcassistant-art.github.io/KestralDeep/ . Every push to `main` is built and deployed by `.github/workflows/pages.yml`; other branches and pull requests are built only, which catches syntax errors.
@@ -39,7 +39,8 @@ Current version: **v1.06.5**. The game was built iteratively in claude.ai chats 
 4. **Batch 2** (`docs/specs/batch-2.md`): four sessions, same workflow. All four sessions are done: 1 (frozen status, cryo grenade, active reload, v0.83), 2 (herbs and herbalism, v0.84), 3 (express shafts and vault junctions, v0.85), 4 (poison gas traps, toxic vents, deck secured walk-back, ceiling crawlways, v0.86).
 5. **Batch 3** (`docs/specs/batch-3.md`): five sessions, same workflow. Session 1 (damage ranges and glancing hits, tiered work orders, v0.99), Session 2 (security cameras, v1.00), Session 3 (sector scenarios, v1.01), Session 4 (tear gas and nerve gas, v1.02) and Session 5 (industrial blower and stun gun, v1.03) are done: the batch is finished.
 6. **Batch 4** (`docs/specs/batch-4.md`): three sessions, same workflow; design principle "what it carries is what it does". All three sessions are done: 1 (armed humans, v1.04), 2 (creature traits, v1.05), 3 (Stats tab links and tooltips, v1.06).
-7. **Balance pass** (the owner plays test runs and reports findings). First round done in v0.87: creature memory, muffled noise, fewer creatures on Large decks, arena waves (see "Pacing" below). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
+7. **Batch 5** (`docs/specs/batch-5.md`): art pass, four sessions, same workflow; the reference is `docs/art/sprite-study.html` (see "Art style" below). Session 1 (drawing toolkit and the player, v1.07) is done. Batch 4 was already finished when it started, so the later sessions must carry its kit and trait drawing (`drawKit()`, `drawTraits()`) onto the new bodies.
+8. **Balance pass** (the owner plays test runs and reports findings). First round done in v0.87: creature memory, muffled noise, fewer creatures on Large decks, arena waves (see "Pacing" below). Tunable numbers are in `src/data/`; a few engine constants are still in game files (`BASE_R`, `LASER_LEN`, `FLARE_R` in `01-core.js`, `PR` in `24-update.js`), and spawn weights are inside `pickType()` in `09-population.js`.
 
 ## Working conventions
 
@@ -56,7 +57,7 @@ Current version: **v1.06.5**. The game was built iteratively in claude.ai chats 
 - In-game messages and UI text are lowercase, short, and written in a plain, slightly dry voice ("the lift doors grind open").
 - The owner prefers the game never to pause the world while menus are open (this is the default, with an option to change it).
 
-## Architecture overview (as of v1.06)
+## Architecture overview (as of v1.07)
 
 **Game states** (`state`): `title`, `play`, `route` (sector map), `node` (between-deck event or stop), `report` (deck results), `dead`. Flags: `testMode`, `testDeck`, `arcadeMode`, `stopMode`.
 
@@ -208,12 +209,21 @@ Current version: **v1.06.5**. The game was built iteratively in claude.ai chats 
 
 **Special areas:** the test range (title screen) has every crew file, NPC, a creature console and a deck builder (the test lift, with a Size option) for testing; the arcade has six original mini-games (`ARC`).
 
+## Art style (Batch 5, from v1.07)
+
+- **Reference:** `docs/art/sprite-study.html`, made in the planning chat and approved by the owner. Open it in a browser: every proposed sprite sits next to the old one at game scale. Its `<script>` is the reference code to port; its "Rules for the style" section is the style guide for anything not drawn on the page. Do not edit it in the repository except to replace it with a newer copy from the owner.
+- **Owner's decisions:** the player is take A, the survey tech (orange suit, white helmet with a lamp, sample pack); takes B and C stay in `PEOPLE` for future archetypes or crew. People (player, crew, guards) share one body, `person()`, clean-edged with a two-tone bevel. Creatures are painted (`paint()`, `dabs()`: dabs in four tones of their own colour, lit from one side, no black outline, one signature movement each). Light comes from the top left on lit decks and from the player's lamp on dark decks (`spriteLight()`). Anything that gives off light gets a soft halo and stays readable in the dark. An outlines option (off by default) is planned for Session 4. Double resolution is not decided: do not change the canvas resolution.
+- **Code:** `src/game/47-sprites.js` holds the toolkit (`ell`, `line`, `pxl`, `shadow`, `dabs`, `paint`, `glow`, `vshade`, `person`, `HATS`, `spriteLight`) and the player's pose (`playerPose()`, `playerCfg()`); data in `src/data/art.js` (`PEOPLE`, `PLAYER_TINT`, `ART_LIGHT`). The study's `hash()`, `rng()` and `px()` are `strHash()`, `artRng()` and `pxl()` here (the game already has a tile `hash()`), and its creature palette `PAL` will be `ART_PAL` (`PAL` is the biome table). `person()` multiplies `globalAlpha` instead of resetting it, so the cloak's transparency carries through; it takes extra options the study lacks (`step`, `hands`, `noGun`, `swingK`, `noBlade`, `lampCol`).
+- **The player (v1.07):** `drawPlayerBody()` (25-render-helpers.js) calls `person()` with `PEOPLE.a` (tinted copies for hurt, adrenaline and night optics, cached in `playerCfg()`). `playerPose()` picks the arms: a melee swing (`swingT`) -> `swing`, with the hand following the real weapon angle; a held or aimed gun -> `aim`; otherwise `rest`; special weapons (bow, spear, whip, soaker, chainsaw, stun gun) and two-handed weapons set both hands. Feet step with the distance actually moved (`plStep`). The weapon itself is still drawn by the game's own code, now `drawPlayerWeapon()`, called from `person()`'s `prop` hook after transforming back to screen space, so it sits between the arms and the head; every overlay (block and shield arcs, beam dot, muzzle flash, shove, charge ring, swing arc) is drawn on top as before.
+- **Measured:** busy Large deck (hunter, alarm, gas grenades, 20-32 creatures) p50 16.7 ms, p95 16.8 ms, the same as before the change.
+
 ## Where things live
 
 **Tables (`src/data/`):**
 
 | File | Tables |
 |---|---|
+| `art.js` | `PEOPLE`, `PLAYER_TINT`, `ART_LIGHT` |
 | `character.js` | `SKILLS`, `ACTS`, `SLING`, `FT()`, `FILES`, `MOVES`, `CORES`, `SUBS`, `FILESUB`, `INJ`, `SPACE_STYLES`, `STAT_LINKS`, `STAT_TIPS` |
 | `crafting.js` | `RECIPES` (with `upgRecipe()`, `ROMAN`), `UPGS`, grinder yields `GEARY`, `ARMY`, `CONY`, `AMMOY` |
 | `creatures.js` | `ET`, `BOSSES`, `KILLPTS`, `THREAT`, `BEASTS`, `BEASTINFO`, `TRACK_CFG`, `THREAT_SIZE_MUL`, `ARENA_WAVES`, `GHOST_CFG`, `TRAITS`, `TRAIT_CFG`, `TRAIT_DESC` |
@@ -275,6 +285,7 @@ Current version: **v1.06.5**. The game was built iteratively in claude.ai chats 
 | tear gas and nerve gas: `cloudK()`, `gasAt()`, `gasPlayerTick()`, `gasEnemyTick()`, `gasJitter()`, `gasLand()`, `lobCanister()`, `riotGuardTick()`, `riotDroneTick()`, `gasLook()`, `irrAimMul()`, `irrStamMul()` | `42-gas.js` |
 | industrial blower and stun gun: `updateBlower()`, `blowK()`, `blowMass()`, `stunZap()`, `addStunB()`, `wetCreature()`, `updateZaps()`, `drawZaps()` | `43-tools.js` |
 | armed humans: `rollKit()`, `setKit()`, `kitTick()`, `kitFire()`, `kitMelee()`, `kitMeleeStats()`, `kitWant()`, `kitPre()`, `dropKit()`, `kitText()`, `drawKit()`, `masked()` | `44-loadouts.js` |
+| art pass toolkit and the player's pose: `ell()`, `line()`, `pxl()`, `shadow()`, `dabs()`, `paint()`, `glow()`, `vshade()`, `person()`, `HATS`, `spriteLight()`, `playerPose()`, `playerCfg()` | `47-sprites.js` |
 | Stats tab links and tooltips: `statSources()`, `drawStatTip()`, `statsKey()`, `statusBuildMul()`, `stLit()`, `stFeeds()` (`statRows()` is in `27-menus.js`) | `46-stattips.js` |
 | creature traits: `rollTraits()`, `setTraits()`, `traitOK()`, `traitWeights()`, `threatOf()`, `traitMul()`, `hasTr()`, `sightMul()`, `traitTick()`, `traitDeath()`, `traitHit()`, `traitNames()`, `noteTraits()`, `traitsSeenAll()`, `drawTraits()`, `TRAIT_PRESETS` | `45-traits.js` |
 | reloads: `startReload()`, `updateReload()`, `finishReload()`, `activeReloadPress()` | `22-actions.js` |
@@ -303,7 +314,7 @@ To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "con
 - Several arcade cabinets in one place take their games from `arcPicks(n)` (distinct games), not independent random picks.
 - Any new chest needs a loot seed `ls:(Math.random()*4294967296)>>>0` where it is created (inside generation), or its contents will not repeat on the same seed. `addChest()` does this for you.
 - When checking that generation repeats, take the fingerprint in the same instant the deck is built: the game loop keeps running between test steps, and creatures move and fires spread.
-- `30-traps.js` to `46-stattips.js` load after `29-loop.js`. `42-gas.js` adds `CLOUD.tear` and `CLOUD.nerve` at load. `35-vaults.js` and `40-cameras.js` also add `HACKR.vault` / `HACKR.cams` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
+- `30-traps.js` to `47-sprites.js` load after `29-loop.js`. `42-gas.js` adds `CLOUD.tear` and `CLOUD.nerve` at load. `35-vaults.js` and `40-cameras.js` also add `HACKR.vault` / `HACKR.cams` at load. `34-herbs.js` does run code at load (it merges `DRAUGHTS` into `FOOD` and adds `QUICK` entries), which is fine because it only touches data tables. `29-loop.js` is no longer the end of the game code: test hooks should be injected before the closing `})();`, not after `requestAnimationFrame(frame);`.
 - `mkEnemy()` rolls a kit (`rollKit()`), which draws random numbers for guards, riot guards and husks; code that needs a bare creature calls `setKit(e,null)` afterwards. Kit attack timing lives in `e.kcd`, not `e.cd`.
 - `powerOff` is per deck: `enterNode()` resets it for real decks, and since v1.01 `launchTestDeck0()`, `returnToTest()` and `newTest()` do too (before, a breaker thrown on one test deck left the next one dark).
 - A generation tweak for a scenario should only draw a random number when the scenario sets that field (`if(S.x&&Math.random()<S.x)`), so Normal decks keep generating exactly as before.
