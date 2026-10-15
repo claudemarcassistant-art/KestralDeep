@@ -21,7 +21,7 @@ src/
   styles.css      page styles
   boot.js         font loader and the on-screen error reporter
   data/           content and tuning tables (loaded first)
-    art.js                  art pass data: PEOPLE (person configs), PLAYER_TINT, ART_LIGHT
+    art.js                  art pass data: PEOPLE (person configs), PLAYER_TINT, ART_LIGHT, ART_PAL (creature tones), ART_DABS
     character.js            crew files, substats, cores, skills, movement skills, psychic actions, sling, injuries, spacebar styles, Stats tab links and tips
     crafting.js             Workbench recipes and upgrades, grinder salvage yields
     creatures.js            creature stats, bestiary order and text, kill points, threat costs, bosses, hunting memory, arena waves, traits
@@ -67,7 +67,7 @@ src/
     22-actions.js           guns and reloading, melee, dash, psychic powers, combo
     23-vision.js            line of sight, shadows, astral projection
     24-update.js            per-frame simulation
-    25-render-helpers.js    text, UI boxes, sprites
+    25-render-helpers.js    text, UI boxes, the player's drawing and weapons
     26-hud.js               HUD
     27-menus.js             pack, workbench, perks, files, map, codex and title menus
     28-render-world.js      world rendering, lighting, fog
@@ -88,6 +88,7 @@ src/
     45-traits.js            creature traits: rolling, effects hooks, volatile bursts, marks, bestiary memory, console presets
     46-stattips.js          Stats tab: core and substat links, tooltips with sources, keyboard selection
     47-sprites.js           art pass toolkit (ell, line, dabs, paint, person, HATS, glow, vshade, spriteLight) and the player's pose
+    48-creature-art.js      painted creatures: drawEnemy(), the study's creatures (CART), emissive parts after the darkness
     44-loadouts.js          armed humans: kit rolling, kit guns (magazines, reloads), kit melee, quick items, drops, drawing, V-look text
     43-tools.js             industrial blower (air lane and its pushes) and stun gun (zaps, stun, water jolts), arcs drawing
 scripts/build.mjs  the build

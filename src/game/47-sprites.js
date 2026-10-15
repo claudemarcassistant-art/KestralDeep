@@ -9,17 +9,25 @@ function artRng(seed){let s=seed>>>0;return()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=M
 function ell(g,x,y,rx,ry,rot,col){g.fillStyle=col;g.beginPath();g.ellipse(x,y,Math.max(.1,rx),Math.max(.1,ry),rot||0,0,TAU);g.fill();}
 function line(g,x1,y1,x2,y2,w,col){g.strokeStyle=col;g.lineWidth=w;g.lineCap='round';g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();g.lineCap='butt';}
 function pxl(g,x,y,col,s){s=s||1;g.fillStyle=col;g.fillRect(x-s/2,y-s/2,s,s);}
-function shadow(g,x,y,rx,ry,a){ell(g,x,y,rx,ry,0,'rgba(0,0,0,'+(a==null?.35:a)+')');}
+// a colour given as an rgba() string is parsed on every fill (about ten times the cost of a hex colour in Chromium),
+// so translucent fills use a hex colour and globalAlpha instead
+function shadow(g,x,y,rx,ry,a){const A0=g.globalAlpha;g.globalAlpha=A0*(a==null?.35:a);ell(g,x,y,rx,ry,0,'#000');g.globalAlpha=A0;}
+function pxlA(g,x,y,col,a,s){const A0=g.globalAlpha;g.globalAlpha=A0*a;pxl(g,x,y,col,s);g.globalAlpha=A0;}
 // a fixed dab layout per key, made once and reused
 const DAB={};
 function dabs(key,n){if(!DAB[key]){const R=artRng(strHash(key)),arr=[];for(let i=0;i<n;i++){const an=R()*TAU,r=Math.sqrt(R());arr.push({u:Math.cos(an)*r,v:Math.sin(an)*r,s:R(),j:R(),p:R()*TAU});}DAB[key]=arr;}return DAB[key];}
-// painterly blob in the current (local) frame; L = direction toward the light, in that frame
-function paint(g,key,n,x,y,rx,ry,pal,L,t,o){o=o||{};const d=dabs(key,n),lx=Math.cos(L),ly=Math.sin(L),wob=o.wob==null?.2:o.wob,sz=o.size||1.15;
+// painterly blob in the current (local) frame; L = direction toward the light, in that frame. The study set a colour
+// and drew a rectangle per dab; here dabs are gathered per tone and each tone is filled once as one path (darkest
+// first, so lit dabs sit on top), which draws the same dabs about five times faster (Batch 5 session 2).
+const paintBuckets=[[],[],[],[],[],[],[],[]];
+function paint(g,key,n,x,y,rx,ry,pal,L,t,o){o=o||{};const d=dabs(key,n),lx=Math.cos(L),ly=Math.sin(L),wob=o.wob==null?.2:o.wob,sz=o.size||1.15,np=pal.length;
   ell(g,x,y,rx*.92,ry*.92,0,pal[0]);
+  for(let i=0;i<np;i++)paintBuckets[i].length=0;
   for(const q of d){const rr2=q.u*q.u+q.v*q.v;const sh=.42+.42*(q.u*lx+q.v*ly)+.28*(1-rr2)+(q.j-.5)*.5;
-    const i=Math.max(0,Math.min(pal.length-1,Math.floor(sh*pal.length)));
+    const i=Math.max(0,Math.min(np-1,Math.floor(sh*np)));
     const dx=x+q.u*rx+Math.sin(t*(1.4+q.s)+q.p)*wob,dy=y+q.v*ry+Math.cos(t*(1.2+q.s)+q.p)*wob,s=sz*(.7+q.s*.7);
-    g.fillStyle=pal[i];g.fillRect(dx-s/2,dy-s/2,s,s);}}
+    paintBuckets[i].push(dx-s/2,dy-s/2,s);}
+  for(let i=0;i<np;i++){const B=paintBuckets[i];if(!B.length)continue;g.fillStyle=pal[i];g.beginPath();for(let k=0;k<B.length;k+=3)g.rect(B[k],B[k+1],B[k+2],B[k+2]);g.fill();}}
 // soft halo for anything that gives off light (rgb as 'r,g,b')
 function glow(g,x,y,r,rgb,a){const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba('+rgb+','+a+')');gr.addColorStop(1,'rgba('+rgb+',0)');g.fillStyle=gr;g.fillRect(x-r,y-r,r*2,r*2);}
 // vertical shading: alpha from top to bottom over h rows

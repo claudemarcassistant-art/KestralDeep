@@ -124,6 +124,7 @@ function render(){
   fctx.fillStyle='rgba(0,0,0,1)';poly(fctx,inner);
   for(const f of glows)cutFogRadial(f.pts,f.x-camX,f.y-camY,f.r,Math.min(1,f.t/2));
   ctx.drawImage(fcv,0,0);
+  drawEmissives();
   if(S.nvg){ctx.globalCompositeOperation='multiply';F('#8fe39a',0,0,W,H);ctx.globalCompositeOperation='source-over';
     ctx.fillStyle='rgba(120,255,140,0.04)';for(let y=(T*40|0)%3;y<H;y+=3)ctx.fillRect(0,y,W,1);}
   // lights
