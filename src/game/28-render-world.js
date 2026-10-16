@@ -109,6 +109,7 @@ function render(){
     else if(visible(b.x,b.y,2)){ctx.fillStyle='#1f3a36';circ(x,y,2.5);ctx.fillStyle='#9fd4c8';circ(x,y,1.5);}}
   for(const q of parts){const x=q.x-camX,y=q.y-camY;if(x<-4||y<-4||x>W+4||y>H+4)continue;ctx.globalAlpha=Math.max(0,q.t/q.m);F(q.c,Math.round(x),Math.round(y),q.s,q.s);}
   ctx.globalAlpha=1;
+  drawRoomLights();
   // fog
   fctx.globalCompositeOperation='source-over';fctx.clearRect(0,0,W,H);
   fctx.fillStyle=cond.light==='dark'?'rgba(2,3,4,0.96)':cond.light==='lit'?'rgba(3,4,5,0.84)':'rgba(3,4,5,0.9)';fctx.fillRect(0,0,W,H);

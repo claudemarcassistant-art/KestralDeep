@@ -71,3 +71,16 @@ const ART_OLC={player:'#f2b464',husk:'#b4c296',crawler:'#f0a060',spitter:'#a8ccf
   medstation:'#ff8080',freezer:'#c8e4f4',dispenser:'#e0c56a',arcade:'#7af0ff',camera:'#7ad0b0',hatch:'#d9a441',fan:'#b8c4ca'};
 // Codex Systems entry for the Sprite outlines option
 const OUTLINE_DESC='Options > Sprite outlines (off by default) draws a thin line around you, creatures, crew, guards, items and interactables, each in a brighter shade of its own colour; items take the colour of their kind (ammo amber, materials blue, medical green, food orange, keys and data violet, weapons and gear white). Only the outer edge is outlined: shadows, glows and the gaps inside a creature are not. Hidden things stay hidden: undiscovered hatches and trap plates never get an outline, and neither do cloaked figures.';
+// biome kits (the study's KITS): each biome's weighted mix of room floor styles (each room picks one), its corridor
+// style, a weighted mix of wall styles (each run of wall picks one) and its room-light style. Same order as PAL/BNAMES.
+// Flags: lanes (painted lane lines on concrete), frost (frost specks), wet (a wet sheen on duckboards).
+const KITS=[
+ {name:'Intake',floors:[['panel',50],['tread',35],['concrete',15]],corr:'grate',walls:[['pipes',70],['bulkhead',30]],light:'sodium'},
+ {name:'Pump Hall',floors:[['tread',50],['concrete',30],['mesh',20]],corr:'catwalk',walls:[['bulkhead',55],['pipes',45]],light:'cage'},
+ {name:'Sorting Floor',floors:[['concrete',55],['panel',30],['tread',15]],corr:'grille',walls:[['concrete',60],['pipes',40]],light:'strip',lanes:true},
+ {name:'Cold Store',floors:[['ribbed',60],['ceramic',40]],corr:'grille',walls:[['subway',80],['bulkhead',20]],light:'panel',frost:true},
+ {name:'Brine Works',floors:[['duckboard',40],['concrete',40],['mesh',20]],corr:'catwalk',walls:[['corroded',70],['bulkhead',30]],light:'teal',wet:true},
+ {name:'Relay Core',floors:[['mesh',40],['panel',40],['ceramic',20]],corr:'grate',walls:[['rack',60],['pipes',40]],light:'status'}];
+// room lights (visual only): how strongly lit and normal decks dim between pools, the faint colour in each pool, how
+// see-through the ceiling fixtures are and their parallax, and how often a corridor gets a light
+const ROOM_LIGHT_CFG={dimLit:.35,dimNormal:.22,tint:.13,ceil:.38,ceilLit:.63,parallax:.05,corrEvery:41,corrApart:8,deadFlicker:.1};

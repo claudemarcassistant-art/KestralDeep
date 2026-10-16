@@ -1,7 +1,7 @@
 // ---------- tile art ----------
 function R(c,x,y,w,h){mctx.fillStyle=c;mctx.fillRect(x,y,w,h);}
 function paintMap(){
-  curPal=PAL[biomeOverride!=null?biomeOverride:(depth-1)%PAL.length];
+  curPal=PAL[biomeOverride!=null?biomeOverride:(depth-1)%PAL.length];kitPrep();
   R('#050607',0,0,mcv.width,mcv.height);
   for(let y=0;y<MH;y++)for(let x=0;x<MW;x++)paintTile(x,y);
   for(let i=0;i<MW*MH;i++)if(hz[i]===1)paintScorch(i%MW,(i/MW)|0);
@@ -11,6 +11,7 @@ function paintMap(){
       if(h%4===0)for(let k=0;k<3;k++){const gx=px+1+((h>>>(k*4))%10),gy=py+3+((h>>>(k*4+2))%8);R('#3a7a2a',gx,gy,1,2);R('#5aa03a',gx,gy-1,1,1);}
       if(h%9===0){const fx=px+2+((h>>>7)%8),fy=py+2+((h>>>10)%8);R('#3a7a2a',fx,fy+1,1,2);R(['#e06a9a','#e0d050','#8a7ae0','#e08a3a'][(h>>>12)%4],fx,fy,1,1);}}
     else if(map[i]===1&&!solid(x,y+1)&&h%2===0){for(let k=0;k<TS;k++){const vx=px+3+((h>>>3)%6)+Math.round(Math.sin(k*0.8+h)*1.5);R('#2e5a1e',vx,py+k,1,1);if(k%4===0)R('#4a8a2a',vx+1,py+k,2,1);}}}
+  placeRoomLights();
 }
 function paintArea(cx,cy){for(let y=cy-1;y<=cy+1;y++)for(let x=cx-1;x<=cx+1;x++)if(x>=0&&y>=0&&x<MW&&y<MH)paintTile(x,y);}
 function isoPuddle(px,py,h){
@@ -151,8 +152,7 @@ function paintTile(x,y){
   if(m===0&&openVent[i]){R('#0b0e0d',px,py,TS,TS);R(P.cap,px,py,TS,1);R(P.faceLo,px,py+TS-1,TS,1);for(let k=2;k<TS-1;k+=3)R('#1a1f1e',px+1,py+k,TS-2,1);return;}
   if(m===0){
     if(kind[i]>=5){moduleFloor(kind[i],x,y,px,py,h,P);}
-    else if(kind[i]===4){grateFloor(x,y,px,py,h,P);mctx.fillStyle='rgba(0,0,0,0.25)';mctx.fillRect(px,py,TS,TS);}
-    else if(kind[i])roomFloor(x,y,px,py,h,P);else grateFloor(x,y,px,py,h,P);
+    else kitFloor(x,y,px,py,h,P,i);
     floorEdgeShade(x,y,px,py);
     const l=liq[i];
     if(l===1)puddle(x,y,px,py,h);
@@ -197,54 +197,11 @@ function floorEdgeShade(x,y,px,py){
   if(solid(x-1,y)){tA(.22,px,py,1,TS);tA(.1,px+1,py,1,TS);}
   if(solid(x+1,y)){tA(.22,px+TS-1,py,1,TS);tA(.1,px+TS-2,py,1,TS);}
   if(solid(x,y+1))tA(.18,px,py+TS-1,TS,1);}
-function roomFloor(x,y,px,py,h,P){
-  R(P.fl,px,py,TS,TS);tW(((h>>>3)%5)*.006,px,py,TS,TS);
-  // 2x2 panels: outer bevel only, a faint inner seam
-  if(x%2===0)R(P.hi,px,py,1,TS);else R(P.lo,px+TS-1,py,1,TS);
-  if(y%2===0)R(P.hi,px,py,TS,1);else R(P.lo,px,py+TS-1,TS,1);
-  if(x%2===1)tC(P.lo,.5,px,py+1,1,TS-2);
-  if(y%2===1)tC(P.lo,.5,px+1,py,TS-2,1);
-  const cx=x%2===0?px+2:px+TS-3,cy=y%2===0?py+2:py+TS-3;R(P.riv,cx,cy,1,1);tW(.08,cx,cy,1,.5);
-  for(let k=0;k<5;k++){const q=(h>>>(k*5))&31;tW(.025+(q%3)*.01,px+(q%11),py+((q*7)%11),1+(k%2),1);}
-  const v=h%37;
-  if(v<3){R(P.lo,px+3,py+3,6,6);R(P.gr,px+4,py+4,4,1);R(P.gr,px+4,py+6,4,1);R(P.hi,px+3,py+8,6,1);tA(.25,px+3,py+3,6,1);}
-  else if(v<6){tC('#46788a',.2,px+2,py+4,7,4);tC('#46788a',.2,px+4,py+3,4,6);tC('#bee1e6',.4,px+4,py+4,2,1);tC('#bee1e6',.4,px+7,py+6,1,1);}
-  else if(v<9){let cx2=px+3+(h>>>8)%4,cy2=py+2;for(let k=0;k<7;k++){R(P.lo,cx2,cy2,1,1);tW(.05,cx2+1,cy2,1,1);cy2++;cx2+=((h>>>k)&1)?1:-1;if(cx2<px+1||cx2>px+10)break;}}
-  else if(v<11){tC('#784623',.22,px+1+(h%4),py+3,5,4);tC('#784623',.22,px+3+(h%3),py+5,4,4);tC('#965a28',.18,px+2+(h%4),py+4,2,2);}
-  else if(v<13){for(let k=0;k<3;k++)R(P.riv,px+3+((h>>>(k*4))%6),py+3+((h>>>(k*4+2))%6),1,1);}
-  else if(v===13){R(P.lo,px+4,py+3,4,6);R(P.hi,px+5,py+4,2,1);R(P.hi,px+5,py+6,2,1);}
-  if(hash(777,y)%9===0){for(let k=0;k<TS;k++){const yy=py+6+Math.round(Math.sin((px+k)*0.21)*2);R('#0a0c0b',px+k,yy,1,1);if(k%3===0)R(P.hi,px+k,yy-1,1,1);}}
-}
-function grateFloor(x,y,px,py,h,P){
-  R(P.gr,px,py,TS,TS);
-  const vert=solid(x-1,y)&&solid(x+1,y);
-  if(h%3===0){if(vert)tC('#5a503c',.35,px+3,py,3,TS);else tC('#5a503c',.35,px,py+5,TS,3);}
-  for(let k=1;k<TS;k+=2){if(vert){R(P.sl,px+k,py+1,1,TS-2);tW(.06,px+k,py+1,1,1);}else{R(P.sl,px+1,py+k,TS-2,1);tW(.07,px+1,py+k,TS-2,.5);}}
-  R(P.lo,px,py,TS,1);R(P.lo,px,py,1,TS);
-  if(h%11===0)tC('#6eaab4',.3,px+3+(h%5),py+4,2,1);
-  if(h%17===0)R('#0a0c0b',px+2,py+2,3,3);
-}
+// room floors, corridors and wall faces are drawn from the deck's biome kit (53-biome-kits.js: kitFloor(), kitWall())
 function wallTile(x,y,px,py,h,P){
   const frontFace=!solid(x,y+1);
   let adj=false;for(const [dx,dy] of D8)if(!solid(x+dx,y+dy)){adj=true;break;}
-  if(frontFace){
-    R(P.face,px,py,TS,TS);for(let k=0;k<TS;k++)tA(k/TS*.22,px,py+k,TS,1);
-    R(P.cap,px,py,TS,2);tW(.12,px,py,TS,1);R(P.faceHi,px,py+2,TS,1);
-    if(x%2===0)R(P.faceLo,px,py+3,1,TS-5);
-    R(P.faceHi,px+2,py+4,1,1);R(P.faceHi,px+TS-3,py+4,1,1);
-    const pipeRow=hash(3,y)%3===0;
-    if(pipeRow){R(P.pipe,px,py+6,TS,2);R(P.pipeHi,px,py+6,TS,1);tA(.3,px,py+8,TS,1);
-      if(x%4===0){R(P.pipe,px+4,py+5,2,4);R(P.pipeHi,px+4,py+5,2,1);}
-      if(h%3===0)tC('#6e401e',.55,px+2+(h%7),py+8,1,2+(h%2));
-      if(h%13===0)tC('#78a096',.35,px+7,py+8,1,2);}
-    else if(h%8===0){R(P.faceLo,px+3,py+4,6,5);for(let k=0;k<3;k++)R(P.face,px+4,py+5+(k*1.5|0),4,1);R(P.faceHi,px+3,py+9,6,1);}
-    else if(h%8===3){R(P.faceHi,px+3,py+4,6,4);R(P.faceLo,px+4,py+5,4,1);R(P.faceLo,px+4,py+6,3,1);tW(.06,px+3,py+4,6,1);}
-    else if(h%8===5){R('#0e1110',px+2,py+3,1,TS-5);R('#0e1110',px+4,py+3,1,TS-5);R(P.faceHi,px+2,py+3,1,1);}
-    if(h%23===0&&!pipeRow){R(P.acc,px+5,py+4,2,2);tW(.2,px+5,py+4,1,1);tC(P.acc,.12,px+3,py+3,6,4);}
-    R(P.faceLo,px,py+TS-2,TS,2);tA(.25,px,py+TS-1,TS,1);
-    if(hash(9,y)%4===0)for(let k=0;k<TS;k++)if(((px+k)>>1)%2===0)R('#6b5220',px+k,py+TS-2,1,1);
-    if(!solid(x-1,y))R(P.faceHi,px,py,1,TS);
-    if(!solid(x+1,y))R(P.faceLo,px+TS-1,py,1,TS);
+  if(frontFace){kitWall(x,y,px,py,h,P);
   }else if(adj){
     R(P.wall,px,py,TS,TS);R(P.faceHi,px+2,py+2,TS-4,TS-4);R(P.wall,px+3,py+3,TS-6,TS-6);
     for(let k=0;k<3;k++){const q=(h>>>(k*6))&63;tA(.12,px+3+(q%6),py+3+((q>>3)%6),1,1);}
