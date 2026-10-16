@@ -53,7 +53,8 @@ function guardBodyDir(e){const look=e.look||0;if(e._bd==null)e._bd=look;if(olPas
   let d=target-e._bd;while(d>Math.PI)d-=TAU;while(d<-Math.PI)d+=TAU;e._bd+=d*0.18;return e._bd;}
 function drawGuardBody(e,x,y,t,L){const b=ET[e.type],body=guardBodyDir(e);let head=(e.look||0)-body;while(head>Math.PI)head-=TAU;while(head<-Math.PI)head+=TAU;head=Math.max(-1.3,Math.min(1.3,head));
   const k=e.kit,gun=!k||k.gun,melee=k&&!k.gun&&!e.dry;
-  person(ctx,x,y,body,t,L,guardCfg(e,b.riot),{arms:gun&&!(e.reloadT>0)?'aim':'rest',walk:(e._mv||0)>0.12,head,noGun:!!k,hands:melee?[[3.8,2.6],null]:null,
+  const fn=k&&ARM_ART[k.main],down=e.reloadT>0||e.dry,wpn=fn?g=>{g.save();if(k.gun){if(down){g.translate(1.6,3.4);g.rotate(.5);}else g.translate(4,.4);}else{const sw=e.swingT>0?-.6:.55;g.translate(3.8,2.6);g.rotate(sw);}fn(g,kitArmState(e));g.restore();}:null;
+  person(ctx,x,y,body,t,L,guardCfg(e,b.riot),{arms:gun&&!(e.reloadT>0)?'aim':'rest',walk:(e._mv||0)>0.12,head,noGun:!!k,wpn,hands:melee?[[3.8,2.6],null]:k&&k.gun&&down?[[1.6,3.6],null]:null,
     over(g){if(!b.riot&&gun){const A0=g.globalAlpha;g.globalAlpha=A0*.8;pxl(g,4.4,-.6,'#fff0c8',.9);g.globalAlpha=A0;}}});}
 
 // ---------- anomalies ----------

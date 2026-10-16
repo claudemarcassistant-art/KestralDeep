@@ -50,7 +50,7 @@ function itemBody(it,x,y){const t=T;
     case 'tonic':{const c=CORES[SUBS[it.sub].core].col;F('#15110a',x-2,y-4,5,9);F(c,x-1,y-1,3,4);F('#d8dcd4',x-1,y-3,3,1);F('#8e978b',x-1,y-4,3,1);FA('#ffffff',.5,x-1,y-1,1,2);break;}
     case 'emetic':F('#15110a',x-2,y-4,5,8);F('#8a9a40',x-1,y-2,3,5);F('#b8c860',x-1,y-2,1,5);F('#d8d0b0',x-1,y-3,3,1);break;
     case 'sigil':{const c=CORES[it.core].col,g=0.5+0.5*Math.sin(T*4);ctx.globalAlpha=0.35*g;ctx.fillStyle=c;circ(x,y,6);ctx.globalAlpha=1;F(c,x-1,y-4,2,8);F(c,x-4,y-1,8,2);F('#fff',x,y,1,1);break;}
-    case 'weapon':F('#1a1e1c',x-5,y-1,10,3);F('#5a6260',x-5,y-2,9,2);F('#8a9290',x-5,y-2,9,1);F('#3a2614',x-2,y,2,3);F('#5a3e22',x-2,y,1,3);F(AMBER,x+3,y-2,1,1);break;
+    case 'weapon':if(it.w&&armOnFloor(it.w,x,y,it.icon))break;F('#1a1e1c',x-5,y-1,10,3);F('#5a6260',x-5,y-2,9,2);F('#8a9290',x-5,y-2,9,1);F('#3a2614',x-2,y,2,3);F('#5a3e22',x-2,y,1,3);F(AMBER,x+3,y-2,1,1);break;
     case 'gear':{const c=GEAR[it.gear]?SLOTCOL[GEAR[it.gear].slot]:AMBER;F('#2a2014',x-3,y-2,7,6);F('#5a4a2e',x-3,y-2,6,5);F('#7a6440',x-3,y-2,6,1);F('#1a140c',x-1,y-3,2,2);F(c,x-3,y,6,1);F('#3a2e1c',x+2,y-2,1,5);break;}
     case 'tuft':drawTuft(it,x,y);break;
     case 'tool':qIcon(it.tool,x,y);break;
@@ -156,4 +156,4 @@ function drawFixture(f){const x=f.tx*TS-camX,y=f.ty*TS-camY;if(x<-14||y<-14||x>W
 function olFixKey(f){return f.kind==='grinder'?(f.spinT>0?null:'grinder'):f.kind==='locker'?'locker'+(f.used?1:0):f.kind==='toolbench'?'tb'+(f.part?1:0):f.kind;}
 function olBarrelKey(b){return b.crate?'crate':'barrel'+(b.fuse>=0?1:0);}
 function olItemKey(it){if(it.pop>0)return null;const s=it.type==='weapon'||it.type==='gear'||it.type==='tool'||it.type==='tuft'||it.type==='sigil'?'':
-  it.type==='food'?it.food:it.type==='raw'?it.raw:it.type==='tonic'?it.sub:'';return 'it:'+it.type+':'+(it.gear||it.tool||it.tuft||it.core||s||'');}
+  it.type==='food'?it.food:it.type==='raw'?it.raw:it.type==='tonic'?it.sub:'';return 'it:'+it.type+':'+(it.w||it.gear||it.tool||it.tuft||it.core||s||'');}

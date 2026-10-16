@@ -76,7 +76,8 @@ function person(g,x,y,a,t,L,c,o){
   if(c.strap)line(g,1.6,-3,-1.8,2.8,.8,c.strap);
   if(c.pads){for(const s of[-1,1]){ell(g,.1,s*3.4,1.75,1.45,0,c.dark);ell(g,.1,s*3.4,1.45,1.15,0,c.pads);pxl(g,.1+lx*.6,s*3.4+ly*.5,'#cfd8dc',.8);}}
   if(c.accent){ell(g,1.1,0,1.0,2.1,0,c.accent);}
-  // arms
+  // arms (o.wpn draws held armaments first, so the hands sit on their grips)
+  if(o.wpn)o.wpn(g,t,Lr);
   for(const [h,s] of [[hR,1],[hL,-1]]){line(g,.5,s*3.0,h[0],h[1],1.5,c.dark);line(g,.5,s*3.0,h[0],h[1],.9,c.suit);ell(g,h[0],h[1],.8,.8,0,c.skin||c.pads||'#9aa4a8');}
   if(o.arms==='swing'&&!o.noBlade){const ex=hR[0]+Math.cos(sw)*6.5,ey=hR[1]+Math.sin(sw)*6.5;line(g,hR[0],hR[1],ex,ey,1.3,'#76828a');pxl(g,ex,ey,'#b8c4c8',.9);
     if((o.swingK!=null?o.swingK:(t%.9)/.9)<.32){g.strokeStyle='rgba(255,240,210,.55)';g.lineWidth=.8;g.beginPath();g.arc(.4,.8,10,-1.4,sw);g.stroke();}}
@@ -109,8 +110,8 @@ const HATS={
 // ---------- the player ----------
 // Pose from game state: a melee swing in progress (swingT) -> swing, timed to the real swing; holding or aiming a gun
 // -> aim; otherwise rest. Feet step with the distance actually moved. Tints (hurt, adrenaline, night optics) are
-// variants of PEOPLE.a, made once. Hands follow special weapons (bow, spear, whip, soaker, chainsaw, stun gun), which
-// the game still draws itself (drawPlayerWeapon()), and two-handed weapons use both hands.
+// variants of PEOPLE.a, made once. Hands and held armaments come from armHold() (52-arm-art.js): melee in the right
+// hand, an off-hand gun forward in the left, both hands on two-handed armaments and on guns when the right is free.
 let plStep=0,plLX=null,plLY=null,plMoving=0;
 const plCfgCache={};
 function playerCfg(){const p=player,k=(p.hurtT>0.2?'h':p.adrenT>0?'a':'n')+(p.gear&&p.gear.head==='nvg'?'v':'');
@@ -118,16 +119,6 @@ function playerCfg(){const p=player,k=(p.hurtT>0.2?'h':p.adrenT>0?'a':'n')+(p.ge
 function playerPose(){const p=player,set=p.arms[p.armSet],m=set.main;
   if(plLX!=null){const d=Math.hypot(p.x-plLX,p.y-plLY);if(d<20){plStep+=d*0.55;plMoving=d>0.05?0.12:Math.max(0,plMoving-1/60);}}plLX=p.x;plLY=p.y;
   const o={walk:plMoving>0,step:plStep,noGun:true,noBlade:true,lampCol:p.gear&&p.gear.head==='nvg'?PLAYER_TINT.nvg.lampCol:null};
-  const chg=Math.min(1,p.chg||0);
-  if(m==='bow'){o.arms='aim';o.hands=[[3-chg*5,.6],[5,-.2]];}
-  else if(m==='spear'){const j=p.jabT>0?Math.sin((1-p.jabT/0.16)*Math.PI)*9:0;o.arms='aim';o.hands=[[2+j,3],[-1+j*.6,2.4]];}
-  else if(m==='whip'){o.arms='rest';o.hands=[[2,3],null];}
-  else if(m==='soaker'){o.arms='aim';o.hands=[[3,3.2],[6,1.2]];}
-  else if(m==='chainsaw'){o.arms='aim';o.hands=[[2.5,3],[3.5,-.6]];}
-  else if(m==='stungun'){o.arms='rest';o.hands=[[3.5,3],null];}
-  else if(p.swingT>0||(m&&!p.weapon&&!p.aiming)){const two=m&&ARM[m]&&ARM[m].hand==='two',rel=p.swingT>0?-0.6+(0.12-p.swingT)*10:two?0:0.7;
-    o.arms=p.swingT>0?'swing':'rest';o.swingK=p.swingT>0?Math.min(1,Math.max(0,(0.12-p.swingT)/0.12)):null;
-    if(m){const h=[Math.cos(rel)*4.3,Math.sin(rel)*4.3];o.hands=[h,two?[Math.cos(rel)*2.4-.4,Math.sin(rel)*2.4-.6]:null];}}
-  else if(p.weapon||p.aiming)o.arms='aim';
-  else o.arms='rest';
+  // hands and held armaments from armHold() (52-arm-art.js); with nothing held, the arms rest (or swing for a punch)
+  const H=armHold();o.arms=H.items.length?'aim':'rest';if(H.hands)o.hands=H.hands;o.held=H.items;
   return o;}

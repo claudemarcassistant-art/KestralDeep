@@ -18,7 +18,7 @@ function kitTick(e,dt){if(e.swingT>0)e.swingT-=dt;if(e.kcd>0)e.kcd-=dt;if(!(e.re
 function kitFire(e,tx,ty){const C=LOADOUT_CFG,k=e.kit,w=WPN[k.main];if(e.reloadT>0||e.dry)return false;
   if(e.mag<=0){if(e.reserve>0){e.reloadT=MAGS[k.main][1]*C.reloadMul;if(seen[tileIdx(e)])float(e.x,e.y-9,'reloading','#e8dcb0');sfx('click');}else{e.dry=true;if(seen[tileIdx(e)])float(e.x,e.y-9,'out of ammo','#e8dcb0');}return true;}
   const cd=w.cd*(C.cdMul[k.main]||3),per=C.gunDps*(C.gunDpsMul[k.main]||1)*cd/(w.pellets||1),base=Math.atan2(ty-e.y,tx-e.x),sp=w.spread*C.spreadMul+C.spreadAdd,v=Math.max(C.minSpeed,w.speed*C.speedMul);
-  e.kcd=cd*rr(0.9,1.1);e.mag--;e.look=base;
+  e.kcd=cd*rr(0.9,1.1);e.mag--;e.look=base;e.shotT=T;
   for(let i=0;i<(w.pellets||1);i++){const a=base+rr(-sp,sp);bullets.push({x:e.x,y:e.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:1.4,dmg:per,p:false,src:e,slug:true,kitGun:k.main});}
   sfx(w.sfx||'shot');noise(e.x,e.y,(w.noise||120)*0.8);return true;}
 function kitMeleeStats(e){const C=LOADOUT_CFG,k=e.kit;if(!k)return null;if(k.gun)return e.dry?{dmg:C.whip.dmg,cd:C.whip.cd,reach:C.whip.reach}:null;
@@ -56,8 +56,11 @@ function drawKit(e){const k=e.kit,x=Math.round(e.x-camX),y=Math.round(e.y-camY),
   const a0=e.look!=null&&ET[e.type].guard?e.look:Math.atan2(p.y-e.y,p.x-e.x),a=a0+(e.reloadT>0?0.9:0),ca=Math.cos(a),sa=Math.sin(a),px=-sa,py=ca;
   if(k.armor){const c=k.armor==='platerig'?'#1a1e22':'#2a3026';F(c,Math.round(x+px*e.r*0.8)-1,Math.round(y+py*e.r*0.8)-1,2,2);F(c,Math.round(x-px*e.r*0.8)-1,Math.round(y-py*e.r*0.8)-1,2,2);}
   if(k.head&&!ET[e.type].riot){F('#15181a',Math.round(x+ca*2)-1,Math.round(y+sa*2)-1,3,3);F('#8a9298',Math.round(x+ca*2),Math.round(y+sa*2),1,1);}
-  const A=ARM[k.main];if(!A)return;
-  if(k.gun){const L=Math.round((GUNLEN[k.main]||6)*0.7);ctx.strokeStyle='#101214';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+px*2+ca*2,y+py*2+sa*2);ctx.lineTo(x+px*2+ca*(2+L),y+py*2+sa*(2+L));ctx.stroke();
-    if(e.reloadT>0&&Math.sin(T*10)>0)F('#e8dcb0',Math.round(x+px*2+ca*(2+L)),Math.round(y+py*2+sa*(2+L)),1,1);}
-  else{const L=k.main==='cutter'?5:k.main==='chainsaw'?9:8,sw=e.swingT>0?0.8:0,b2=a+sw,c2=Math.cos(b2),s2=Math.sin(b2);ctx.strokeStyle=KIT_COL[k.main]||'#8a9298';ctx.lineWidth=k.main==='bat'||k.main==='chainsaw'?2:1;
-    ctx.beginPath();ctx.moveTo(x+px*3+c2*2,y+py*3+s2*2);ctx.lineTo(x+px*3+c2*L,y+py*3+s2*L);ctx.stroke();}}
+  const A=ARM[k.main];if(!A||ET[e.type].guard)return;
+  // the held weapon, from the armament drawings (52-arm-art.js); guards hold theirs inside person() (drawGuardBody())
+  const fn=ARM_ART[k.main];if(!fn)return;const s=kitArmState(e);ctx.save();
+  if(k.gun){ctx.translate(x+px*2+ca*2,y+py*2+sa*2);ctx.rotate(a);ctx.scale(.85,.85);fn(ctx,s);}
+  else{const b2=a+(e.swingT>0?0.8:0.35);ctx.translate(x+px*3+Math.cos(b2)*2,y+py*3+Math.sin(b2)*2);ctx.rotate(b2);ctx.scale(.85,.85);fn(ctx,s);}
+  ctx.restore();if(k.gun&&e.reloadT>0&&Math.sin(T*10)>0)F('#e8dcb0',Math.round(x+px*2+ca*7),Math.round(y+py*2+sa*7),1,1);}
+// an armed creature's armament state for ARM_ART: its last shot, and a chainsaw running while it swings
+function kitArmState(e){const k=e.shotT!=null&&T>=e.shotT?T-e.shotT:99;return Object.assign({},ARM_IDLE,{t:T+(e._to||0),k,rev:e.kit&&e.kit.main==='chainsaw'&&e.swingT>0,nock:false});}

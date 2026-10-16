@@ -44,7 +44,7 @@ function fire(){
   const mx=player.x+Math.cos(player.ang)*7,my=player.y+Math.sin(player.ang)*7;
   for(let i=0;i<w.pellets;i++){const sp=aimMul()*(perk('steady')?0.7:1)*(1-0.15*U('steady'))*w.spread*(player.aiming?(w.pellets>1?0.6:0.3)*(S.laser?0.6:1):1)*(player.sprinting?2.5:1),a=player.ang+rr(-sp,sp),s=w.speed*rr(.9,1.1);
     bullets.push({x:player.x,y:player.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:0.6,dmg:w.dmg*(player.aiming&&S.laser?1.1:1)*(1+0.08*U('pen')),cc:critChance(player.weapon)+(player.aiming&&S.laser?0.03:0),p:true,kb:w.kb,pierce:!!w.pierce,kind:player.weapon,hits:w.pierce?new Set():null});}
-  player.flashT=0.05;
+  player.flashT=0.05;player.shotT=T;
   const lc=player.weapon==='bolt'?'140,200,255':'255,210,120';
   lights.push({x:mx,y:my,r:player.weapon==='nailer'?30:50,t:0.06,m:0.06,c:lc});
   for(let i=0;i<(player.weapon==='nailer'?1:4);i++)parts.push({x:mx,y:my,vx:Math.cos(player.ang+rr(-.6,.6))*rr(40,120),vy:Math.sin(player.ang+rr(-.6,.6))*rr(40,120),t:0.15,m:0.15,c:player.weapon==='bolt'?'#bfe4ff':'#ffd98a',s:1});
