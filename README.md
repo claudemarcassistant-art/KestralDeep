@@ -21,7 +21,7 @@ src/
   styles.css      page styles
   boot.js         font loader and the on-screen error reporter
   data/           content and tuning tables (loaded first)
-    art.js                  art pass data: PEOPLE (person configs), PLAYER_TINT, ART_LIGHT, ART_PAL (creature tones), ART_DABS
+    art.js                  art pass data: PEOPLE (person configs), PLAYER_TINT, ART_LIGHT, ART_PAL (creature tones), ART_DABS, CREW_CFG (crew configs)
     character.js            crew files, substats, cores, skills, movement skills, psychic actions, sling, injuries, spacebar styles, Stats tab links and tips
     crafting.js             Workbench recipes and upgrades, grinder salvage yields
     creatures.js            creature stats, bestiary order and text, kill points, threat costs, bosses, hunting memory, arena waves, traits
@@ -50,7 +50,7 @@ src/
     05-levelgen.js          deck sizing, deck generation, pathfinding, slime, oil, cooking, barrels, gas clouds, cables
     06-arcade.js            arcade cabinet games, ice
     07-world-fx.js          sprinklers, fans, plants, hazards, vending machines, panels, liquids
-    08-tile-art.js          tile, fire and decoration painting
+    08-tile-art.js          tile, fire and decoration painting (floors and walls in the batch 5 style)
     09-population.js        placing creatures, items and chests
     10-player.js            gear slots, skills, perk cores, injuries
     11-recipes.js           crafting and upgrades
@@ -89,6 +89,7 @@ src/
     46-stattips.js          Stats tab: core and substat links, tooltips with sources, keyboard selection
     47-sprites.js           art pass toolkit (ell, line, dabs, paint, person, HATS, glow, vshade, spriteLight) and the player's pose
     48-creature-art.js      painted creatures: drawEnemy(), the study's creatures (CART), emissive parts after the darkness
+    49-crew-art.js          crew fixtures with props and idle activities, guard and riot guard bodies, anomalies (unstable and crackling)
     44-loadouts.js          armed humans: kit rolling, kit guns (magazines, reloads), kit melee, quick items, drops, drawing, V-look text
     43-tools.js             industrial blower (air lane and its pushes) and stun gun (zaps, stun, water jolts), arcs drawing
 scripts/build.mjs  the build

@@ -7,7 +7,23 @@ const PEOPLE={
   a:{name:'Survey tech',suit:'#b2702e',hi:'#e3a456',dark:'#4a2a12',boot:'#231d18',pack:'#46504c',packHi:'#6e7a74',head:'#d6d3c7',headHi:'#ffffff',lamp:true,skin:'#c49a78'},
   b:{name:'Scavenger',suit:'#5c6048',hi:'#8a8b62',dark:'#22241a',boot:'#1c1a16',tails:'#46493a',head:'#34342c',headHi:'#55554a',accent:'#a8452e',strap:'#3a2a1c',skin:'#b48a6a'},
   c:{name:'Hardsuit',suit:'#6c777d',hi:'#a8b5bb',dark:'#262d31',boot:'#1e2224',pads:'#87939a',head:'#47525a',headHi:'#7a8a94',visor:'#6fd0c0'},
-  guard:{suit:'#2c4264',hi:'#557aae',dark:'#121a28',boot:'#14161a',head:'#1c2636',headHi:'#3a4a62',cap:'#1a2230',skin:'#b08a6c',belt:'#0e1218'}
+  guard:{suit:'#2c4264',hi:'#557aae',dark:'#121a28',boot:'#14161a',head:'#1c2636',headHi:'#3a4a62',cap:'#1a2230',skin:'#b08a6c',belt:'#0e1218'},
+  // riot guards: the guard's body in darker armour with shoulder plates and a gas mask (Batch 5 session 3)
+  riot:{suit:'#262e3c',hi:'#44506a',dark:'#0e1218',boot:'#121416',pads:'#3a4458',head:'#1a1e26',headHi:'#363e4c',skin:'#2a2e34',belt:'#0a0c10',hat:'gasmask'}
+};
+// crew (the npc fixtures), from the study's CREW: each faces down with its props and idle activity (49-crew-art.js).
+// gambler is the sensitive (the psychic fixture: gambler stops, and now and then a room).
+const CREW_CFG={
+  scrapper:{suit:'#6a5a3a',hi:'#9a8458',dark:'#2a2216',boot:'#1e1a14',head:'#5a4a36',headHi:'#7a6a50',hood:'#4a3c2a',skin:'#c8a888',hat:'hood'},
+  quarter:{suit:'#3a4a3a',hi:'#5e725e',dark:'#161e16',boot:'#1a1c18',head:'#3a2e24',headHi:'#5a4a3a',skin:'#b89878',hat:'cap'},
+  cook:{suit:'#d8d0c0',hi:'#f4f0e6',dark:'#5e5a52',boot:'#22201c',head:'#5a3a2a',headHi:'#7a5a44',skin:'#c8a080',hat:'chef'},
+  subject:{suit:'#e2e2e4',hi:'#ffffff',dark:'#6a6a72',boot:'#b8a8b0',head:'#d0c0d0',headHi:'#f0e4f0',skin:'#d0c0d0'},
+  bomber:{suit:'#4a5a3a',hi:'#6e8256',dark:'#1e2618',boot:'#1a1c16',head:'#3a4a30',headHi:'#5a6a48',hat:'visor',pads:'#5e704c'},
+  locksmith:{suit:'#5a4a6a',hi:'#8a76a0',dark:'#22192c',boot:'#1c1820',tails:'#46385a',head:'#3a2a22',headHi:'#5a4232',skin:'#c0a080'},
+  android:{suit:'#8a969e',hi:'#c8d0d8',dark:'#2e3438',boot:'#3a4246',pads:'#a6b0b6',head:'#8a969e',headHi:'#d8e0e6',eye:true},
+  pilot:{suit:'#7a4a2a',hi:'#a8683a',dark:'#2e1a0e',boot:'#1e1610',head:'#7a4a2a',headHi:'#c08a5a',skin:'#c09070',hat:'pilot'},
+  detective:{suit:'#3a3a4a',hi:'#5e5e74',dark:'#16161e',boot:'#141418',tails:'#2e2e3c',head:'#2a2a32',headHi:'#4a4a5a',hat:'fedora'},
+  gambler:{suit:'#3a2a52',hi:'#5e4880',dark:'#140e1e',boot:'#2a1e3a',head:'#2a1e3a',headHi:'#4a3a62',hood:'#2e2244',hat:'hood'}
 };
 // the player's tints on top of PEOPLE.a: hurt flash, adrenaline, night optics on the head
 const PLAYER_TINT={hurt:{suit:'#d08070',hi:'#f0b0a0'},adren:{suit:'#a89a5a',hi:'#d8c880'},nvg:{head:'#4a6a4a',headHi:'#7a9a7a',lampCol:'#7fff8a'}};

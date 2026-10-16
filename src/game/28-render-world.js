@@ -158,12 +158,7 @@ function render(){
   if((cond.haz==='fog'||cond.haz==='steam')&&!hazOff){const fa=cond.haz==='fog'?0.2:0.08;
     for(let k=0;k<7;k++){const r=70+(k%3)*20,x=((k*131-camX*0.9+T*(6+k*2))%(W+2*r)+W+2*r)%(W+2*r)-r,y=((k*83-camY*0.9+T*(k%2?3:-3))%(H+2*r)+H+2*r)%(H+2*r)-r;
       const lg=ctx.createRadialGradient(x,y,0,x,y,r);lg.addColorStop(0,`rgba(140,150,150,${fa})`);lg.addColorStop(1,'rgba(140,150,150,0)');ctx.fillStyle=lg;ctx.fillRect(x-r,y-r,r*2,r*2);}}
-  for(const a of anoms){const x=a.x-camX,y=a.y-camY;if(x<-100||y<-100||x>W+100||y>H+100)continue;
-    let lg=ctx.createRadialGradient(x,y,0,x,y,30);lg.addColorStop(0,'rgba(0,0,0,0.95)');lg.addColorStop(0.4,'rgba(10,0,20,0.6)');lg.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=lg;ctx.fillRect(x-30,y-30,60,60);
-    ctx.globalCompositeOperation='lighter';lg=ctx.createRadialGradient(x,y,6,x,y,90);lg.addColorStop(0,'rgba(150,80,255,0.16)');lg.addColorStop(1,'rgba(150,80,255,0)');ctx.fillStyle=lg;ctx.fillRect(x-90,y-90,180,180);
-    for(let k=0;k<18;k++){const rad=62-((T*26+k*11)%56),ang=T*(1.2+k*0.07)+k*2.1+(62-rad)*0.06;ctx.fillStyle=`rgba(190,140,255,${0.2+0.6*(1-rad/62)})`;ctx.fillRect(Math.round(x+Math.cos(ang)*rad),Math.round(y+Math.sin(ang)*rad),1,1);}
-    ctx.globalCompositeOperation='source-over';ctx.strokeStyle=`rgba(190,140,255,${0.5+0.3*Math.sin(T*8+a.ph)})`;ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,9,0,6.283);ctx.stroke();
-    ctx.fillStyle='#000';circ(x,y,7);}
+  for(const a of anoms){const x=a.x-camX,y=a.y-camY;if(x<-100||y<-100||x>W+100||y>H+100)continue;drawAnomaly(a,x,y);}
   if(S.compass&&state==='play'){const a=Math.atan2(exitT.y*TS+6-p.y,exitT.x*TS+6-p.x),x=pcx+Math.cos(a)*15,y=pcy+Math.sin(a)*15;
     ctx.fillStyle='rgba(217,164,65,0.85)';ctx.beginPath();ctx.moveTo(x+Math.cos(a)*3,y+Math.sin(a)*3);
     ctx.lineTo(x+Math.cos(a+2.4)*3,y+Math.sin(a+2.4)*3);ctx.lineTo(x+Math.cos(a-2.4)*3,y+Math.sin(a-2.4)*3);ctx.closePath();ctx.fill();}

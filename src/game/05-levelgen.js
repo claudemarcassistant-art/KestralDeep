@@ -442,6 +442,7 @@ function drawFixture(f){const x=f.tx*TS-camX,y=f.ty*TS-camY;if(x<-14||y<-14||x>W
   else if(f.kind==='sink'){F('#8e978b',x+2,y+7,8,4);F('#e8e8e8',x+3,y+7,6,3);F('#6fb3c3',x+5,y+8,2,1);F('#b8c4c8',x+5,y+5,2,2);}
   else if(f.kind==='closet'){F('#2a2f2c',x,y,TS,TS);F('#5a524a',x+1,y+1,TS-2,TS-2);F('#3a342e',x+5,y+1,2,TS-2);F(Math.sin(T*2)>0?'#7fd08e':'#3a6a4a',x+8,y+5,1,2);F('#8e978b',x+1,y+1,TS-2,1);}
   else if(f.kind==='liftdoor'){const lit=0.6+0.4*Math.sin(T*3);F('#2a2f2c',x,y,TS,TS);F('#4a524e',x+1,y+1,TS-2,TS-2);F('#1a1e1c',x+5,y+1,2,TS-2);F(`rgba(217,164,65,${lit})`,x+4,y+5,1,2);F(`rgba(217,164,65,${lit})`,x+7,y+5,1,2);F('#d9a441',x+1,y+1,TS-2,1);}
+  else if((f.kind==='npc'||f.kind==='psychic')&&drawCrew(f,x,y)){/* top-down crew, 49-crew-art.js */}
   else if(f.kind==='npc'){const N=NPCS[f.npc],b=Math.round(Math.sin(T*1.6+(f.ph||0))*0.6),hx=x+6,hy=y+1+b;F('rgba(0,0,0,0.4)',x+2,y+9,9,2);
     ctx.fillStyle=N.robe;ctx.beginPath();ctx.moveTo(hx,y+1+b);ctx.lineTo(x+11,y+10);ctx.lineTo(x+1,y+10);ctx.closePath();ctx.fill();ctx.fillStyle=N.head;circ(hx,hy,2.4);F('#15110a',hx-1,hy,1,1);F('#15110a',hx+1,hy,1,1);
     const a=N.acc;if(a==='pack')F('#5a4a2a',x+8,y+2+b,4,6);else if(a==='cap'){F('#2a3a2a',hx-3,hy-3,6,2);F('#2a3a2a',hx,hy-2,4,1);}else if(a==='hat'){F('#f0f0f0',hx-2,hy-6,5,4);F('#f0f0f0',hx-3,hy-3,7,1);}

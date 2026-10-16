@@ -153,6 +153,7 @@ function paintTile(x,y){
     if(kind[i]>=5){moduleFloor(kind[i],x,y,px,py,h,P);}
     else if(kind[i]===4){grateFloor(x,y,px,py,h,P);mctx.fillStyle='rgba(0,0,0,0.25)';mctx.fillRect(px,py,TS,TS);}
     else if(kind[i])roomFloor(x,y,px,py,h,P);else grateFloor(x,y,px,py,h,P);
+    floorEdgeShade(x,y,px,py);
     const l=liq[i];
     if(l===1)puddle(x,y,px,py,h);
     else if(l>=2){waterLayer(x,y,px,py,2,'rgba(40,95,105,0.5)');if(l>=3)waterLayer(x,y,px,py,3,'rgba(5,32,46,0.62)');if(l===4)waterLayer(x,y,px,py,4,'rgba(0,10,22,0.62)');
@@ -182,16 +183,34 @@ function doorTile(x,y,px,py,P){
   for(let k=0;k<TS;k++)if(((k+x+y)>>1)%2===0){if(lr){R('#6b5220',px,py+k,1,1);R('#6b5220',px+TS-1,py+k,1,1);}else{R('#6b5220',px+k,py,1,1);R('#6b5220',px+k,py+TS-1,1,1);}}
   R('#0a0806',px+4,py+4,4,4);R('#8a6a24',px+5,py+5,2,2);
 }
+// ---- tiles (Batch 5 session 3, the study's tilesNew()): 2x2 floor panels, soft shading where floor meets wall, lit
+// wall caps, rust streaks under pipes and slat highlights. Every variant the old tiles had is kept (hatches, puddle
+// stains, cracks, rust, extra rivets, plates, the cable line across a room, grate drains and holes, wall vents,
+// panels, conduits, warning lights and stripes). Translucent shading goes through tA()/tW()/tC() with globalAlpha:
+// a whole Large deck is painted at once, and rgba() colour strings would make that several times slower.
+function tA(a,x,y,w,h){mctx.globalAlpha=a;mctx.fillStyle='#000';mctx.fillRect(x,y,w,h);mctx.globalAlpha=1;}
+function tW(a,x,y,w,h){mctx.globalAlpha=a;mctx.fillStyle='#fffaeb';mctx.fillRect(x,y,w,h);mctx.globalAlpha=1;}
+function tC(col,a,x,y,w,h){mctx.globalAlpha=a;mctx.fillStyle=col;mctx.fillRect(x,y,w,h);mctx.globalAlpha=1;}
+// soft shading on a floor tile where it meets walls (strongest under a wall face, which is "above" in this view)
+function floorEdgeShade(x,y,px,py){
+  if(solid(x,y-1)){tA(.32,px,py,TS,1);tA(.2,px,py+1,TS,1);tA(.1,px,py+2,TS,1);tA(.05,px,py+3,TS,1);}
+  if(solid(x-1,y)){tA(.22,px,py,1,TS);tA(.1,px+1,py,1,TS);}
+  if(solid(x+1,y)){tA(.22,px+TS-1,py,1,TS);tA(.1,px+TS-2,py,1,TS);}
+  if(solid(x,y+1))tA(.18,px,py+TS-1,TS,1);}
 function roomFloor(x,y,px,py,h,P){
-  R(P.fl,px,py,TS,TS);
-  R(P.hi,px,py,TS,1);R(P.hi,px,py,1,TS);R(P.lo,px,py+TS-1,TS,1);R(P.lo,px+TS-1,py,1,TS);
-  R(P.riv,px+2,py+2,1,1);R(P.riv,px+9,py+2,1,1);R(P.riv,px+2,py+9,1,1);R(P.riv,px+9,py+9,1,1);
+  R(P.fl,px,py,TS,TS);tW(((h>>>3)%5)*.006,px,py,TS,TS);
+  // 2x2 panels: outer bevel only, a faint inner seam
+  if(x%2===0)R(P.hi,px,py,1,TS);else R(P.lo,px+TS-1,py,1,TS);
+  if(y%2===0)R(P.hi,px,py,TS,1);else R(P.lo,px,py+TS-1,TS,1);
+  if(x%2===1)tC(P.lo,.5,px,py+1,1,TS-2);
+  if(y%2===1)tC(P.lo,.5,px+1,py,TS-2,1);
+  const cx=x%2===0?px+2:px+TS-3,cy=y%2===0?py+2:py+TS-3;R(P.riv,cx,cy,1,1);tW(.08,cx,cy,1,.5);
+  for(let k=0;k<5;k++){const q=(h>>>(k*5))&31;tW(.025+(q%3)*.01,px+(q%11),py+((q*7)%11),1+(k%2),1);}
   const v=h%37;
-  if(v<3){R(P.lo,px+3,py+3,6,6);R(P.gr,px+4,py+4,4,1);R(P.gr,px+4,py+6,4,1);R(P.hi,px+3,py+8,6,1);}
-  else if(v<6){mctx.fillStyle='rgba(70,120,130,0.22)';mctx.fillRect(px+2,py+4,7,4);mctx.fillRect(px+4,py+3,4,6);
-    mctx.fillStyle='rgba(170,210,215,0.35)';mctx.fillRect(px+4,py+4,2,1);}
-  else if(v<9){let cx=px+3+(h>>>8)%4,cy=py+2;for(let k=0;k<7;k++){R(P.lo,cx,cy,1,1);cy++;cx+=((h>>>k)&1)?1:-1;if(cx<px+1||cx>px+10)break;}}
-  else if(v<11){mctx.fillStyle='rgba(120,70,35,0.25)';mctx.fillRect(px+1+(h%4),py+3,5,4);mctx.fillRect(px+3+(h%3),py+5,4,4);}
+  if(v<3){R(P.lo,px+3,py+3,6,6);R(P.gr,px+4,py+4,4,1);R(P.gr,px+4,py+6,4,1);R(P.hi,px+3,py+8,6,1);tA(.25,px+3,py+3,6,1);}
+  else if(v<6){tC('#46788a',.2,px+2,py+4,7,4);tC('#46788a',.2,px+4,py+3,4,6);tC('#bee1e6',.4,px+4,py+4,2,1);tC('#bee1e6',.4,px+7,py+6,1,1);}
+  else if(v<9){let cx2=px+3+(h>>>8)%4,cy2=py+2;for(let k=0;k<7;k++){R(P.lo,cx2,cy2,1,1);tW(.05,cx2+1,cy2,1,1);cy2++;cx2+=((h>>>k)&1)?1:-1;if(cx2<px+1||cx2>px+10)break;}}
+  else if(v<11){tC('#784623',.22,px+1+(h%4),py+3,5,4);tC('#784623',.22,px+3+(h%3),py+5,4,4);tC('#965a28',.18,px+2+(h%4),py+4,2,2);}
   else if(v<13){for(let k=0;k<3;k++)R(P.riv,px+3+((h>>>(k*4))%6),py+3+((h>>>(k*4+2))%6),1,1);}
   else if(v===13){R(P.lo,px+4,py+3,4,6);R(P.hi,px+5,py+4,2,1);R(P.hi,px+5,py+6,2,1);}
   if(hash(777,y)%9===0){for(let k=0;k<TS;k++){const yy=py+6+Math.round(Math.sin((px+k)*0.21)*2);R('#0a0c0b',px+k,yy,1,1);if(k%3===0)R(P.hi,px+k,yy-1,1,1);}}
@@ -199,40 +218,44 @@ function roomFloor(x,y,px,py,h,P){
 function grateFloor(x,y,px,py,h,P){
   R(P.gr,px,py,TS,TS);
   const vert=solid(x-1,y)&&solid(x+1,y);
-  if(vert){for(let k=1;k<TS;k+=2)R(P.sl,px+k,py+1,1,TS-2);}else{for(let k=1;k<TS;k+=2)R(P.sl,px+1,py+k,TS-2,1);}
+  if(h%3===0){if(vert)tC('#5a503c',.35,px+3,py,3,TS);else tC('#5a503c',.35,px,py+5,TS,3);}
+  for(let k=1;k<TS;k+=2){if(vert){R(P.sl,px+k,py+1,1,TS-2);tW(.06,px+k,py+1,1,1);}else{R(P.sl,px+1,py+k,TS-2,1);tW(.07,px+1,py+k,TS-2,.5);}}
   R(P.lo,px,py,TS,1);R(P.lo,px,py,1,TS);
-  if(h%11===0){mctx.fillStyle='rgba(90,150,160,0.22)';mctx.fillRect(px+3+(h%5),py+4,2,1);}
+  if(h%11===0)tC('#6eaab4',.3,px+3+(h%5),py+4,2,1);
   if(h%17===0)R('#0a0c0b',px+2,py+2,3,3);
 }
 function wallTile(x,y,px,py,h,P){
   const frontFace=!solid(x,y+1);
   let adj=false;for(const [dx,dy] of D8)if(!solid(x+dx,y+dy)){adj=true;break;}
   if(frontFace){
-    R(P.face,px,py,TS,TS);R(P.cap,px,py,TS,2);R(P.faceHi,px,py+2,TS,1);
+    R(P.face,px,py,TS,TS);for(let k=0;k<TS;k++)tA(k/TS*.22,px,py+k,TS,1);
+    R(P.cap,px,py,TS,2);tW(.12,px,py,TS,1);R(P.faceHi,px,py+2,TS,1);
     if(x%2===0)R(P.faceLo,px,py+3,1,TS-5);
     R(P.faceHi,px+2,py+4,1,1);R(P.faceHi,px+TS-3,py+4,1,1);
     const pipeRow=hash(3,y)%3===0;
-    if(pipeRow){R(P.pipe,px,py+6,TS,2);R(P.pipeHi,px,py+6,TS,1);
+    if(pipeRow){R(P.pipe,px,py+6,TS,2);R(P.pipeHi,px,py+6,TS,1);tA(.3,px,py+8,TS,1);
       if(x%4===0){R(P.pipe,px+4,py+5,2,4);R(P.pipeHi,px+4,py+5,2,1);}
-      if(h%13===0){mctx.fillStyle='rgba(120,160,150,0.35)';mctx.fillRect(px+7,py+8,1,2);}}
+      if(h%3===0)tC('#6e401e',.55,px+2+(h%7),py+8,1,2+(h%2));
+      if(h%13===0)tC('#78a096',.35,px+7,py+8,1,2);}
     else if(h%8===0){R(P.faceLo,px+3,py+4,6,5);for(let k=0;k<3;k++)R(P.face,px+4,py+5+(k*1.5|0),4,1);R(P.faceHi,px+3,py+9,6,1);}
-    else if(h%8===3){R(P.faceHi,px+3,py+4,6,4);R(P.faceLo,px+4,py+5,4,1);R(P.faceLo,px+4,py+6,3,1);}
+    else if(h%8===3){R(P.faceHi,px+3,py+4,6,4);R(P.faceLo,px+4,py+5,4,1);R(P.faceLo,px+4,py+6,3,1);tW(.06,px+3,py+4,6,1);}
     else if(h%8===5){R('#0e1110',px+2,py+3,1,TS-5);R('#0e1110',px+4,py+3,1,TS-5);R(P.faceHi,px+2,py+3,1,1);}
-    if(h%23===0&&!pipeRow){R(P.acc,px+5,py+4,2,2);R('#fff3',px+5,py+4,1,1);}
-    R(P.faceLo,px,py+TS-2,TS,2);
-    if(hash(9,y)%4===0)for(let k=0;k<TS;k++)if(((px+k)>>1)%2===0)R('#6b5220',px+k,py+TS-2,1,2);
+    if(h%23===0&&!pipeRow){R(P.acc,px+5,py+4,2,2);tW(.2,px+5,py+4,1,1);tC(P.acc,.12,px+3,py+3,6,4);}
+    R(P.faceLo,px,py+TS-2,TS,2);tA(.25,px,py+TS-1,TS,1);
+    if(hash(9,y)%4===0)for(let k=0;k<TS;k++)if(((px+k)>>1)%2===0)R('#6b5220',px+k,py+TS-2,1,1);
     if(!solid(x-1,y))R(P.faceHi,px,py,1,TS);
     if(!solid(x+1,y))R(P.faceLo,px+TS-1,py,1,TS);
   }else if(adj){
     R(P.wall,px,py,TS,TS);R(P.faceHi,px+2,py+2,TS-4,TS-4);R(P.wall,px+3,py+3,TS-6,TS-6);
-    if(!solid(x,y-1))R(P.cap,px,py,TS,1);
+    for(let k=0;k<3;k++){const q=(h>>>(k*6))&63;tA(.12,px+3+(q%6),py+3+((q>>3)%6),1,1);}
+    if(!solid(x,y-1)){R(P.cap,px,py,TS,1);tW(.1,px,py,TS,1);}
     if(!solid(x-1,y))R(P.cap,px,py,1,TS);
     if(!solid(x+1,y))R(P.faceLo,px+TS-1,py,1,TS);
     if(h%3===0){R(P.cap,px+2,py+2,1,1);R(P.cap,px+9,py+9,1,1);}
     if(h%11===0)R(P.faceLo,px,py+5,TS,1);
   }else{
     R(P.rock,px,py,TS,TS);
-    for(let k=0;k<4;k++)R(k%2?P.faceLo:P.wall,px+((h>>>(k*5))%11),py+((h>>>(k*5+3))%11),1,1);
+    for(let k=0;k<6;k++)R(k%2?P.faceLo:P.wall,px+((h>>>(k*5))%11),py+((h>>>(k*5+3))%11),1,1);tA(.15,px,py,TS,TS);
   }
 }
 function splat(x,y,col,n,sp){mctx.fillStyle=col;for(let i=0;i<n;i++){const a=Math.random()*6.283,d=Math.random()*sp;const px=x+Math.cos(a)*d,py=y+Math.sin(a)*d;
