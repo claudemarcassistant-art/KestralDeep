@@ -32,15 +32,18 @@ function render(){
   if(p.st&&p.st.brn>40){const g={x:p.x,y:p.y,r:26+p.st.brn*0.18,t:9};g.pts=flarePoly(g);glows.push(g);}
   for(const f of fires){if(Math.hypot(f.x-p.x,f.y-p.y)>280)continue;f.r=46+Math.sin(T*17+f.ph)*3;f.t=9;f.pts=flarePoly(f);glows.push(f);}
   const tx0=Math.floor(camX/TS),ty0=Math.floor(camY/TS),tx1=Math.floor((camX+W)/TS),ty1=Math.floor((camY+H)/TS);
+  // the tile layer and the baked water over it, tile by tile; liquids on screen are gathered and drawn after
+  // (54-liquids.js: moving water, ice, toxic spills, slag, oil; slime trails per tile)
+  liqScanTick();const LW_=[],LI_=[],LT_=[],LMc=[],LMk=[],LO_=[];
   for(let ty=ty0;ty<=ty1;ty++)for(let tx=tx0;tx<=tx1;tx++){
-    if(tx<0||ty<0||tx>=MW||ty>=MH||!seen[ty*MW+tx])continue;
+    if(tx<0||ty<0||tx>=MW||ty>=MH||!seen[ty*MW+tx])continue;const i=ty*MW+tx;
     ctx.drawImage(mcv,tx*TS,ty*TS,TS,TS,tx*TS-camX,ty*TS-camY,TS,TS);
-    if(ice[ty*MW+tx])drawIce(tx,ty);
-    if(flot[ty*MW+tx])drawFlotsam(tx,ty);
-    if(oil[ty*MW+tx])drawOil(tx,ty,oil[ty*MW+tx]);
-    if(slime[ty*MW+tx])drawSlime(tx,ty,slime[ty*MW+tx],slimeK[ty*MW+tx]);
-    const l=ice[ty*MW+tx]?0:liq[ty*MW+tx];if(l>=2){const ph=T*1.6+tx*0.9+ty*1.7;ctx.fillStyle=`rgba(170,220,225,${l===3?0.22:0.3})`;
-      ctx.fillRect(tx*TS-camX+((Math.sin(ph)*3+5)|0),ty*TS-camY+((Math.cos(ph*0.8)*3+5)|0),2,1);}}
+    if(wetT&&wetT[i])ctx.drawImage(wcv,tx*TS,ty*TS,TS,TS,tx*TS-camX,ty*TS-camY,TS,TS);
+    if(ice[i])LI_.push(i);else if(liq[i]&&map[i]===0)LW_.push(i);
+    if(hz[i]===2&&!hazOff)LT_.push(i);if(molten[i]===1)LMc.push(i);else if(molten[i]===2)LMk.push(i);if(oil[i])LO_.push(i);}
+  drawWaterMotion(LW_);drawToxicTiles(LT_);drawMoltenTiles(LMc,LMk);drawIceTiles(LI_);drawOilTiles(LO_);
+  for(let ty=ty0;ty<=ty1;ty++)for(let tx=tx0;tx<=tx1;tx++){if(tx<0||ty<0||tx>=MW||ty>=MH||!seen[ty*MW+tx])continue;const i=ty*MW+tx;
+    if(flot[i])drawFlotsam(tx,ty);if(slime[i])drawSlime(tx,ty,slime[i],slimeK[i]);}
   drawTraps();drawToxicVents();drawCrawls();drawPlateDoors();drawIncense();drawArchive();drawCams();
   for(const pn of panels){if(!seen[pn.ty*MW+pn.tx])continue;const x=pn.tx*TS-camX,y=pn.ty*TS-camY;if(x<-14||y<-14||x>W+2||y>H+2)continue;
     olDraw('panel',ART_OLC.panel,x,y,12,12,()=>panelArt(pn,x,y));}

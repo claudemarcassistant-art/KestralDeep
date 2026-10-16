@@ -84,3 +84,10 @@ const KITS=[
 // room lights (visual only): how strongly lit and normal decks dim between pools, the faint colour in each pool, how
 // see-through the ceiling fixtures are and their parallax, and how often a corridor gets a light
 const ROOM_LIGHT_CFG={dimLit:.35,dimNormal:.22,tint:.13,ceil:.38,ceilLit:.63,parallax:.05,corrEvery:41,corrApart:8,deadFlicker:.1};
+// water colours per biome (PAL order): shallow, deep and abyss (rgb) and the shoreline colour, from the study
+const WATER_TINT=[
+ {s:'70,140,150',d:'14,52,70',a:'2,14,26',sh:'170,215,215'},{s:'64,128,150',d:'12,46,72',a:'2,12,28',sh:'160,205,220'},{s:'90,130,120',d:'26,52,52',a:'8,16,18',sh:'180,200,180'},
+ {s:'110,165,190',d:'30,70,104',a:'6,20,40',sh:'220,240,255'},{s:'70,140,110',d:'16,56,48',a:'4,18,16',sh:'170,220,190'},{s:'80,120,170',d:'22,40,84',a:'8,10,30',sh:'190,200,255'}];
+// liquids: how fast changed water is noticed (tiles checked per frame = the deck / scanFrames), puddle depth in the
+// depth field, and the motion layer's sample spacing in pixels
+const LIQ_CFG={scanFrames:8,puddle:.55,step:2};

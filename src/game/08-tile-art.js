@@ -11,48 +11,10 @@ function paintMap(){
       if(h%4===0)for(let k=0;k<3;k++){const gx=px+1+((h>>>(k*4))%10),gy=py+3+((h>>>(k*4+2))%8);R('#3a7a2a',gx,gy,1,2);R('#5aa03a',gx,gy-1,1,1);}
       if(h%9===0){const fx=px+2+((h>>>7)%8),fy=py+2+((h>>>10)%8);R('#3a7a2a',fx,fy+1,1,2);R(['#e06a9a','#e0d050','#8a7ae0','#e08a3a'][(h>>>12)%4],fx,fy,1,1);}}
     else if(map[i]===1&&!solid(x,y+1)&&h%2===0){for(let k=0;k<TS;k++){const vx=px+3+((h>>>3)%6)+Math.round(Math.sin(k*0.8+h)*1.5);R('#2e5a1e',vx,py+k,1,1);if(k%4===0)R('#4a8a2a',vx+1,py+k,2,1);}}}
-  placeRoomLights();
+  placeRoomLights();waterBakeAll();
 }
 function paintArea(cx,cy){for(let y=cy-1;y<=cy+1;y++)for(let x=cx-1;x<=cx+1;x++)if(x>=0&&y>=0&&x<MW&&y<MH)paintTile(x,y);}
-function isoPuddle(px,py,h){
-  const rot=((h>>>2)%8)*Math.PI/8,shape=(h>>>5)%4,cx=px+4+((h>>>8)%5),cy=py+4+((h>>>11)%5);
-  const ca=Math.cos(rot),sa=Math.sin(rot),blob=(x,y,rx,ry,r)=>{mctx.moveTo(x+rx*Math.cos(r),y+rx*Math.sin(r));mctx.ellipse(x,y,rx,ry,r,0,6.283);};
-  mctx.fillStyle='rgba(60,115,125,0.3)';mctx.beginPath();
-  if(shape===0){blob(cx,cy,3+((h>>>14)%2),1.6+((h>>>15)%2)*0.8,rot);}
-  else if(shape===1){blob(cx,cy,2.6,1.8,rot);blob(cx+ca*2.8,cy+sa*2.8,1.9,1.3,rot+0.6);}
-  else if(shape===2){blob(cx,cy,1.6,1.3,rot);blob(cx+ca*3-sa*1.5,cy+sa*3+ca*1.5,1.2,1,rot);blob(cx-ca*2.2+sa*1.8,cy-sa*2.2-ca*1.8,1,0.8,rot);}
-  else{blob(cx,cy,4.2,1.1,rot);blob(cx+ca*4.5,cy+sa*4.5,1.1,1,0);}
-  mctx.fill();
-  mctx.fillStyle='rgba(170,210,215,0.28)';mctx.fillRect(Math.round(cx-ca),Math.round(cy-sa-1),1,1);
-}
-function puddle(x,y,px,py,h){
-  let sx=0,sy=0;for(const [dx,dy] of D8){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=MW||ny>=MH)continue;if(map[ny*MW+nx]===0&&liq[ny*MW+nx]>=2){sx+=dx;sy+=dy;}}
-  let cx,cy;const r1=2.5+(h%3),r2=2+((h>>>3)%3);
-  if(sx||sy){cx=px+(sx>0?TS-1.5:sx<0?1.5:6+((h>>>5)%3)-1);cy=py+(sy>0?TS-1.5:sy<0?1.5:6+((h>>>7)%3)-1);}
-  else{isoPuddle(px,py,h);return;}
-  const ox=((h>>>9)%5)-2,oy=((h>>>11)%5)-2;
-  mctx.fillStyle='rgba(60,115,125,0.32)';mctx.beginPath();mctx.ellipse(cx,cy,r1,r1*0.8,0,0,6.283);
-  mctx.moveTo(cx+ox+r2,cy+oy);mctx.ellipse(cx+ox,cy+oy,r2,r2*0.75,0,0,6.283);mctx.fill();
-  mctx.fillStyle='rgba(170,210,215,0.3)';mctx.fillRect(Math.round(cx-1),Math.round(cy-1),1,1);
-}
-function waterLayer(x,y,px,py,k,col){
-  const lo=(dx,dy)=>{const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=MW||ny>=MH||map[ny*MW+nx]!==0)return false;return liq[ny*MW+nx]<k;};
-  const T_=lo(0,-1),B_=lo(0,1),L_=lo(-1,0),R_=lo(1,0),r=4;
-  const tl=T_&&L_?r:0,tr=T_&&R_?r:0,br=B_&&R_?r:0,bl=B_&&L_?r:0,w=TS,h=TS;
-  mctx.fillStyle=col;mctx.beginPath();mctx.moveTo(px+tl,py);
-  mctx.arcTo(px+w,py,px+w,py+h,tr);mctx.arcTo(px+w,py+h,px,py+h,br);mctx.arcTo(px,py+h,px,py,bl);mctx.arcTo(px,py,px+w,py,tl);mctx.closePath();mctx.fill();
-  mctx.strokeStyle=k===2?'rgba(170,215,215,0.12)':'rgba(120,180,195,0.08)';mctx.lineWidth=1;mctx.beginPath();
-  const a=px+0.5,b=py+0.5,c=px+w-0.5,d=py+h-0.5;
-  if(T_){mctx.moveTo(a+tl,b);mctx.lineTo(c-tr,b);}
-  if(B_){mctx.moveTo(a+bl,d);mctx.lineTo(c-br,d);}
-  if(L_){mctx.moveTo(a,b+tl);mctx.lineTo(a,d-bl);}
-  if(R_){mctx.moveTo(c,b+tr);mctx.lineTo(c,d-br);}
-  if(tl){mctx.moveTo(a,b+tl);mctx.arcTo(a,b,a+tl,b,tl-0.5);}
-  if(tr){mctx.moveTo(c-tr,b);mctx.arcTo(c,b,c,b+tr,tr-0.5);}
-  if(br){mctx.moveTo(c,d-br);mctx.arcTo(c,d,c-br,d,br-0.5);}
-  if(bl){mctx.moveTo(a+bl,d);mctx.arcTo(a,d,a,d-bl,bl-0.5);}
-  mctx.stroke();
-}
+// water is baked by waterBake() in 54-liquids.js (Batch 5 liquids); isoPuddle()/puddle()/waterLayer() are gone
 function fireAnchor(tx,ty){const h=hash(tx*5+1,ty*11+7);return [tx*TS+6+((h%9)-4)*1.1,ty*TS+6+(((h>>>4)%9)-4)*1.1];}
 function paintScorch(tx,ty){
   const [ax,ay]=fireAnchor(tx,ty),h=hash(tx*3+2,ty*7+1);
@@ -154,16 +116,10 @@ function paintTile(x,y){
     if(kind[i]>=5){moduleFloor(kind[i],x,y,px,py,h,P);}
     else kitFloor(x,y,px,py,h,P,i);
     floorEdgeShade(x,y,px,py);
-    const l=liq[i];
-    if(l===1)puddle(x,y,px,py,h);
-    else if(l>=2){waterLayer(x,y,px,py,2,'rgba(40,95,105,0.5)');if(l>=3)waterLayer(x,y,px,py,3,'rgba(5,32,46,0.62)');if(l===4)waterLayer(x,y,px,py,4,'rgba(0,10,22,0.62)');
-      if(l===3&&h%5===0){mctx.fillStyle='rgba(120,180,190,0.2)';mctx.fillRect(px+3,py+5,5,1);}}
+    // water: the baked overlay in 54-liquids.js (waterBake())
     const hh=hz[i];
     if(hh===1){/* scorch is drawn by paintScorch so it can spill across tile edges */}
-    else if(hh===2){mctx.fillStyle='rgba(80,120,20,0.78)';mctx.fillRect(px,py,TS,TS);mctx.fillStyle='rgba(170,220,60,0.35)';
-      for(const [dx,dy] of D4){const nx=x+dx,ny=y+dy;if(solid(nx,ny)||hz[ny*MW+nx]===2)continue;
-        if(dx===1)mctx.fillRect(px+TS-1,py,1,TS);if(dx===-1)mctx.fillRect(px,py,1,TS);if(dy===1)mctx.fillRect(px,py+TS-1,TS,1);if(dy===-1)mctx.fillRect(px,py,TS,1);}
-      mctx.fillStyle='rgba(40,60,10,0.6)';mctx.fillRect(px+3+(h%4),py+5,3,2);}
+    else if(hh===2){/* toxic spills are drawn per frame (drawToxicTiles(), 54-liquids.js) */}
     else if(hh===5){R('#0a0c0b',px+2,py+2,8,8);R(P.cap,px+2,py+2,8,1);R('#15110a',px+1,py+1,1,1);R('#15110a',px+10,py+10,1,1);
       for(let k=0;k<9;k++){R('#7a4a22',px+2+k,py+5+Math.round(Math.sin(k*0.9+(h%5))*1.5),1,1);R('#4a5a6a',px+3+Math.round(Math.cos(k*0.8)*1.5),py+2+k,1,1);}
       R('#d0a060',px+9,py+5,1,1);R('#d0a060',px+3,py+9,1,1);}

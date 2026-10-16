@@ -51,26 +51,7 @@ let cables=[],cableMap=new Map(),barrels=[],risers=[];
 let slime=new Uint8Array(MW*MH),slimeK=new Uint8Array(MW*MH);
 function clearSlimeAround(x,y,rad){const tx=Math.floor(x/TS),ty=Math.floor(y/TS),r=Math.ceil(rad/TS);for(let yy=ty-r;yy<=ty+r;yy++)for(let xx=tx-r;xx<=tx+r;xx++){if(xx<0||yy<0||xx>=MW||yy>=MH)continue;const i=yy*MW+xx;if(slime[i]&&Math.hypot(xx*TS+6-x,yy*TS+6-y)<=rad+6){slime[i]=0;if(Math.random()<.5)parts.push({x:xx*TS+6,y:yy*TS+6,vx:rr(-6,6),vy:rr(-20,-8),t:0.5,m:0.5,c:'#6a6a50',s:2});}}}
 function slimeAnchor(tx,ty){const h=hash(tx*7+3,ty*13+5);return [tx*TS+6+((h%7)-3)*1.1,ty*TS+6+(((h>>>4)%7)-3)*1.1];}
-function drawSlime(tx,ty,sl,k){
-  const i=ty*MW+tx,[ax,ay]=slimeAnchor(tx,ty),x=ax-camX,y=ay-camY,h=hash(tx,ty),a=0.13+0.07*sl;
-  const col=k===2?`rgba(120,210,40,${a})`:`rgba(190,200,90,${a})`;
-  ctx.strokeStyle=col;ctx.lineCap='round';
-  const has=(xx,yy)=>xx>=0&&yy>=0&&xx<MW&&yy<MH&&slime[yy*MW+xx]>0;
-  for(const [dx,dy] of D8){const nx=tx+dx,ny=ty+dy;if(!has(nx,ny))continue;if(dx&&dy&&(has(tx+dx,ty)||has(tx,ty+dy)))continue;
-    const n=ny*MW+nx,[bx,by]=slimeAnchor(nx,ny),hp=hash(Math.min(i,n),Math.max(i,n)),len=Math.hypot(bx-ax,by-ay)||1;
-    const bend=((hp%9)-4)*0.9,cx=(ax+bx)/2-(by-ay)/len*bend,cy=(ay+by)/2+(bx-ax)/len*bend;
-    const mx=0.25*ax+0.5*cx+0.25*bx,my=0.25*ay+0.5*cy+0.25*by;
-    ctx.lineWidth=2+Math.min(sl,slime[n])*0.6+((hp>>>5)%3)*0.4;
-    ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo((ax+cx)/2-camX,(ay+cy)/2-camY,mx-camX,my-camY);ctx.stroke();}
-  ctx.fillStyle=col;ctx.beginPath();
-  const r1=2.2+sl*0.5+(h%3)*0.4,r2=1.6+sl*0.35;ctx.ellipse(x,y,r1,r2,(h%8)*0.4,0,6.283);
-  if(sl>=2&&(h>>>7)%3===0){const ox=((h>>>9)%5)-2,oy=((h>>>12)%5)-2;ctx.moveTo(x+ox+2,y+oy);ctx.ellipse(x+ox,y+oy,2,1.4,(h%5)*0.6,0,6.283);}
-  ctx.fill();
-  if((h>>>14)%4===0){ctx.beginPath();ctx.ellipse(x+((h>>>16)%7)-3,y+((h>>>19)%7)-3,1,0.8,0,0,6.283);ctx.fill();}
-  ctx.lineCap='butt';
-  ctx.fillStyle=`rgba(255,255,230,${0.1+0.05*sl})`;ctx.fillRect(Math.round(x-1),Math.round(y-1),1,1);
-  if(k===2&&Math.random()<0.01)parts.push({x:ax+rr(-2,2),y:ay+rr(-2,2),vx:0,vy:-8,t:0.5,m:0.5,c:'#a0e040',s:1});
-}
+// drawSlime() is in 54-liquids.js (Batch 5 liquids)
 let oil=new Uint8Array(MW*MH),oilIgnite=[],oilCur=0;
 function oilOK(i){return map[i]===0&&liq[i]===0&&hz[i]!==1&&hz[i]!==2;}
 function spillOil(tx,ty,R,amt){blob(tx,ty,R,(i,x,y,d)=>{if(!oilOK(i))return;const v=Math.max(1,Math.min(3,amt-d));if(v>oil[i])oil[i]=v;});}
@@ -99,16 +80,7 @@ function updateOil(dt){
     for(const [dx,dy] of D8){const j=(y+dy)*MW+x+dx;if(j>=0&&j<N&&hz[j]===1){ice[i]=0;if(oil[i])oilIgnite.push({tx:x,ty:y,t:rr(0.05,0.3)});break;}}}
 }
 function oilAnchor(tx,ty){const h=hash(tx*11+5,ty*3+9);return [tx*TS+6+((h%7)-3)*1.1,ty*TS+6+(((h>>>4)%7)-3)*1.1];}
-function drawOil(tx,ty,amt){
-  const i=ty*MW+tx,[ax,ay]=oilAnchor(tx,ty),x=ax-camX,y=ay-camY,h=hash(tx*7,ty*5),a=0.38+0.1*amt;
-  ctx.fillStyle=`rgba(18,14,10,${a})`;ctx.strokeStyle=`rgba(18,14,10,${a})`;ctx.lineCap='round';
-  for(const [dx,dy] of D8){const nx=tx+dx,ny=ty+dy;if(nx<0||ny<0||nx>=MW||ny>=MH||!oil[ny*MW+nx])continue;if(dx<0||(dx===0&&dy<0))continue;
-    const [bx,by]=oilAnchor(nx,ny),len=Math.hypot(bx-ax,by-ay)||1,bend=((hash(tx+nx*3,ty+ny*3)%7)-3)*0.8;
-    ctx.lineWidth=4+Math.min(amt,oil[ny*MW+nx])*1.2;ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo((ax+bx)/2-(by-ay)/len*bend-camX,(ay+by)/2+(bx-ax)/len*bend-camY,bx-camX,by-camY);ctx.stroke();}
-  ctx.lineCap='butt';ctx.beginPath();ctx.ellipse(x,y,3.5+amt*0.9,2.8+amt*0.7,(h%8)*0.4,0,6.283);ctx.fill();
-  const ph=T*0.8+tx*0.7+ty*0.3,cols=['rgba(170,90,200,0.45)','rgba(80,170,190,0.45)','rgba(210,180,80,0.45)'];
-  for(let k=0;k<2;k++){ctx.fillStyle=cols[(k+Math.floor(ph))%3];ctx.fillRect(Math.round(x-2+((h>>>(k*5))%5)),Math.round(y-1+((h>>>(k*5+3))%3)),2,1);}
-}
+// oil is drawn by drawOilTiles()/oilShape() in 54-liquids.js (Batch 5 liquids)
 const MODKD={};for(const k in MODS)MODKD[MODS[k].kd]=k;
 function foodNeed(){return 60+35*(player.foodLv||0);}
 function gainFoodXp(a){const P=player;if(!a)return;P.foodXp=(P.foodXp||0)+a;

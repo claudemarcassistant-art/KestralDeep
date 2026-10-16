@@ -21,7 +21,7 @@ src/
   styles.css      page styles
   boot.js         font loader and the on-screen error reporter
   data/           content and tuning tables (loaded first)
-    art.js                  art pass data: PEOPLE (person configs), PLAYER_TINT, ART_LIGHT, ART_PAL (creature tones), ART_DABS, CREW_CFG (crew configs), ITEM_CAT/ITEM_CAT_OF (item categories), ART_OLC (outline colours), OUTLINE_DESC, KITS, ROOM_LIGHT_CFG
+    art.js                  art pass data: PEOPLE (person configs), PLAYER_TINT, ART_LIGHT, ART_PAL (creature tones), ART_DABS, CREW_CFG (crew configs), ITEM_CAT/ITEM_CAT_OF (item categories), ART_OLC (outline colours), OUTLINE_DESC, KITS, ROOM_LIGHT_CFG, WATER_TINT, LIQ_CFG
     character.js            crew files, substats, cores, skills, movement skills, psychic actions, sling, injuries, spacebar styles, Stats tab links and tips
     crafting.js             Workbench recipes and upgrades, grinder salvage yields
     creatures.js            creature stats, bestiary order and text, kill points, threat costs, bosses, hunting memory, arena waves, traits
@@ -94,6 +94,7 @@ src/
     51-outlines.js          the Sprite outlines option: olDraw(), ring building and caching
     52-arm-art.js           armaments in hand and on the floor: ARM_ART, armState(), armHold(), drawHeldArms(), armOnFloor()
     53-biome-kits.js        biome kits (floor, corridor and wall styles per sector) and room lights (placeRoomLights(), drawRoomLights())
+    54-liquids.js           liquids: baked water overlay (waterBake(), liqScanTick()), moving water, ice, oil, toxic spills, slag, slime
     44-loadouts.js          armed humans: kit rolling, kit guns (magazines, reloads), kit melee, quick items, drops, drawing, V-look text
     43-tools.js             industrial blower (air lane and its pushes) and stun gun (zaps, stun, water jolts), arcs drawing
 scripts/build.mjs  the build
