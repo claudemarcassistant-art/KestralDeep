@@ -38,7 +38,7 @@ const CREW_ART={
 };
 // an npc or psychic fixture at screen tile x,y (top left); the figure stands at the tile centre, a little high
 function drawCrew(f,x,y){const id=f.kind==='psychic'?'gambler':f.npc,cfg=CREW_CFG[id],fn=CREW_ART[id];if(!cfg||!fn)return false;
-  const cx=x+6,cy=y+5,t=T+(f.ph||0)+(f.tx*.37+f.ty*.61);fn(ctx,cx,cy,t,spriteLight(cx+camX,cy+camY),cfg);
+  const cx=x+6,cy=y+5,t=T+(f.ph||0)+(f.tx*.37+f.ty*.61);olDraw(f,ART_OLC[id],cx-15,cy-13,30,26,()=>fn(ctx,cx,cy,t,spriteLight(cx+camX,cy+camY),cfg));
   if(f.kind==='psychic'){const A0=ctx.globalAlpha;ctx.globalAlpha=A0*.7;for(let k=0;k<3;k++){const a=T*1.2+k*2.1+(f.ph||0);pxl(ctx,cx+Math.cos(a)*7,cy-3+Math.sin(a)*4,'#c9a8ff',1);}ctx.globalAlpha=A0;}
   return true;}
 
@@ -48,7 +48,7 @@ function drawCrew(f,x,y){const id=f.kind==='psychic'?'gambler':f.npc,cfg=CREW_CF
 // study's sidearm. The flashlight is a lit dot at the leading hand, drawn again after the dark by drawEmissives().
 const guardTint={};
 function guardCfg(e,riot){const k=(riot?'r':'g')+(e.flash>0?'f':'');if(!guardTint[k]){const c=Object.assign({},riot?PEOPLE.riot:PEOPLE.guard);if(e.flash>0)Object.assign(c,{suit:'#d8dce4',hi:'#ffffff',head:'#c8ccd4'});guardTint[k]=c;}return guardTint[k];}
-function guardBodyDir(e){const look=e.look||0;if(e._bd==null)e._bd=look;let target=look;
+function guardBodyDir(e){const look=e.look||0;if(e._bd==null)e._bd=look;if(olPass)return e._bd;let target=look;
   if((e._mv||0)>0.12&&e._px!=null){const dx=e.x-e._px,dy=e.y-e._py;if(dx*dx+dy*dy>0.0004)target=Math.atan2(dy,dx);}e._px=e.x;e._py=e.y;
   let d=target-e._bd;while(d>Math.PI)d-=TAU;while(d<-Math.PI)d+=TAU;e._bd+=d*0.18;return e._bd;}
 function drawGuardBody(e,x,y,t,L){const b=ET[e.type],body=guardBodyDir(e);let head=(e.look||0)-body;while(head>Math.PI)head-=TAU;while(head<-Math.PI)head+=TAU;head=Math.max(-1.3,Math.min(1.3,head));

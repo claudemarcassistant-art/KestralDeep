@@ -53,7 +53,7 @@ function hud(){
     else txt('guard '+Math.round(p.guard)+'/'+Math.round(p.guardMax||40),W-6,H-12,'#bfe4ff','right');}
   {const n=hotCount(),sw=HUD_SW,x0=hotbarX(),y0=H-16;drawSkillIcons();
     for(let i=0;i<n;i++){const x=x0+i*sw+(i>=2?3:0),sel=i===p.hotSel;box(x,y0,sw-1,15,sel?'#1c2220':'#0a0d0c',sel?AMBER:'#2a302e');txt(''+(i+1),x+2,y0-8,sel?AMBER:'#3f4642');
-      if(i<2){const st=p.arms[i],show=st.off&&ARM[st.off].gun?st.off:st.main||st.off;if(show)drawItem({x:x+8+camX,y:y0+7+camY,type:'weapon',w:show,ph:0});else{ctx.fillStyle='#c9c1a0';circ(x+8,y0+7,2.5);}continue;}
+      if(i<2){const st=p.arms[i],show=st.off&&ARM[st.off].gun?st.off:st.main||st.off;if(show)drawItem({x:x+8+camX,y:y0+7+camY,type:'weapon',w:show,ph:0,icon:true});else{ctx.fillStyle='#c9c1a0';circ(x+8,y0+7,2.5);}continue;}
       if(p.actMode==='sling'){const a=p.slingbar[i-2];if(a){const A=SLING[a];F(A.col,x+4,y0+3,8,8);F('#050607',x+6,y0+5,4,4);txt(slingCount(a)==='inf'?'':slingCount(a),x+sw-2,y0+7,'#e3e6dc','right');}continue;}
       if(p.actMode){const a=p.actbar[i-2];if(a){const A=ACTS[a],cd=p.actCd[a]||0;F(A.col,x+4,y0+3,8,8);F('#050607',x+6,y0+5,4,4);F(A.col,x+7,y0+6,2,2);if(cd>0){F('rgba(0,0,0,0.65)',x+1,y0+1,sw-3,13);txt(''+Math.ceil(cd),x+sw-2,y0+7,'#8e978b','right');}}continue;}
       const id=p.quick[i-2],q=qInfo(id),cnt=q?(q.cnt?q.cnt():q.n()):0,usable=q&&q.n()>0;if(id){ctx.globalAlpha=usable?1:0.35;qIcon(id,x+8,y0+7);ctx.globalAlpha=1;txt(''+cnt,x+sw-2,y0+7,usable?'#e3e6dc':'#5d655f','right');}}

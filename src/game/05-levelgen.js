@@ -248,10 +248,7 @@ function updateHazards2(dt){
       if(r.t<=0){r.phase='idle';r.t=rr(2.5,5);}}}
 }
 function drawBarrel(b){const x=Math.round(b.x-camX),y=Math.round(b.y-camY);if(x<-10||y<-10||x>W+10||y>H+10)return;
-  if(b.crate){F('rgba(0,0,0,0.45)',x-5,y+4,11,2);F('#120c08',x-5,y-5,11,10);const c0=b.wood?'#7a5a32':'#5a6066',c1=b.wood?'#a07a44':'#7a8288';F(c0,x-4,y-4,9,8);F(c1,x-4,y-4,9,1);F(c1,x-4,y-1,9,1);F(c1,x-4,y+2,9,1);if(b.wood){F('#4a3420',x-4,y-4,1,8);F('#4a3420',x+4,y-4,1,8);}else{F('#3a4044',x-1,y-4,1,8);}return;}
-  F('rgba(0,0,0,0.45)',x-4,y+4,9,2);F('#120c08',x-4,y-5,9,10);F('#8a3a22',x-3,y-4,7,8);F('#b8552e',x-3,y-4,2,8);
-  {const o=Math.floor((b.roll||0))%4;F('#d9a441',x-3,y-1+(o===1?-1:o===3?1:0),7,1);F('#1a1410',x-3,y+(o===1?-1:o===3?1:0),7,1);}F('#5a2616',x-3,y-4,7,1);
-  if(b.hp<4)F('#2a1a10',x+1,y-3,1,2);if(b.fuse>=0&&Math.sin(T*30)>0)F('#fff0c0',x,y-5,1,1);}
+  olDraw(olBarrelKey(b),ART_OLC[b.crate?'crate':'barrel'],x-7,y-7,14,14,()=>barrelArt(b,x,y));}
 function drawRiser(r){const x=r.tx*TS-camX,y=r.ty*TS-camY;if(x<-14||y<-14||x>W+14||y>H+14)return;
   if(r.dir[1]===1){F('#1a1e1d',x+3,y-2,6,TS+1);F('#6a7470',x+4,y-2,4,TS);F('#9aa5a0',x+4,y-2,1,TS);F('#3a423f',x+3,y+TS-3,6,3);
     F('#b8493a',x+2,y+3,8,1);F('#b8493a',x+5,y+1,2,5);F('#d8dcd4',x+8,y+7,2,2);}
@@ -415,7 +412,8 @@ function fillModule(m){
   else if(m.type==='custodial'){fixtures.push({tx:m.x+m.w-1,ty:m.y+m.h-1,kind:'bucket'});put('cloth');put('cloth');put('powder');if(Math.random()<0.5)put('key');if(Math.random()<0.4)put('emetic');
     if(Math.random()<0.35){const t=freeTile(m);if(t){hz[t.ty*MW+t.tx]=2;paintTile(t.tx,t.ty);}}}
 }
-function drawFixture(f){const x=f.tx*TS-camX,y=f.ty*TS-camY;if(x<-14||y<-14||x>W+14||y>H+14)return;
+// the old fixture drawing; drawFixture() in 50-object-art.js draws the redrawn kinds and calls this for the rest
+function drawFixture0(f){const x=f.tx*TS-camX,y=f.ty*TS-camY;
   if(f.kind==='locker'){F('#15181a',x+1,y-1,10,TS+1);F(f.used?'#3a4248':'#56626a',x+2,y,8,TS-1);F('#2a3036',x+6,y,1,TS-1);F('#8a969e',x+4,y+5,1,2);F('#8a969e',x+8,y+5,1,2);for(let k=0;k<2;k++)F('#2a3036',x+3,y+1+k*2,2,1);}
   else if(f.kind==='camera'){F('#0a0a0a',x+1,y-2,TS-2,TS+1);F('#2a3430',x+2,y-1,TS-4,TS-1);F('#0a1a14',x+3,y+1,6,5);
     for(let k=0;k<3;k++)F(Math.random()<0.5?'#3a6a5a':'#1a3a2e',x+3,y+2+k*2,6,1);F(Math.sin(T*4)>0?'#e05040':'#401010',x+8,y,1,1);}

@@ -27,10 +27,7 @@ function updateFans(dt){const p=player;
       for(let k=1;k<=6;k++){const tx=Math.floor((f.x+ux*k*12)/TS),ty=Math.floor((f.y+uy*k*12)/TS);if(solid(tx,ty))break;const i=ty*MW+tx;if(hz[i]===1){hz[i]=0;paintTile(tx,ty);fires=fires.filter(q=>!(Math.floor(q.x/TS)===tx&&Math.floor(q.y/TS)===ty));}}
       if(f.t<=0){f.phase='idle';f.t=rr(3,6);}}}}
 function drawFan(f){const x=f.tx*TS-camX,y=f.ty*TS-camY;if(x<-14||y<-14||x>W+14||y>H+14)return;
-  const cx=x+6,cy=y+6;ctx.fillStyle='#0a0c0c';circ(cx,cy,5.5);ctx.fillStyle=f.dead?'#2a2a2a':'#3a4244';circ(cx,cy,4.5);
-  if(!f.dead){ctx.strokeStyle='#8a969e';ctx.lineWidth=1;for(let k=0;k<3;k++){const a=f.spin+k*2.09;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*4,cy+Math.sin(a)*4);ctx.stroke();}}
-  else{F('#1a1a1a',cx-2,cy-1,4,2);}
-  ctx.strokeStyle='#5a6468';ctx.beginPath();ctx.arc(cx,cy,5,0,6.283);ctx.stroke();F(f.phase==='spin'&&!f.dead?'#ffd060':'#2a3032',cx-1,cy-1,2,2);}
+  olDraw('fan',ART_OLC.fan,x-1,y-1,14,14,()=>fanArt(f,x,y));}
 let plants=[],mists=[],freightT=null,pendingSkip=0;
 function fireWeak(e){const b=ET[e.type];return !!(b.plant||b.trail||e.type==='slug'||e.type==='toxslug'||e.type==='snail');}
 function burnPlant(pl){if(pl.burst)return;pl.burst=true;pl.burnt=true;for(let k=0;k<10;k++)parts.push({x:pl.x+rr(-3,3),y:pl.y+rr(-3,3),vx:rr(-10,10),vy:rr(-30,-8),t:0.6,m:0.6,c:k%2?'#3a3028':'#ff9a4a',s:1});}
@@ -104,30 +101,19 @@ function vendChoose(i){
   for(let k=0;k<4;k++)parts.push({x:v.tx*TS+6,y:v.ty*TS+14,vx:rr(-20,20),vy:rr(0,20),t:0.3,m:0.3,c:VSTYLE[v.style].sign,s:1});
   if(!v.stock.some(q=>!q.sold)){v.state='done';vendUI=null;say('sold out. the sign flickers off');}
 }
-function drawHatch(h){const x=h.tx*TS-camX+6,y=h.ty*TS-camY+6;if(x<-10||y<-10||x>W+10||y>H+10)return;
-  ctx.fillStyle='#0d100f';circ(x,y,5);ctx.fillStyle=h.found?'#000':'#1c2120';circ(x,y,4);
-  if(h.found){F('#4a4030',x-2,y-2,4,1);F('#4a4030',x-2,y+1,4,1);}else{F('#3a3226',x-2,y,4,1);F('#2e3533',x-3,y-3,1,1);F('#2e3533',x+2,y+2,1,1);}}
+function drawHatch(h){const x=h.tx*TS-camX,y=h.ty*TS-camY;if(x<-16||y<-16||x>W+4||y>H+4)return;
+  olDraw('hatch1',h.found?ART_OLC.hatch:null,x-1,y-1,14,14,()=>hatchArt(h,x,y));}
 function drawLadder(h){const x=h.lx*TS-camX,y=h.ly*TS-camY;if(x<-12||y<-12||x>W||y>H)return;
   F('#5a4a2e',x+2,y-2,1,TS+2);F('#5a4a2e',x+9,y-2,1,TS+2);for(let k=0;k<TS;k+=3)F('#8a7040',x+2,y+k,8,1);}
 function drawLever(l){const x=l.tx*TS-camX,y=l.ty*TS-camY;if(x<-12||y<-12||x>W||y>H)return;
-  F('rgba(0,0,0,0.4)',x+2,y+9,8,2);F('#1a1e1d',x+3,y+6,6,4);F('#3a423f',x+5,y+2,2,6);
-  if(l.used){F('#5fae6e',x+6,y+7,4,2);}else{F('#c0402a',x+6,y,3,3);if(Math.sin(T*6)>0)F('#ff6050',x+3,y+7,1,1);}}
+  olDraw('lever'+(l.used?1:0),ART_OLC.lever,x,y-2,14,14,()=>leverArt(l,x,y));}
 function drawCage(c){const x=c.tx*TS-camX,y=c.ty*TS-camY,w=c.w*TS,h=c.h*TS;if(x>W||y>H||x+w<0||y+h<0)return;
   if(c.open){F('#3a3f3c',x,y-3,w,2);return;}
   F('#4a504d',x,y,w,2);F('#4a504d',x,y+h-2,w,2);for(let k=0;k<w;k+=3){F('#7a807c',x+k,y,1,h);F('#2a2f2d',x+k+1,y,1,h);}}
 function drawVendor(v,x,y){
   if(v.npc){F('rgba(0,0,0,0.45)',x+1,y+9,10,2);ctx.fillStyle='#15130e';circ(x+6,y+5,5);ctx.fillStyle='#4a4436';circ(x+6,y+5,4);ctx.fillStyle='#8b8468';circ(x+6,y+3,2.2);
     F('#ffd070',x+10,y+4,2,3);if(Math.random()<0.5)F('rgba(255,210,120,0.6)',x+10,y+3,2,1);return;}
-  const st=VSTYLE[v.style],dead=v.state==='dead',empty=!v.stock.some(o=>!o.sold);
-  F('rgba(0,0,0,0.45)',x,y+TS,TS,3);
-  F('#070808',x-1,y-3,TS+2,TS+5);F(dead?'#2a2a2a':st.body,x,y-2,TS,TS+3);F(dead?'#333':st.trim,x,y-2,TS,1);
-  const sign=dead?'#1a1a1a':empty?'#3a2a2a':(Math.random()<0.04?'#fff':st.sign);F(sign,x+1,y-1,TS-2,2);
-  F('#0b1210',x+1,y+2,7,7);
-  v.stock.forEach((o,k)=>{const cx=x+2+(k%2)*3,cy=y+3+Math.floor(k/2)*3;F(o.sold||dead?'#1a1f1e':['#e0c56a','#b8493a','#7fd08e','#8fb6d0'][k],cx,cy,2,2);});
-  if(!dead&&Math.random()<0.3)F('rgba(200,240,240,0.18)',x+1,y+2+rnd(7),7,1);
-  F('#2a2f2d',x+9,y+2,2,5);F(dead?'#3a1a1a':empty?'#6a4a20':(Math.sin(T*4+v.ph)>0?'#7fff8a':'#2f6a3a'),x+9,y+3,2,1);
-  F('#050606',x+1,y+10,7,1);
-  if(dead&&Math.random()<0.015)parts.push({x:v.tx*TS+6,y:v.ty*TS+4,vx:rr(-30,30),vy:rr(-10,30),t:0.3,m:0.3,c:'#ffe7a0',s:1});
+  olDraw('vend'+v.style+v.state+(v.stock.some(o=>!o.sold)?1:0),ART_OLC.vend,x-2,y-4,16,20,()=>vendArt(v,x,y));
 }
 function drawVend(){
   const v=vendUI.v,st=VSTYLE[v.style],O=vendOpts(),pw=270,ph=60+O.length*12,px=(W-pw)>>1,py=(H-ph)>>1;

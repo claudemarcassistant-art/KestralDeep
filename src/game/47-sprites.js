@@ -29,9 +29,18 @@ function paint(g,key,n,x,y,rx,ry,pal,L,t,o){o=o||{};const d=dabs(key,n),lx=Math.
     paintBuckets[i].push(dx-s/2,dy-s/2,s);}
   for(let i=0;i<np;i++){const B=paintBuckets[i];if(!B.length)continue;g.fillStyle=pal[i];g.beginPath();for(let k=0;k<B.length;k+=3)g.rect(B[k],B[k+1],B[k+2],B[k+2]);g.fill();}}
 // soft halo for anything that gives off light (rgb as 'r,g,b')
-function glow(g,x,y,r,rgb,a){const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba('+rgb+','+a+')');gr.addColorStop(1,'rgba('+rgb+',0)');g.fillStyle=gr;g.fillRect(x-r,y-r,r*2,r*2);}
+// (since Batch 5 session 4 the gradient is drawn once per colour into a small canvas and scaled with globalAlpha:
+// the same picture as a fresh radial gradient, at a fraction of the cost)
+const glowTex={};
+function glowCanvas(rgb){let c=glowTex[rgb];if(c)return c;c=glowTex[rgb]=document.createElement('canvas');c.width=c.height=32;const q=c.getContext('2d'),gr=q.createRadialGradient(16,16,0,16,16,16);
+  gr.addColorStop(0,'rgba('+rgb+',1)');gr.addColorStop(1,'rgba('+rgb+',0)');q.fillStyle=gr;q.fillRect(0,0,32,32);return c;}
+function glow(g,x,y,r,rgb,a){if(!(r>0)||!(a>0))return;const A0=g.globalAlpha;g.globalAlpha=A0*Math.min(1,a);g.drawImage(glowCanvas(rgb),x-r,y-r,r*2,r*2);g.globalAlpha=A0;}
 // vertical shading: alpha from top to bottom over h rows
-function vshade(g,x,y,w,h,top,bot){for(let k=0;k<h;k++){g.fillStyle='rgba(0,0,0,'+(top+(bot-top)*k/h)+')';g.fillRect(x,y+k,w,1);}}
+// (cached per top/bottom/height as a 1-pixel-wide strip, stretched to the width)
+const vshadeTex={};
+function vshade(g,x,y,w,h,top,bot){h=Math.round(h);if(h<=0||w<=0)return;const k0=top+'|'+bot+'|'+h;let c=vshadeTex[k0];
+  if(!c){c=vshadeTex[k0]=document.createElement('canvas');c.width=1;c.height=h;const q=c.getContext('2d');for(let k=0;k<h;k++){q.fillStyle='rgba(0,0,0,'+(top+(bot-top)*k/h)+')';q.fillRect(0,k,1,1);}}
+  g.drawImage(c,x,y,w,h);}
 // direction toward the light for a sprite at world x,y: overhead from the top left on lit decks; on dark decks the
 // player's lamp (toward the player; the player itself uses a fixed angle). Same darkness test as the renderer.
 function spriteLight(x,y){if(!cond||cond.light!=='dark'||!player)return ART_LIGHT.lit;const dx=player.x-x,dy=player.y-y;return dx*dx+dy*dy<1?ART_LIGHT.selfDark:Math.atan2(dy,dx);}

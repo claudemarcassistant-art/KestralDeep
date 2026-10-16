@@ -42,14 +42,8 @@ function render(){
     const l=ice[ty*MW+tx]?0:liq[ty*MW+tx];if(l>=2){const ph=T*1.6+tx*0.9+ty*1.7;ctx.fillStyle=`rgba(170,220,225,${l===3?0.22:0.3})`;
       ctx.fillRect(tx*TS-camX+((Math.sin(ph)*3+5)|0),ty*TS-camY+((Math.cos(ph*0.8)*3+5)|0),2,1);}}
   drawTraps();drawToxicVents();drawCrawls();drawPlateDoors();drawIncense();drawArchive();drawCams();
-  for(const pn of panels){if(!seen[pn.ty*MW+pn.tx])continue;const x=pn.tx*TS-camX+2,y=pn.ty*TS-camY+3;
-    if(x<-12||y<-12||x>W||y>H)continue;
-    const base=pn.state==='dead'?'#141414':pn.state==='done'?'#16402a':pn.reward==='traps'?'#381812':pn.hack?'#10302c':'#141c2a';
-    F('#070908',x-1,y-1,10,7);F(base,x,y,8,5);
-    if(pn.state!=='dead'){for(let k=0;k<5;k++){const a=Math.random()*0.6;ctx.fillStyle=pn.state==='done'?`rgba(120,230,150,${a})`:pn.reward==='traps'?`rgba(240,120,90,${a})`:pn.hack?`rgba(120,230,210,${a})`:`rgba(140,170,230,${a})`;ctx.fillRect(x+rnd(8),y+rnd(5),1,1);}
-      if(Math.random()<0.06){ctx.fillStyle='rgba(200,240,240,0.5)';ctx.fillRect(x,y+rnd(5),8,1);}}
-    else if(Math.random()<0.02)parts.push({x:pn.tx*TS+6,y:pn.ty*TS+8,vx:rr(-30,30),vy:rr(-10,30),t:0.3,m:0.3,c:'#ffe7a0',s:1});
-    if(pn.hack&&pn.state==='idle'&&Math.sin(T*5+pn.ph)>0)F(AMBER,x+7,y+6,1,1);}
+  for(const pn of panels){if(!seen[pn.ty*MW+pn.tx])continue;const x=pn.tx*TS-camX,y=pn.ty*TS-camY;if(x<-14||y<-14||x>W+2||y>H+2)continue;
+    olDraw('panel',ART_OLC.panel,x,y,12,12,()=>panelArt(pn,x,y));}
   for(let ty=ty0;ty<=ty1;ty++)for(let tx=tx0;tx<=tx1;tx++){if(tx<0||ty<0||tx>=MW||ty>=MH||!seen[ty*MW+tx])continue;const hh=hz[ty*MW+tx];
     if(hh===1&&!hazOff){drawFireTile(tx,ty);}
     else if(hh===2&&Math.random()<0.03)parts.push({x:tx*TS+2+rnd(8),y:ty*TS+2+rnd(8),vx:0,vy:-6,t:0.6,m:0.6,c:'#b8e060',s:1});}
@@ -100,7 +94,7 @@ function render(){
   for(const f of flares){const x=Math.round(f.x-camX),y=Math.round(f.y-camY);F('#8a2d24',x-2,y,4,1);F('#ffd0a0',x+1,y-1,2,2);}
   for(const e of enemies)if(e.caged&&!e.caged.open&&seen[Math.floor(e.y/TS)*MW+Math.floor(e.x/TS)]&&visible(e.x,e.y,e.r)){drawEnemy(e);if(e.frozenT>0)drawIceShell(e.x-camX,e.y-camY,e.r);}
   for(const c of cages)if(seen[c.ty*MW+c.tx])drawCage(c);
-  for(const e of enemies)if(!(e.caged&&!e.caged.open)&&visible(e.x,e.y,e.r)){if(hasTr(e,'hulking')){const hx=e.x-camX,hy=e.y-camY,k=TRAITS.hulking.size;ctx.save();ctx.translate(hx,hy);ctx.scale(k,k);ctx.translate(-hx,-hy);const r0=e.r;e.r=r0/k;drawEnemy(e);e.r=r0;ctx.restore();}else drawEnemy(e);if(e.kit&&!e.dead)drawKit(e);if(e.tr&&!e.dead){drawTraits(e);noteTraits(e);}if(e.frozenT>0)drawIceShell(e.x-camX,e.y-camY,e.r);if(bestiary&&!ET[e.type].dummy&&!bestiary.seen[e.type]){bestiary.seen[e.type]=depth;if(state==='play')say('new creature logged: '+BEASTINFO[e.type].name.toLowerCase()+'. B to view');}}
+  for(const e of enemies)if(!(e.caged&&!e.caged.open)&&visible(e.x,e.y,e.r)){const ob=OPTS.outlines?olEnemyBox(e):null,olc=ob&&!e.dead&&!(e.cloak>0)?olColOf(e):null;if(hasTr(e,'hulking')){const hx=e.x-camX,hy=e.y-camY,k=TRAITS.hulking.size;ctx.save();ctx.translate(hx,hy);ctx.scale(k,k);ctx.translate(-hx,-hy);const r0=e.r;e.r=r0/k;olDraw(e,olc,...(ob||[0,0,0,0]),()=>drawEnemy(e));e.r=r0;ctx.restore();if(e.kit&&!e.dead)drawKit(e);}else olDraw(e,olc,...(ob||[0,0,0,0]),()=>{drawEnemy(e);if(e.kit&&!e.dead)drawKit(e);});if(e.tr&&!e.dead){drawTraits(e);noteTraits(e);}if(e.frozenT>0)drawIceShell(e.x-camX,e.y-camY,e.r);if(bestiary&&!ET[e.type].dummy&&!bestiary.seen[e.type]){bestiary.seen[e.type]=depth;if(state==='play')say('new creature logged: '+BEASTINFO[e.type].name.toLowerCase()+'. B to view');}}
   if(state==='play'){drawPlayer();if(p.frozenT>0)drawIceShell(p.x-camX,p.y-camY,p.r+1);if(p.weapon==='ray'&&p.charge>0){const mx=p.x-camX+Math.cos(p.ang)*11,my=p.y-camY+Math.sin(p.ang)*11;ctx.fillStyle=`rgba(140,255,170,${0.4+0.3*Math.sin(T*30)})`;circ(mx,my,1+p.charge*2.5);}if(p.dazeT>0)for(let k=0;k<3;k++){const q=T*6+k*2.1;F('#e8dcb0',Math.round(p.x-camX+Math.cos(q)*6),Math.round(p.y-camY-8+Math.sin(q)*1.5),1,1);}wade(Math.round(p.x-camX),Math.round(p.y-camY),4,liqAt(p.x,p.y));}
   for(const b of bullets){const x=b.x-camX,y=b.y-camY;
     if(b.p&&b.kind==='sling'){const c=b.slk==='debris'?'#8e978b':(SLING[b.slk]||{}).col||'#ccc';F('#15110a',Math.round(x)-1,Math.round(y)-1,3,3);F(c,Math.round(x),Math.round(y)-1,1,2);}

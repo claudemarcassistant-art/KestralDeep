@@ -88,7 +88,7 @@ function assignQuick(id,slot){if(slot>=qCap()){say('that slot is locked. belt po
 function qIcon(id,x,y){if(!id)return;if(prepIcon(id,x,y))return;
   if(id==='glowstick'){const on=player&&player.glowOn;F('#15110a',x-2,y-5,5,11);F(on?'#9fff9a':'#4a7a4a',x-1,y-4,3,9);if(on){ctx.globalAlpha=0.3;ctx.fillStyle='#9fff9a';circ(x,y,5);ctx.globalAlpha=1;}return;}
   if(id==='sledge'){F('#15110a',x-4,y-5,9,5);F('#6a7078',x-3,y-4,7,3);F('#8a6a3a',x,y-1,1,7);return;}
-  if(id==='scanner'){F('#15110a',x-3,y-4,7,9);F('#3a4a3a',x-2,y-3,5,7);F('#9fe0b0',x-1,y-2,3,2);F('#c8c0a0',x+2,y-6,1,3);return;}const di=(t,e)=>drawItem(Object.assign({x:x+camX,y:y+camY,type:t,ph:0},e||{}));
+  if(id==='scanner'){F('#15110a',x-3,y-4,7,9);F('#3a4a3a',x-2,y-3,5,7);F('#9fe0b0',x-1,y-2,3,2);F('#c8c0a0',x+2,y-6,1,3);return;}const di=(t,e)=>drawItem(Object.assign({x:x+camX,y:y+camY,type:t,ph:0,icon:true},e||{}));
   if(id.startsWith('food:'))return di('food',{food:id.slice(5)});
   if(id==='medpatch')return di('medkit');if(id==='emetic')return di('emetic');
   if(id==='charge'){F('#15110a',x-4,y-2,9,5);F('#7a8c93',x-3,y-1,7,3);F('#c0402a',x+3,y-2,1,1);return;}

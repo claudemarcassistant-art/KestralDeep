@@ -16,7 +16,7 @@ function artRamp(hex){if(artRampCache[hex])return artRampCache[hex];const n=pars
 const AP=k=>artFlash?ART_PAL.FLASH:(ART_PAL[k]||artRamp(ET[k]?ET[k].col:'#808080'));
 const AD=k=>ART_DABS[k]||ART_DABS.generic;
 // per-creature animation clock offset and a smoothed movement measure (pixels a frame), so motion drives the art
-function artPrep(e){if(e._to==null)e._to=((e.x*7.31+e.y*3.17)%10+10)%10;const mv=e._ax==null?0:Math.hypot(e.x-e._ax,e.y-e._ay);e._ax=e.x;e._ay=e.y;e._mv=(e._mv||0)*0.8+Math.min(4,mv)*0.2;return T+e._to;}
+function artPrep(e){if(e._to==null)e._to=((e.x*7.31+e.y*3.17)%10+10)%10;if(olPass)return T+e._to;const mv=e._ax==null?0:Math.hypot(e.x-e._ax,e.y-e._ay);e._ax=e.x;e._ay=e.y;e._mv=(e._mv||0)*0.8+Math.min(4,mv)*0.2;return T+e._to;}
 const spitSwell=e=>{const m=(ET.spitter.atk||2)*1.2;return 1-Math.max(0,Math.min(1,(e.cd||0)/m));};
 
 // ---------- the study's creatures, as in its NEW object (pal() picks the flash tones) ----------
@@ -212,14 +212,14 @@ function drawEnemy(e){
   }else if(b.slug||b.snail){
     const hd=Math.atan2(player.y-e.y,player.x-e.x),hc=Math.cos(hd),hs=Math.sin(hd),hide=b.snail&&e.shellT>0;
     if(!hide)CART.slug(g,x,y,hd,t,L,b.snail?'snail':e.type==='toxslug'?'toxslug':'slug');
-    if(!hide&&e.type==='toxslug'&&Math.random()<0.1)parts.push({x:x+camX+rr(-3,3),y:y+camY-2,vx:0,vy:-10,t:0.4,m:0.4,c:'#a0e040',s:1});
+    if(!hide&&!olPass&&e.type==='toxslug'&&Math.random()<0.1)parts.push({x:x+camX+rr(-3,3),y:y+camY-2,vx:0,vy:-10,t:0.4,m:0.4,c:'#a0e040',s:1});
     if(b.snail){const sx=x-hc*1.5,sy=y-hs*1.5-1;if(hide)shadow(g,sx,sy+3,4.6,2,.3);paint(g,'shell',AD('shell'),sx,sy,4.2,4,AP('shell'),L,t,{wob:.04,size:1.3});
       ctx.strokeStyle=artFlash?'#fff':'#c8a870';ctx.lineWidth=0.8;ctx.beginPath();ctx.arc(sx,sy,2.4,0.5,5.2);ctx.stroke();pxl(ctx,sx,sy,'#e0c890',1);}
   }else if(e.type==='charger'){
     const a2=e.dir!=null&&e.st!=='walk'?e.dir:a,c2=Math.cos(a2),s2=Math.sin(a2),sh=e.st==='wind'?Math.round(rr(-1,1)):0,xx=x+sh;
     shadow(g,xx,y+e.r*.5,e.r+1,e.r*.45,.35);
     // its signature: scraping its feet as it winds up, dust while it charges
-    if((e.st==='wind'||e.st==='charge')&&!e.portrait&&Math.random()<0.5)parts.push({x:e.x-c2*e.r+rr(-2,2),y:e.y-s2*e.r+rr(-2,2),vx:-c2*rr(10,30)+rr(-10,10),vy:-s2*rr(10,30)+rr(-10,10),t:0.35,m:0.35,c:'#6a5a44',s:1});
+    if((e.st==='wind'||e.st==='charge')&&!e.portrait&&!olPass&&Math.random()<0.5)parts.push({x:e.x-c2*e.r+rr(-2,2),y:e.y-s2*e.r+rr(-2,2),vx:-c2*rr(10,30)+rr(-10,10),vy:-s2*rr(10,30)+rr(-10,10),t:0.35,m:0.35,c:'#6a5a44',s:1});
     g.save();g.translate(xx,y);g.rotate(a2);const Lr=L-a2;paint(g,'chg',AD('charger'),-1,0,e.r,e.r*.9,AP('charger'),Lr,t,{wob:.1,size:1.3});paint(g,'chgh',AD('chargerH'),3,0,e.r*.55,e.r*.6,AP('chargerH'),Lr,t,{wob:.06});g.restore();
     F('#d8d0b0',Math.round(xx+c2*5-s2*3),Math.round(y+s2*5+c2*3),2,2);F('#d8d0b0',Math.round(xx+c2*5+s2*3),Math.round(y+s2*5-c2*3),2,2);
     F('#ff6040',Math.round(xx+c2*4-s2*1),Math.round(y+s2*4+c2*1),1,1);F('#ff6040',Math.round(xx+c2*4+s2*1),Math.round(y+s2*4-c2*1),1,1);

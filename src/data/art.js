@@ -52,3 +52,22 @@ const ART_PAL={
 };
 // dab counts: kept low enough that a busy Large deck holds 60 fps (Batch 5 session 2); cut these first if it slows
 const ART_DABS={husk:48,huskH:14,crawler:34,spitter:56,brute:90,bruteH:14,frog:50,wasp:26,waspT:12,slug:44,spider:34,spiderH:14,snakeH:16,charger:60,chargerH:16,lurker:40,grasper:56,plant:30,pod:20,drone:16,shell:22,warden:110,generic:40};
+// item categories (Batch 5 session 4): the soft pool under every item on the floor and its outline colour.
+// rgb is for the pool, ol for the optional outline. ITEM_CAT_OF maps an item type to its category (gear otherwise).
+const ITEM_CAT={ammo:{rgb:'217,164,65',ol:'#d9a441',name:'ammo'},material:{rgb:'143,182,208',ol:'#8fb6d0',name:'materials'},
+  medical:{rgb:'127,208,142',ol:'#7fd08e',name:'medical'},food:{rgb:'224,160,112',ol:'#e0a070',name:'food'},
+  key:{rgb:'201,168,255',ol:'#c9a8ff',name:'keys and data'},gear:{rgb:'227,230,220',ol:'#e3e6dc',name:'weapons and gear'}};
+const ITEM_CAT_OF={rounds:'ammo',shells:'ammo',nails:'ammo',bolts:'ammo',knives:'ammo',cells:'ammo',
+  scrap:'material',pipe:'material',battery:'material',cloth:'material',powder:'material',chip:'material',
+  medkit:'medical',herb:'medical',medpatch:'medical',trauma:'medical',regen:'medical',surgery:'medical',stim:'medical',antitox:'medical',emetic:'medical',tuft:'medical',tonic:'medical',
+  food:'food',raw:'food',
+  key:'key',liftcard:'key',file:'key',clearpack:'key',routechart:'key',schematic:'key',secretmap:'key',sigil:'key'};
+// outline colours (the optional Sprite outlines): a brightened version of each sprite's main colour, from the study's
+// OLC. Creatures without an entry use their ET colour brightened (olColOf() in 51-outlines.js).
+const ART_OLC={player:'#f2b464',husk:'#b4c296',crawler:'#f0a060',spitter:'#a8ccf4',brute:'#e08484',frog:'#a0dc74',wasp:'#f8e278',ghost:'#d0f4ff',slug:'#ecec96',spider:'#b49ad8',
+  guard:'#84aae0',riotguard:'#7a8ab0',
+  scrapper:'#c8a870',quarter:'#88a888',cook:'#f4f0e6',subject:'#f0e8f4',bomber:'#98b078',locksmith:'#b49ad0',android:'#d0dae0',pilot:'#e0a060',detective:'#9a9ab8',gambler:'#a48ad0',
+  barrel:'#e07a4a',crate:'#c8a070',chest:'#e0b060',rare:'#c9a8ff',locker:'#a8b8c4',panel:'#7fe8d0',vend:'#ff8a9a',lever:'#ff7a60',breaker:'#e8c040',toolbench:'#c89a60',grinder:'#e08a40',
+  medstation:'#ff8080',freezer:'#c8e4f4',dispenser:'#e0c56a',arcade:'#7af0ff',camera:'#7ad0b0',hatch:'#d9a441',fan:'#b8c4ca'};
+// Codex Systems entry for the Sprite outlines option
+const OUTLINE_DESC='Options > Sprite outlines (off by default) draws a thin line around you, creatures, crew, guards, items and interactables, each in a brighter shade of its own colour; items take the colour of their kind (ammo amber, materials blue, medical green, food orange, keys and data violet, weapons and gear white). Only the outer edge is outlined: shadows, glows and the gaps inside a creature are not. Hidden things stay hidden: undiscovered hatches and trap plates never get an outline, and neither do cloaked figures.';

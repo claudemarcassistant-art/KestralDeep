@@ -21,7 +21,7 @@ src/
   styles.css      page styles
   boot.js         font loader and the on-screen error reporter
   data/           content and tuning tables (loaded first)
-    art.js                  art pass data: PEOPLE (person configs), PLAYER_TINT, ART_LIGHT, ART_PAL (creature tones), ART_DABS, CREW_CFG (crew configs)
+    art.js                  art pass data: PEOPLE (person configs), PLAYER_TINT, ART_LIGHT, ART_PAL (creature tones), ART_DABS, CREW_CFG (crew configs), ITEM_CAT/ITEM_CAT_OF (item categories), ART_OLC (outline colours), OUTLINE_DESC
     character.js            crew files, substats, cores, skills, movement skills, psychic actions, sling, injuries, spacebar styles, Stats tab links and tips
     crafting.js             Workbench recipes and upgrades, grinder salvage yields
     creatures.js            creature stats, bestiary order and text, kill points, threat costs, bosses, hunting memory, arena waves, traits
@@ -90,6 +90,8 @@ src/
     47-sprites.js           art pass toolkit (ell, line, dabs, paint, person, HATS, glow, vshade, spriteLight) and the player's pose
     48-creature-art.js      painted creatures: drawEnemy(), the study's creatures (CART), emissive parts after the darkness
     49-crew-art.js          crew fixtures with props and idle activities, guard and riot guard bodies, anomalies (unstable and crackling)
+    50-object-art.js        items (drawItem(), category pools, shine) and interactables (FIX_ART, barrels, chests, panels, vending, levers, hatches, fans)
+    51-outlines.js          the Sprite outlines option: olDraw(), ring building and caching
     44-loadouts.js          armed humans: kit rolling, kit guns (magazines, reloads), kit melee, quick items, drops, drawing, V-look text
     43-tools.js             industrial blower (air lane and its pushes) and stun gun (zaps, stun, water jolts), arcs drawing
 scripts/build.mjs  the build
