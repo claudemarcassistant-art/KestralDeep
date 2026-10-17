@@ -2,7 +2,7 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v1.13.1**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v1.13.2**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
@@ -135,6 +135,8 @@ Current version: **v1.13.1**. The game was built iteratively in claude.ai chats 
 - **Counts:** the threat budget in `populate()` is multiplied by `THREAT_SIZE_MUL[deckSize]` (Large 0.8, owner's choice).
 - **Ghosts (owner's design, v0.88):** the ghost branch of the enemy loop calls `ghostMove()` (`37-pacing.js`, numbers in `GHOST_CFG`): velocity steering with low acceleration (`e.gvx`/`e.gvy`), states `e.gst` `float` (toward you within 230 px on a wandering heading `e.wob`, speed varying, about 22 px/s on average), `windup` (0.35 s shiver at ~60 px), `lunge` (210 px/s for 0.45 s, hits once), `drift` (coasts on along the lunge, slowing from 42 px/s, 2.6 s), then back to `float`, which curves it round in a loop. Looking straight at it still makes it flee. The enemy loop's `e.cd-=dt` times the 3.2 s lunge cooldown.
 - **Arena waves (owner's design):** `enterLevel()` places only `arenaStart()`'s share of the arena creatures (40%, at least 2) and sets `arenaW`; `updateArenaWaves()` queues a wave every 15 s (first after 8 s) through `queueSpawn()` (`spawnQ` entries marked `arena`), size 2-3 plus depth/3 scaled by area, skipped while the arena already holds `cap` (8 x AREA). With a mini-boss (`arenaW.boss`) waves continue until it dies; without one there are 3. The lift unlocks only when `arenaW.done` and the arena is clear.
+
+**Deck report reward (owner's request, v1.13.2):** `drawReport()` (04-state.js) draws the reward from just right of the grade letter (`gx`, measured in the 16px font) and wraps it with `wrapLines()` (38-inspect.js) to the panel's right edge; every line past two (`gExtra`, 9 px each) moves Run total, waves drawn and the panel's bottom down.
 
 **Wall corners (owner's request, v1.13.1):** light rays mark tiles `seen` as they pass (`castRay(...,true)` in `render()`), but an inside corner tile only touches the floor at one point, so rays almost never entered it and it stayed black between two lit walls. `revealCorners(x,y,r)` (23-vision.js) runs after the player's light rays each frame over the tiles within 300 px and marks an unseen non-floor tile seen when at least two of its four straight neighbours are seen walls and one diagonal neighbour is seen floor (never `kind` 3); rock behind walls and the walls of dark rooms stay hidden. Measured: inside corners of rooms on three test decks all seen (none before); busy Large deck unchanged.
 

@@ -39,7 +39,10 @@ function fmtT(t){t=Math.round(t);return Math.floor(t/60)+':'+String(t%60).padSta
 function reportAdvance(){const shown=(T-report.start)/0.18;if(shown<report.lines.length+3){report.start=T-99;return;}report=null;if(pendingSkip>1){for(let k=0;k<pendingSkip-1;k++){if(route.cur===route.exit)break;const d=nodeDist(route.exit);let best=route.cur;for(const j of curNode().links)if(d[j]<d[best])best=j;route.cur=best;route.nodes[best].known=true;route.nodes[best].visited=true;depth++;}}pendingSkip=0;openRoute();}
 function saveBest(){if(testMode)return;const tot=runScore+liveLevelScore();if(tot>bestScore){bestScore=tot;bestSeed=runSeed&&runSeed.kind!=='random'?runSeed:null;try{localStorage.setItem('kd_best',''+bestScore);localStorage.setItem('kd_best_seed',JSON.stringify(bestSeed));}catch(e){}}}
 function drawReport(){
-  const r=report,pw=300,ph=206,px=(W-pw)>>1,py=(H-ph)>>1,shown=Math.floor((T-r.start)/0.18);
+  // the reward sits just right of the grade letter and wraps below it; extra lines push the rows under it (and the
+  // panel) down (owner's request, v1.13.2)
+  const r=report,pw=300,g0=r.grade;ctx.font='16px '+FONT;const gx=62+Math.ceil(ctx.measureText(g0[0]).width)+8,rwL=wrapLines('reward: '+r.reward,pw-10-gx),gExtra=Math.max(0,rwL.length-2)*9;
+  const ph=206+gExtra,px=(W-pw)>>1,py=(H-ph)>>1,shown=Math.floor((T-r.start)/0.18);
   F('#050607',0,0,W,H);box(px,py,pw,ph,'#0a0d0c','#1f2524');F(AMBER,px,py,pw,2);
   txt('DECK REPORT',px+10,py+8,AMBER);txt('depth '+depth+'  /  '+(levelLabel||sector(depth)).toLowerCase(),px+pw-10,py+8,'#5d655f','right');
   r.lines.forEach((l,i)=>{if(i>=shown)return;const yy=py+24+i*11,zero=!l[2];
@@ -47,8 +50,8 @@ function drawReport(){
   const n=r.lines.length,base=py+24+n*11+4;
   if(shown>n){F('#1f2524',px+10,base,pw-20,1);txt('Deck score',px+10,base+5,AMBER);if(r.scen)txt(r.scen,px+200,base+5,'#8e978b','right');txt(''+r.total,px+pw-10,base+5,AMBER,'right');}
   if(shown>n+1){const g=r.grade;txt('Grade',px+10,base+19,'#8e978b');txt(g[0],px+62,base+14,g[2],'left',16);
-    txt('reward: '+r.reward,px+pw-10,base+19,g[0]==='D'?'#5d655f':'#9fcf9a','right');}
-  if(shown>n+2){txt('Run total',px+10,base+35,'#8e978b');txt(''+r.run,px+pw-10,base+35,'#e3e6dc','right');if(r.drawn)txt('waves drawn this run: '+r.drawn+(r.carry?'  (they are following you)':''),px+10,base+45,r.carry?'#ff8a7a':'#6f7a6a');
+    rwL.forEach((l,i)=>txt(l,px+gx,base+15+i*9,g[0]==='D'?'#5d655f':'#9fcf9a'));}
+  if(shown>n+2){txt('Run total',px+10,base+35+gExtra,'#8e978b');txt(''+r.run,px+pw-10,base+35+gExtra,'#e3e6dc','right');if(r.drawn)txt('waves drawn this run: '+r.drawn+(r.carry?'  (they are following you)':''),px+10,base+45+gExtra,r.carry?'#ff8a7a':'#6f7a6a');
     if(Math.sin(T*4)>-0.3)txt('Enter or click to ride on',px+pw/2,py+ph-12,'#e8dcb0','center');}
 }
 let powerOff=false,powerPrev=null,cond={light:'normal',haz:null},hazOff=false,hz=new Uint8Array(MW*MH),fires=[],vents=[],anoms=[],panels=[],hackUI=null,glows=[];
