@@ -26,6 +26,7 @@ function render(){
     let d2=Math.min(d,Rr*0.9),d3=Math.min(d,Rr*0.78),d1=d;
 
     outer.push(pcx+c*d1,pcy+s*d1);mid.push(pcx+c*d2,pcy+s*d2);inner.push(pcx+c*d3,pcy+s*d3);}
+  revealCorners(vo.x,vo.y,300);
   for(const f of flares){f.r=FLARE_R+Math.sin(T*23+f.ph)*4;f.pts=flarePoly(f);}
   glows=[...flares];
   for(const L of lamps){if(Math.hypot(L.x-p.x,L.y-p.y)>260)continue;L.r=30+Math.sin(T*1.3+L.ph)*1.5;L.t=9;L.pts=flarePoly(L);glows.push(L);}
