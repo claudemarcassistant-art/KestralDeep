@@ -266,31 +266,35 @@ function floodRegion(){
   for(let y=1;y<MH-1;y++)for(let x=1;x<MW-1;x++)if(liq[y*MW+x])paintTile(x,y);
   sfx('steam');
 }
-// rounds needed: HACK_CFG.win.length, minus one for each HACK_CFG.cut threshold the hack stat reaches
-function hackRounds(){const C=HACK_CFG;return Math.max(C.minRounds,C.win.length-C.cut.filter(t=>S.hack>=t).length);}
-function startHack(pn){hackUI={pn,round:0,need:hackRounds(),misses:0,pos:0,dir:1,flash:0,ok:0,barW:HACK_CFG.barW};newHackWindow();mouse.l=false;mouse.r=false;sfx('map');}
+// progress per lock and the fewest locks a hack takes (shown in Stats)
+function hackHit(){const C=HACK_CFG;return Math.round(C.hit*(1+S.hack*C.hitHack));}
+function hackRounds(){return Math.ceil(HACK_CFG.goal/hackHit());}
+function startHack(pn){hackUI={pn,round:0,pts:0,hit:hackHit(),misses:0,pos:0,dir:1,flash:0,ok:0,drain:0,barW:HACK_CFG.barW};newHackWindow();mouse.l=false;mouse.r=false;sfx('map');}
 function newHackWindow(){const h=hackUI,C=HACK_CFG;h.ww=Math.max(C.minWin,C.win[Math.min(h.round,C.win.length-1)]*(1+S.hack))*(h.pn.hard?VAULT_CFG.hackMul:1);h.win=rr(0,h.barW-h.ww);
-  h.speed=(C.speed+h.round*C.step*(1-Math.min(C.stepCutMax,S.hack*C.stepCut)))*(1-S.hack*C.slow);}
+  h.speed=(C.speed+Math.min(h.round,C.win.length-1)*C.step*(1-Math.min(C.stepCutMax,S.hack*C.stepCut)))*(1-S.hack*C.slow);}
 function hackTry(){const h=hackUI;if(!h)return;
-  if(h.pos>=h.win&&h.pos<=h.win+h.ww){h.round++;h.ok=0.2;
-    if(h.round>=h.need){const r=HACKR[h.pn.reward];h.pn.state='done';hackUI=null;sfx('hackwin');if(lvl)lvl.hacks++;say(r.act(h.pn));return;}
+  if(h.pos>=h.win&&h.pos<=h.win+h.ww){h.round++;h.ok=0.2;h.pts=Math.min(HACK_CFG.goal,h.pts+h.hit);
+    if(h.pts>=HACK_CFG.goal){const r=HACKR[h.pn.reward];h.pn.state='done';hackUI=null;sfx('hackwin');if(lvl)lvl.hacks++;say(r.act(h.pn));return;}
     sfx('hackok');newHackWindow();}
   else{h.misses++;h.flash=0.35;sfx('zap');alertAdd(perk('ductrat')?6:12);shake=Math.max(shake,5);hurtPlayer(9,true);addStatus('shk',30);
     if(!hackUI)return;
     if(h.misses>=2){h.pn.state='dead';hackUI=null;if(h.pn.reward==='traps')trapsSetOff(h.pn);else if(h.pn.reward==='vault')vaultFried(h.pn);else if(h.pn.reward==='cams')camsHackFailed(h.pn);else say('the panel shorts out in a shower of sparks');}}}
-function updateHack(dt){const h=hackUI;h.pos+=h.dir*h.speed*dt;if(h.pos>h.barW){h.pos=h.barW;h.dir=-1;}if(h.pos<0){h.pos=0;h.dir=1;}h.flash-=dt;h.ok-=dt;}
+// every bounce off either end of the bar drains HACK_CFG.bounce progress
+function hackBounce(h){if(h.pts>0){h.pts=Math.max(0,h.pts-HACK_CFG.bounce);h.drain=0.3;sfx('tink');}}
+function updateHack(dt){const h=hackUI;h.pos+=h.dir*h.speed*dt;if(h.pos>h.barW){h.pos=h.barW;h.dir=-1;hackBounce(h);}if(h.pos<0){h.pos=0;h.dir=1;hackBounce(h);}h.flash-=dt;h.ok-=dt;h.drain-=dt;}
 function drawHack(){
   const h=hackUI,px=(W-240)/2|0,py=(H-96)/2|0;
   F('rgba(4,5,6,0.6)',0,0,W,H);
   box(px,py,240,96,'#070b0a','#1f3a36');F('#6fd0c0',px,py,240,2);
   txt('PANEL ACCESS',px+10,py+8,'#6fd0c0');txt(HACKR[h.pn.reward].label,px+230,py+8,AMBER,'right');
-  txt('lock the signal inside the window. '+h.need+' locks to break in.',px+10,py+20,'#6f7a6a');
+  txt('lock in the window. bounces drain the bar.',px+10,py+20,'#6f7a6a');
   const bx=px+20,by=py+38;F('#0e1614',bx,by,h.barW,14);
   for(let k=0;k<h.barW;k+=4)F(`rgba(100,200,190,${0.05+Math.random()*0.1})`,bx+k,by+rnd(14),1,1);
   F(h.ok>0?'#9fe0b0':'#2f6a4a',bx+h.win,by,h.ww,14);F('#6fd0a0',bx+h.win,by,h.ww,1);
   F('#ffffff',bx+Math.round(h.pos)-1,by-3,2,20);
-  for(let k=0;k<h.need;k++){ctx.fillStyle=k<h.round?'#9fe0b0':'#1f3a36';circ(px+100+k*14,py+66,3);}
-  for(let k=0;k<2;k++){F(k<h.misses?'#e05040':'#2a1512',px+178+k*12,py+63,8,6);}
+  {const G=HACK_CFG.goal,pw=128,fw=Math.round(pw*h.pts/G),qx=bx;F('#0e1614',qx,py+63,pw,6);F(h.drain>0?'#e08a40':h.ok>0?'#9fe0b0':'#4fa880',qx,py+63,fw,6);
+    for(let v=h.hit;v<G;v+=h.hit)F('#1f3a36',qx+Math.round(pw*v/G),py+63,1,6);txt(Math.round(h.pts)+'/'+G,qx+pw+4,py+62,h.drain>0?'#e08a40':'#6f7a6a');}
+  for(let k=0;k<2;k++){F(k<h.misses?'#e05040':'#2a1512',px+204+k*12,py+63,8,6);}
   txt('R, SPACE or click to lock    ESC to back out',px+120,py+80,'#4f5a55','center');
   if(h.flash>0){F(`rgba(180,220,255,${h.flash*1.2})`,0,0,W,H);ctx.strokeStyle=`rgba(200,240,255,${h.flash*2})`;ctx.beginPath();let x=rnd(W),y=0;ctx.moveTo(x,y);
     while(y<H){x+=rr(-20,20);y+=rr(10,30);ctx.lineTo(x,y);}ctx.stroke();}

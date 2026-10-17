@@ -2,7 +2,7 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v1.13.2**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v1.14**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
@@ -205,7 +205,7 @@ Current version: **v1.13.2**. The game was built iteratively in claude.ai chats 
 
 **Crew files view:** the tier details on the right are clipped and scroll (`flScroll`; the wheel scrolls them when the pointer is right of `flDetX`, otherwise it moves the selection). `flAuto` keeps the next tier in view until the wheel moves it, and resets when another file is selected.
 
-**Hacking (v0.97):** numbers in `HACK_CFG` (`src/data/hacking.js`). `startHack()` sets `need` from `hackRounds()`: `win.length` (4) rounds, minus one for each `cut` threshold the hack stat reaches (0.4, 0.8; at least `minRounds` 2). `newHackWindow()` takes the round's window from `win[]` (42, 34, 27, 22 px on a 200 px bar) times (1 + hack), and the cursor speed `speed + round x step x (1 - min(stepCutMax, hack x stepCut))`, times (1 - hack x `slow`). Vault panels still multiply the window by `VAULT_CFG.hackMul`. Measured time inside the window per round: no skill 323/189/117/79 ms (was 354/195/108 over 3 rounds); hack 0.4 (a splicer kit) 514/322/209 ms over 3; hack 0.8, 2 rounds of 765/516 ms. The hack stat comes from the splicer kit (0.4), Surveyor tier 1 (0.25) and Memory (0.05 a point). Stats shows `Hack window` with the round count.
+**Hacking (v0.97; progress bar, owner's design, v1.14):** numbers in `HACK_CFG` (`src/data/hacking.js`). A hack no longer needs a fixed number of locks: `hackUI.pts` fills toward `goal` (100), each lock inside the window adds `hackHit()` (`hit` 40 x (1 + hack x `hitHack` 0.5): 48 at hack 0.4, 56 at 0.8), and `hackBounce()` (from `updateHack()`, every time the cursor reaches either end of the bar and turns) takes `bounce` (10) off, never below 0. `hackRounds()` is now the fewest locks it can take (`ceil(goal/hackHit())`); Stats shows `Hack window` as the window bonus plus `+N a lock`. `h.round` counts locks: `newHackWindow()` takes the window from `win[]` by it (the last entry repeats) and the cursor speed `speed + min(round, win.length-1) x step x (1 - min(stepCutMax, hack x stepCut))`, times (1 - hack x `slow`). The old `cut`/`minRounds` round skipping is gone. Two misses still short the panel; vault panels still multiply the window by `VAULT_CFG.hackMul`. `drawHack()` draws the progress bar with a tick at every lock's worth and `pts/100` (orange for a moment after a drain). The hack stat comes from the splicer kit (0.4), Surveyor tier 1 (0.25) and Memory (0.05 a point).
 
 **Hands and Bones** (the gambler's dice game, `18-dice-options.js`): both sides start with `DICE_HP` (`src/data/npcs.js`, 9 since v0.92; 12 averaged ~8.5 rounds, 9 averages ~6.3).
 

@@ -119,7 +119,7 @@ const STAT_TIPS={
   'Enemy drop chance':{key:'luck',d:'Chance a creature drops supplies when it goes down.',also:'gear (lucky tag), crew file tiers'},
   'Regeneration':{key:'regen',d:'Health you get back every second without doing anything.',also:'gear (slow injector), crew file tiers, food buffs'},
   'Light radius':{d:'How far your own light reaches, and any beam you carry.',also:'gear (back lantern, night optics, headlamp, barrel light), the deck\'s lighting, fog'},
-  'Hack window':{key:'hack',d:'How wide the green window is on hack panels, and how many rounds a hack takes.',also:'gear (splicer kit), crew file tiers'},
+  'Hack window':{key:'hack',d:'How wide the green window is on hack panels, and how much each lock fills a hack\'s progress bar (100 breaks in).',also:'gear (splicer kit), crew file tiers'},
   'Shove':{d:'Shove damage and reach.',also:'the Spiked knuckles and Long haft upgrades, gear (grip gloves)'},
   'Shove push':{d:'How far a shove knocks things back, and how wide it sweeps.',also:'the Weighted sleeve and Wide swing upgrades'},
   'Status build-up':{d:'How fast poison, shock, burning, cold and the rest fill up on you. Lower is better.',also:'the Resilience upgrade'},
