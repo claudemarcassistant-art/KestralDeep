@@ -13,7 +13,7 @@ cv.addEventListener('pointerdown',e=>{
   if(state==='report'){if(e.button===0)reportAdvance();return;}
   if(state==='title'&&histOpen){histOpen=false;return;}
   if(state==='title'||state==='route'||state==='node'){if(e.button===0)for(const r of uiRects)if(mouse.sx>=r.x&&mouse.sx<=r.x+r.w&&mouse.sy>=r.y&&mouse.sy<=r.y+r.h&&r.click){r.click();break;}return;}
-  if(hackUI){if(e.button===0)hackTry();return;}
+  if(hackUI)return;
   if(arcadeUI){const a=arcadeUI;if(e.button!==0)return;if(a.over)startArcade(a.f);else if(ARC[a.g].click)ARC[a.g].click(a,mouse.sx-a.fx,mouse.sy-a.fy);return;}
   if(choiceUI||diceUI){if(e.button===0)for(const r of uiRects)if(mouse.sx>=r.x&&mouse.sx<=r.x+r.w&&mouse.sy>=r.y&&mouse.sy<=r.y+r.h&&r.click){r.click();break;}return;}
   if(grindUI){if(e.button===0)for(const r of uiRects)if(mouse.sx>=r.x&&mouse.sx<=r.x+r.w&&mouse.sy>=r.y&&mouse.sy<=r.y+r.h&&r.click){r.click();break;}return;}
@@ -42,7 +42,7 @@ function onPress(code){
   if(state==='title'){const n=TITLE_OPTS.length;if(up)titleSel=(titleSel+n-1)%n;if(down)titleSel=(titleSel+1)%n;if(code==='Enter'||code==='Space')TITLE_OPTS[titleSel].go();return;}
   if(state==='dead'){if((code==='Enter'||code==='Space')&&deadT>1)state='title';titleSel=hasSave()?0:1;return;}
   if(state==='report'){if(go)reportAdvance();return;}
-  if(hackUI){if(code==='Escape')hackUI=null;else if(go)hackTry();return;}
+  if(hackUI){if(code==='Escape')hackUI=null;else{const k={KeyW:'W',KeyA:'A',KeyS:'S',KeyD:'D',ArrowUp:'W',ArrowLeft:'A',ArrowDown:'S',ArrowRight:'D'}[code];if(k)hackTry(k);}return;}
   if(arcadeUI){const a=arcadeUI;if(code==='Escape'||code==='Tab'){arcadeUI=null;return;}
     if(!a.over){const G=ARC[a.g];if(G.key)G.key(a,code);}
     else if(code==='KeyR'||code==='Enter'||code==='Space')startArcade(a.f);return;}

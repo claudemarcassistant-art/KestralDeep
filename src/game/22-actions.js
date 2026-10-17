@@ -269,11 +269,14 @@ function floodRegion(){
 // progress per lock and the fewest locks a hack takes (shown in Stats)
 function hackHit(){const C=HACK_CFG;return Math.round(C.hit*(1+S.hack*C.hitHack));}
 function hackRounds(){return Math.ceil(HACK_CFG.goal/hackHit());}
-function startHack(pn){hackUI={pn,round:0,pts:0,hit:hackHit(),misses:0,pos:0,dir:1,flash:0,ok:0,drain:0,barW:HACK_CFG.barW};newHackWindow();mouse.l=false;mouse.r=false;sfx('map');}
+function startHack(pn){hackUI={pn,round:0,pts:0,hit:hackHit(),misses:0,pos:0,dir:1,flash:0,ok:0,half:0,drain:0,key:null,barW:HACK_CFG.barW};newHackWindow();mouse.l=false;mouse.r=false;sfx('map');}
 function newHackWindow(){const h=hackUI,C=HACK_CFG;h.ww=Math.max(C.minWin,C.win[Math.min(h.round,C.win.length-1)]*(1+S.hack))*(h.pn.hard?VAULT_CFG.hackMul:1);h.win=rr(0,h.barW-h.ww);
+  // the key this lock wants: one of W A S D, never the same twice running
+  const ks=HACK_CFG.keys.filter(k=>k!==h.key);h.key=ks[Math.floor(Math.random()*ks.length)];
   h.speed=(C.speed+Math.min(h.round,C.win.length-1)*C.step*(1-Math.min(C.stepCutMax,S.hack*C.stepCut)))*(1-S.hack*C.slow);}
-function hackTry(){const h=hackUI;if(!h)return;
-  if(h.pos>=h.win&&h.pos<=h.win+h.ww){h.round++;h.ok=0.2;h.pts=Math.min(HACK_CFG.goal,h.pts+h.hit);
+// k: the key pressed (W A S D). In the window with the wanted key adds a full lock, with another key half of one
+function hackTry(k){const h=hackUI;if(!h)return;
+  if(h.pos>=h.win&&h.pos<=h.win+h.ww){const right=k===h.key;h.round++;if(right)h.ok=0.2;else h.half=0.3;h.pts=Math.min(HACK_CFG.goal,h.pts+(right?h.hit:Math.round(h.hit*HACK_CFG.wrongMul)));
     if(h.pts>=HACK_CFG.goal){const r=HACKR[h.pn.reward];h.pn.state='done';hackUI=null;sfx('hackwin');if(lvl)lvl.hacks++;say(r.act(h.pn));return;}
     sfx('hackok');newHackWindow();}
   else{h.misses++;h.flash=0.35;sfx('zap');alertAdd(perk('ductrat')?6:12);shake=Math.max(shake,5);hurtPlayer(9,true);addStatus('shk',30);
@@ -281,24 +284,33 @@ function hackTry(){const h=hackUI;if(!h)return;
     if(h.misses>=2){h.pn.state='dead';hackUI=null;if(h.pn.reward==='traps')trapsSetOff(h.pn);else if(h.pn.reward==='vault')vaultFried(h.pn);else if(h.pn.reward==='cams')camsHackFailed(h.pn);else say('the panel shorts out in a shower of sparks');}}}
 // every bounce off either end of the bar drains HACK_CFG.bounce progress
 function hackBounce(h){if(h.pts>0){h.pts=Math.max(0,h.pts-HACK_CFG.bounce);h.drain=0.3;sfx('tink');}}
-function updateHack(dt){const h=hackUI;h.pos+=h.dir*h.speed*dt;if(h.pos>h.barW){h.pos=h.barW;h.dir=-1;hackBounce(h);}if(h.pos<0){h.pos=0;h.dir=1;hackBounce(h);}h.flash-=dt;h.ok-=dt;h.drain-=dt;}
+function updateHack(dt){const h=hackUI;h.pos+=h.dir*h.speed*dt;if(h.pos>h.barW){h.pos=h.barW;h.dir=-1;hackBounce(h);}if(h.pos<0){h.pos=0;h.dir=1;hackBounce(h);}h.flash-=dt;h.ok-=dt;h.half-=dt;h.drain-=dt;}
 function drawHack(){
   const h=hackUI,px=(W-240)/2|0,py=(H-96)/2|0;
   F('rgba(4,5,6,0.6)',0,0,W,H);
   box(px,py,240,96,'#070b0a','#1f3a36');F('#6fd0c0',px,py,240,2);
   txt('PANEL ACCESS',px+10,py+8,'#6fd0c0');txt(HACKR[h.pn.reward].label,px+230,py+8,AMBER,'right');
-  txt('lock in the window. bounces drain the bar.',px+10,py+20,'#6f7a6a');
+  txt('press the key in the window. bounces drain.',px+10,py+20,'#6f7a6a');
   const bx=px+20,by=py+38;F('#0e1614',bx,by,h.barW,14);
   for(let k=0;k<h.barW;k+=4)F(`rgba(100,200,190,${0.05+Math.random()*0.1})`,bx+k,by+rnd(14),1,1);
-  F(h.ok>0?'#9fe0b0':'#2f6a4a',bx+h.win,by,h.ww,14);F('#6fd0a0',bx+h.win,by,h.ww,1);
+  F(h.ok>0?'#9fe0b0':h.half>0?'#d9a441':'#2f6a4a',bx+h.win,by,h.ww,14);F('#6fd0a0',bx+h.win,by,h.ww,1);
+  txt(h.key,bx+Math.round(h.win+h.ww/2)+1,by-1,h.ok>0||h.half>0?'#0e1614':'#bff0d8','center',16);
   F('#ffffff',bx+Math.round(h.pos)-1,by-3,2,20);
-  {const G=HACK_CFG.goal,pw=128,fw=Math.round(pw*h.pts/G),qx=bx;F('#0e1614',qx,py+63,pw,6);F(h.drain>0?'#e08a40':h.ok>0?'#9fe0b0':'#4fa880',qx,py+63,fw,6);
-    for(let v=h.hit;v<G;v+=h.hit)F('#1f3a36',qx+Math.round(pw*v/G),py+63,1,6);txt(Math.round(h.pts)+'/'+G,qx+pw+4,py+62,h.drain>0?'#e08a40':'#6f7a6a');}
+  drawHackProgress(h,bx,py+61);
   for(let k=0;k<2;k++){F(k<h.misses?'#e05040':'#2a1512',px+204+k*12,py+63,8,6);}
-  txt('R, SPACE or click to lock    ESC to back out',px+120,py+80,'#4f5a55','center');
+  txt('WASD or arrows to lock    ESC to back out',px+120,py+80,'#4f5a55','center');
   if(h.flash>0){F(`rgba(180,220,255,${h.flash*1.2})`,0,0,W,H);ctx.strokeStyle=`rgba(200,240,255,${h.flash*2})`;ctx.beginPath();let x=rnd(W),y=0;ctx.moveTo(x,y);
     while(y<H){x+=rr(-20,20);y+=rr(10,30);ctx.lineTo(x,y);}ctx.stroke();}
 }
+// the progress bar: an old loading bar of HACK_CFG.segs blocks in a sunk frame, filled block by block, with the
+// percentage beside it giving a quick half turn clockwise once a second
+function drawHackProgress(h,x,y){const C=HACK_CFG,n=C.segs,sw=6,fr=h.pts/C.goal,lit=Math.floor(fr*n+1e-6),col=h.drain>0?'#e08a40':h.half>0?'#d9a441':'#6fd0a0';
+  F('#1f3a36',x-2,y-2,n*sw+3,12);F('#050807',x-1,y-1,n*sw+1,10);
+  for(let k=0;k<n;k++){const sx=x+k*sw;if(k<lit){F(col,sx,y,sw-1,8);F('#d8fff0',sx,y,sw-1,1);F('#2f6a4a',sx,y+7,sw-1,1);}else F('#0e1614',sx,y,sw-1,8);}
+  // the block being filled blinks
+  if(lit<n&&fr*n-lit>0.01&&Math.sin(T*12)>0)F('#2f6a4a',x+lit*sw,y,sw-1,8);
+  const t=T%1,e=Math.min(1,t/C.spinT),a=Math.PI*(Math.floor(T)+e*e*(3-2*e)),cx=x+n*sw+16,cy=y+4;
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(a);txt(Math.round(fr*100)+'%',0,-4,h.drain>0?'#e08a40':'#9fcfb8','center');ctx.restore();}
 function lootRoll(tier){
   return tier==='rare'
     ?wpick([['gear',3],['chip',1.2],['secretmap',0.4],['schematic',0.6],['key',0.8],['rounds',1.5],['shells',1],['bolts',0.8],['battery',1],['pipe',1]])
