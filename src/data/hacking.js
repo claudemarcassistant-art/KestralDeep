@@ -7,4 +7,4 @@
 // hack x stepCut (at most stepCutMax) and raises the points per lock. Two misses still short the panel out.
 // Each window wants one of keys (v1.14.1, picked at random, never the same twice running): a lock in time with another
 // key gives hit x wrongMul. The bar is drawn as segs blocks; the % beside it turns 180 degrees in spinT s every second.
-const HACK_CFG={barW:200,win:[42,34,27,22],minWin:12,speed:130,step:50,slow:0.3,stepCut:0.6,stepCutMax:0.6,goal:100,hit:40,hitHack:0.5,bounce:10,keys:['W','A','S','D'],wrongMul:0.5,segs:20,spinT:0.3};
+const HACK_CFG={barW:200,win:[42,34,27,22],minWin:12,speed:130,step:50,slow:0.3,stepCut:0.6,stepCutMax:0.6,goal:100,hit:30,hitHack:0.5,bounce:10,keys:['W','A','S','D'],wrongMul:0.5,segs:20,spinT:0.3};
