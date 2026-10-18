@@ -188,6 +188,7 @@ function liftShutMsg(){return liftState==='arena'?'the lift is sealed until ever
 function findInteract(){
   const p=player;let best=null,bd=18;
   {const ex=exitLiftAt();if(ex)return ex;}
+  {const r=pdReleaseAt(p);if(r&&r.d<bd){bd=r.d;best=r;}}
   {const h=crawlAt();if(h){const c=h.c[h.end],cx=c.tx*TS+6,cy=c.ty*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<bd){bd=d;best={k:'crawl',h,x:cx,y:cy};}}}
   if(testMode&&testConsole){const cx=testConsole.tx*TS+6,cy=testConsole.ty*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<bd){bd=d;best={k:'console',x:cx,y:cy};}}
   for(const h of hatches){let cx=h.tx*TS+6,cy=h.ty*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<Math.min(bd,12)){bd=d;best={k:'hatch',h,x:cx,y:cy};}
@@ -211,6 +212,7 @@ function interact(){
   if(it.k==='testlift'){deckUI={sel:0};mouse.l=false;mouse.r=false;sfx('map');return;}
   if(it.k==='arcexit'){state='title';arcadeMode=false;return;}
   if(it.k==='crawl'){askCrawl(it.h);return;}
+  if(it.k==='pdrelease'){pdRelease(it.pd);return;}
   if(it.k==='panel'){if(vaultPanelBlocked(it.pn))return;startHack(it.pn);return;}
   if(it.k==='mdoor'){const i=it.ty*MW+it.tx,m=map[i],inside=doorInside(it.md);
     if(m===0){map[i]=6;openDoor[i]=0;paintArea(it.tx,it.ty);sfx('door');flowT=0;return;}

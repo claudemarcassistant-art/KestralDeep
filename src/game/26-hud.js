@@ -77,6 +77,7 @@ function hud(){
   const it=findInteract();
   if(it){const x=Math.round(it.x-camX),y=Math.round(it.y-camY)-16;const has=p.inv.key>0;
     if(it.k==='crawl')txt('R climb into the crawlway',x,y+4,'#e8c070','center');
+    else if(it.k==='pdrelease')txt(it.pd.holdT>0?'door held open':'R door release',x,y+4,'#e0c080','center');
     else if(it.k==='panel')txt('R hack: '+HACKR[it.pn.reward].label,x,y+4,'#6fd0c0','center');
     else if(it.k==='console')txt('R creature console',x,y-2,'#c9a8ff','center');
     else if(it.k==='mdoor'){const m2=map[it.ty*MW+it.tx],ins=doorInside(it.md);txt(m2===0?'R close door':m2===6?(ins?'R lock door':'R open door'):(ins?'R unlock and open':'R unlock (key)'),x,y-2,'#c9cfc2','center');}

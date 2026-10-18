@@ -58,6 +58,8 @@ function inspectAt(wx,wy){const tx=Math.floor(wx/TS),ty=Math.floor(wy/TS);if(tx<
   for(const f of fixtures)if(f.tx===tx&&f.ty===ty){if(f.kind==='npc'&&NPCS[f.npc])return {name:NPCS[f.npc].name,desc:NPCS[f.npc].body||'',col:'#c9a8ff'};const D=FIX_DESC[f.kind];if(D)return D;}
   for(const t of traps)if(t.found&&(t.tx===tx&&t.ty===ty||t.area&&tx>=t.tx&&tx<=t.tx+1&&ty>=t.ty&&ty<=t.ty+1))return {name:TRAP_TYPES[t.type].name+(t.off?' (locked)':''),desc:TRAP_TYPES[t.type].desc,col:'#e08060'};
   for(const c of crawls)for(const e of [c.a,c.b])if(e&&e.tx===tx&&e.ty===ty)return {name:'Crawlway hatch',desc:CRAWL_DESC};
+  for(const pd of plateDoors){if(pd.tx===tx&&pd.ty===ty)return {name:'Plate door',desc:'Opens while its floor plate holds 3 weight'+(pd.room?'. A release button inside holds it open for a few seconds.':'.')};
+    if(pd.px===tx&&pd.py===ty)return {name:'Door plate',desc:'Holds its door open while it carries 3 weight: you, a creature, a crate or dropped items.'};}
   if(exitT&&Math.max(Math.abs(tx-exitT.x),Math.abs(ty-exitT.y))<=1)return {name:'Exit lift',desc:'R anywhere on the plate to ride down'+(liftState==='open'||liftState==='ready'?'.':', once it opens.'),col:'#9fe0b0'};
   if(freightT&&Math.max(Math.abs(tx-freightT.x),Math.abs(ty-freightT.y))<=1)return {name:'Freight lift',desc:'R on the plate: drops you several decks at once.',col:'#e8c070'};
   if(map[i]===1)return null;

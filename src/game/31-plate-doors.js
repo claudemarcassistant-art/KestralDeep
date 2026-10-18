@@ -56,12 +56,19 @@ function fillPlateRooms(){for(const pd of plateDoors){const r=pd.room;
 
 // ---- running
 function plateWeight(pd){return weightAt(pd.px,pd.py);}
+// the release button inside a loot or vault room (v1.14.3): blinking, dashing or being thrown past the door could
+// otherwise shut you in. It sits on the inner face of the door; R from inside the room holds the door open for
+// PLATE_DOOR_CFG.release seconds (pd.holdT), after which it closes as usual unless the plate is held
+function pdInside(pd,x,y){const r=pd.room,tx=Math.floor(x/TS),ty=Math.floor(y/TS);return !!r&&tx>=r.x&&tx<r.x+r.w&&ty>=r.y&&ty<r.y+r.h;}
+function pdButton(pd){return {x:pd.tx*TS+6-pd.dir[0]*8,y:pd.ty*TS+6-pd.dir[1]*8};}
+function pdReleaseAt(p){let best=null,bd=16;for(const pd of plateDoors){if(!pd.room||!pdInside(pd,p.x,p.y))continue;const b=pdButton(pd),d=Math.hypot(b.x-p.x,b.y-p.y);if(d<bd){bd=d;best={k:'pdrelease',pd,x:b.x,y:b.y,d};}}return best;}
+function pdRelease(pd){pd.holdT=PLATE_DOOR_CFG.release;sfx('click');if(pd.state==='closed'){pd.state='open';setPlateDoor(pd,true);sfx('door');shake=Math.max(shake,1);}else pd.state='open';}
 function doorBlocked(pd){const i=pd.ty*MW+pd.tx,p=player;if(p&&tileIdx(p)===i)return true;
   return enemies.some(e=>!e.dead&&tileIdx(e)===i)||barrels.some(b=>!b.dead&&b.tx===pd.tx&&b.ty===pd.ty);}
 function setPlateDoor(pd,open){const i=pd.ty*MW+pd.tx;map[i]=open?0:1;paintArea(pd.tx,pd.ty);flowT=0;
   if(!open)for(const it of items)if(tileIdx(it)===i){it.x+=pd.dir[0]*TS;it.y+=pd.dir[1]*TS;}}
 function updatePlateDoors(dt){const C=PLATE_DOOR_CFG,p=player;
-  for(const pd of plateDoors){const held=plateWeight(pd)>=C.need;
+  for(const pd of plateDoors){if(pd.holdT>0)pd.holdT-=dt;const held=plateWeight(pd)>=C.need||pd.holdT>0;
     if(pd.state==='closed'){if(held){pd.state='open';setPlateDoor(pd,true);sfx('door');shake=Math.max(shake,1);}}
     else if(pd.state==='open'){if(!held){pd.state='closing';pd.t=C.warn;sfx('grind');}}
     else if(pd.state==='closing'){if(held){pd.state='open';continue;}pd.t-=dt;if(Math.random()<dt*10)parts.push({x:pd.tx*TS+rr(0,12),y:pd.ty*TS+rr(0,12),vx:rr(-10,10),vy:rr(-10,10),t:0.3,m:0.3,c:'#8e978b',s:1});
@@ -82,4 +89,6 @@ function drawPlateDoors(){
     if(pd.state==='open'){if(vert){F('#3c423e',dx+4,dy,4,2);F('#3c423e',dx+4,dy+TS-2,4,2);}else{F('#3c423e',dx,dy+4,2,4);F('#3c423e',dx+TS-2,dy+4,2,4);}}
     else{const fl=pd.state==='closing'&&Math.sin(T*24)>0;F('#141614',dx,dy,TS,TS);F(fl?'#6a5a30':'#3c423e',dx+1,dy+1,TS-2,TS-2);
       for(let k=0;k<3;k++)F(fl?'#ffd060':'#d9a441',vert?dx+3:dx+2+k*3,vert?dy+2+k*3:dy+3,vert?6:2,vert?2:6);
-      F(held?'#8fe09a':'#c04030',dx+5,dy+5,2,2);}}}
+      F(held?'#8fe09a':'#c04030',dx+5,dy+5,2,2);}
+    // the release button on the inner face of a room's door, lit green while it holds the door
+    if(pd.room&&si){const b=pdButton(pd),bx=Math.round(b.x-camX)-2,by=Math.round(b.y-camY)-2;F('#141614',bx,by,5,5);F(pd.holdT>0?'#8fe09a':'#c04030',bx+1,by+1,3,3);F('#ffffff',bx+1,by+1,1,1);}}}
