@@ -2,7 +2,7 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v1.14.3**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v1.14.4**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
@@ -158,6 +158,8 @@ Current version: **v1.14.3**. The game was built iteratively in claude.ai chats 
 **Player stun (v0.94):** numbers in `STUN_CFG` (`src/data/status.js`). `hurtPlayer()` adds `perHit + perDmg x damage` stun for every non-quiet hit (was 2.2 x damage only), the meter drains `decay` per second (was 14), and `explode()` adds `blastFull` (before resistances) within `blastNear` x its radius, `blast` further out. Measured: 1-damage hits daze after 9-10 hits at 4-7 per second, 6-damage hits after 5, 10-damage hits after 4; a blast within ~16 px dazes. `dazeT` 1 s and `stnImm` 2.5 s are unchanged.
 
 **HUD clearance (v0.94):** `26-hud.js` draws `clearance N` (green when above 0) just left of the score in the top-right corner. **No hotbar label (owner's call, v0.96):** the line above the hotbar that named the selected armament, item or action was removed because it overlapped CREEPING/winded and repeated the bottom-right `LMB ...` line, which now also names the psychic or sling action in action mode.
+
+**HUD layout without overlaps (owner's request, v1.14.4):** `hud()` (26-hud.js) lays out the top centre top-down: the lift or lockdown banner at y 6, then the breach count, the wave line and the messages each on the next free row (`ty`, `msgY`). The bottom-centre states (creeping/winded, liquid, no weapons, frozen/dazed, cloaked, power fails, backpedal slowed, the depth-1 hint) are a list drawn upward from H-34, 10 px a row; `hudStackTop` is its top and `drawHudTip()` puts the tip box above it. A Q icon (item quickbar; purple in a skill set, with a tip) sits left of E in `drawSkillIcons()`; `hotbarX()` is at least 172 to leave it room. When the hotbar would reach the LMB/RMB/ammo lines (`W-86`), those lines move up 26 px (`rLift`). Checked with every element on at once at 512x288 and 384x216.
 
 **HUD icons, tips and V-look (owner's design, v0.98):** `src/game/38-inspect.js`, text in `src/data/inspect.js` (`FIX_DESC`, `TILE_DESC`). `hotbarX()` puts the hotbar 10 px right of centre (at least x 150); `drawSkillIcons()` (called from the hotbar block in `hud()`) draws the E and F abilities as two 16x15 icons just left of it (glyphs in `drawSkillGlyph()`, colours `SKILL_COL`, a dark fill rising with the cooldown and the seconds left) and sets a tip when the mouse is over an icon or a hotbar slot. `drawHudTip()` (in `hud()` before the interaction prompts) shows the tip box centred at W/2+20 with its bottom at H-40, just above the CREEPING line; with nothing hovered and V held (`player.peek`) it shows `inspectAt(mouse + camera)`: creatures (`visible()`, name, state, move and attack), then only on a seen, visible tile: items (`itemLook()`), chests, barrels and crates, hack panels, vending machines, NPCs and fixtures, found traps, crawlway hatches, the exit and freight lift pads, then floor hazards (fire, toxic, cables, chasm, slag, webs, rubble, oil, ice, slime, water). New world objects that should be inspectable need a line in `inspectAt()`. The crowbar joined `CHARGE` (v0.98).
 

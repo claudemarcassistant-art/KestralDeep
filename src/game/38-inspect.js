@@ -5,9 +5,9 @@
 // hazards: FIX_DESC and TILE_DESC (src/data/inspect.js).
 const HUD_SW=17;
 // left edge of the hotbar: nudged right of centre, and never so far left that the ability icons would meet the health bar
-function hotbarX(){return Math.max(Math.round(W/2-hotCount()*HUD_SW/2)+10,150);}
+function hotbarX(){return Math.max(Math.round(W/2-hotCount()*HUD_SW/2)+10,172);}
 const SKILL_COL={sonar:'#6fd0c0',adren:'#ff9a5a',cloak:'#9fc3ff',slam:'#d0a060',sling:'#c9b48a',psych:'#a88af0'};
-let hudTip=null;
+let hudTip=null,hudStackTop=0;
 const mouseIn=(x,y,w,h)=>mouse.sx>=x&&mouse.sx<x+w&&mouse.sy>=y&&mouse.sy<y+h;
 function setTip(name,desc,col){if(!hudTip)hudTip={name,desc:desc||'',col:col||AMBER};}
 function drawSkillGlyph(id,x,y,c){ctx.fillStyle=c;ctx.strokeStyle=c;ctx.lineWidth=1;
@@ -26,6 +26,13 @@ function drawSkillIcons(){const p=player,x0=hotbarX(),y0=H-16,live=!menuOpen&&st
     box(x,y0,HUD_SW-1,15,'#0a0d0c',rdy?c:'#2a302e');txt(kk,x+2,y0-8,rdy?c:'#5d655f');drawSkillGlyph(id,x+8,y0+7,rdy?c:'#4a524c');
     if(!rdy){const f=Math.min(1,cd/S0.cd),hh=Math.round(13*f);F('rgba(0,0,0,0.55)',x+1,y0+14-hh,HUD_SW-3,hh);txt(''+Math.ceil(cd),x+HUD_SW-2,y0+7,'#c9cfc2','right');}
     if(live&&mouseIn(x,y0,HUD_SW-1,15))setTip(kk+': '+S0.name,S0.desc+(rdy?'':'  recharging, '+Math.ceil(cd)+'s'),c);});
+  // Q, left of E (v1.14.4): the item quickbar. Lit while an item slot is selected; in a skill set it reads as the way
+  // back to the items
+  {const x=x0-38-HUD_SW,act=!!p.actMode,c=act?'#a88af0':'#c9cfc2',sel=!act&&p.hotSel>=2;
+    box(x,y0,HUD_SW-1,15,'#0a0d0c',sel?AMBER:act?'#3a3052':'#2a302e');txt('Q',x+2,y0-8,sel?AMBER:act?c:'#5d655f');
+    // glyph: three stacked item cards, the front one lit
+    F('#3f4642',x+6,y0+3,6,7);F('#5d655f',x+5,y0+4,6,7);F(sel?AMBER:c,x+4,y0+5,6,7);F('#0a0d0c',x+5,y0+6,4,5);F(sel?AMBER:c,x+6,y0+8,2,1);
+    if(live&&mouseIn(x,y0,HUD_SW-1,15))setTip(act?'Q: back to items':'Q: item quickbar',act?'Leaves the skill set and puts your item slots (3-9) back on the hotbar.':'Steps to the next item slot (3-9) on the hotbar. In a skill set (Psych or Sling), Q puts the item slots back.',c);}
   if(!live)return;const n=hotCount();
   for(let i=0;i<n;i++){const x=x0+i*HUD_SW+(i>=2?3:0);if(!mouseIn(x,y0-8,HUD_SW-1,23))continue;
     if(i<2){const st=p.arms[i],m=st.main?ARM[st.main]:null,o=st.off&&st.off!==st.main?ARM[st.off]:null;
@@ -75,6 +82,6 @@ function drawHudTip(){const p=player;if(!p||state!=='play'||menuOpen||mapOpen)re
   if(!hudTip&&p.peek){const r=inspectAt(mouse.sx+camX,mouse.sy+camY);if(r)hudTip={name:r.name,desc:r.desc||'',col:r.col||AMBER};}
   const t=hudTip;hudTip=null;if(!t)return;
   const maxW=Math.min(220,W-40),lines=t.desc?wrapLines(t.desc,maxW):[];ctx.font='8px '+FONT;
-  const bw=Math.round(Math.max(ctx.measureText(t.name).width,...lines.map(l=>ctx.measureText(l).width))+10),bh=11+lines.length*9+3,cx=W/2+20,bx=Math.round(Math.max(4,Math.min(W-bw-4,cx-bw/2))),by=H-40-bh;
+  const bw=Math.round(Math.max(ctx.measureText(t.name).width,...lines.map(l=>ctx.measureText(l).width))+10),bh=11+lines.length*9+3,cx=W/2+20,bx=Math.round(Math.max(4,Math.min(W-bw-4,cx-bw/2))),by=Math.min(H-40,hudStackTop||H-40)-bh;
   F('rgba(6,8,8,0.88)',bx,by,bw,bh);F('#2a302e',bx,by,bw,1);F('#2a302e',bx,by+bh-1,bw,1);F(t.col,bx,by,2,bh);
   txt(t.name,bx+5,by+3,t.col);lines.forEach((l,k)=>txt(l,bx+5,by+13+k*9,'#c9cfc2'));}

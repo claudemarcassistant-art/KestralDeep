@@ -7,11 +7,9 @@ function hud(){
   {const bm=baseMaxHp(),mx=maxHp(),lost=Math.round(72*(bm-mx)/bm);F('#2a1512',22,H-21,72,6);F(p.hp>30?'#b84a3e':(Math.sin(T*10)>0?'#e0604e':'#8a3228'),22,H-21,Math.round(72*Math.min(1,p.hp/bm)),6);if(lost>0){F('#4a4a4a',22+72-lost,H-21,lost,6);for(let k=0;k<lost;k+=3)F('#3a3a3a',22+72-lost+k,H-21,1,6);}}
   if(p.stam<maxStam()||p.floating||p.sprinting){F('#1a1810',22,H-14,72,2);F(p.stamLock?'#6a5a30':'#c9b46a',22,H-14,Math.round(72*p.stam/maxStam()),2);}
   if(p.armor>0){txt('AR',6,H-12,'#9aa39a');F('#141c24',22,H-10,72,3);F('#6f93b3',22,H-10,Math.round(72*p.armor/50),3);}
-  if(waves&&!testMode||waves&&waves.phase!=='wait'){const w=waves,yy=liftState==='alarm'?34:18;
-    if(w.phase==='wait')txt('movement below: '+Math.ceil(w.trigT)+'s, or at '+Math.round(w.trigPct*100)+'% explored ('+Math.round(w.pct*100)+'%)',W/2,yy,'#8e978b','center');
-    else if(w.phase==='warn'){if(Math.sin(T*8)>-0.2)txt('SOMETHING IS COMING',W/2,yy,'#ff8070','center');}
-    else if(w.phase==='active')txt('WAVE '+w.wave+' / '+w.n+(w.wave<w.n?'   next in '+Math.ceil(w.t)+'s':''),W/2,yy,'#ff8070','center');}
-  if(liftState==='alarm'){txt('LIFT INBOUND  '+fmtT(alarmT),W/2,6,Math.sin(T*8)>0?'#ff6050':'#a03020','center',16);const lc=cores.filter(c=>!c.dead).length;if(cores.length)txt(lc?lc+' breach'+(lc>1?'es':'')+' open':'breaches sealed',W/2,24,lc?'#ff8a9a':'#9fcf9a','center');}
+  // top centre, top down (v1.14.4): the lift or lockdown banner, the breach count, the wave line, then messages, each
+  // on its own row so none print over another
+  if(liftState==='alarm'){txt('LIFT INBOUND  '+fmtT(alarmT),W/2,6,Math.sin(T*8)>0?'#ff6050':'#a03020','center',16);}
   else if(liftState==='ready'){if(Math.sin(T*5)>-0.3)txt('LIFT READY',W/2,6,'#9fe0b0','center',16);}
   else if(liftState==='arena')txt('clear the arena: '+arenaFoes().length+' left',W/2,6,'#e8c070','center');
   else if(liftState==='locked')txt(liftCard?'':'objective: find the lift keycard',W/2,6,'#e8c070','center');
@@ -19,6 +17,14 @@ function hud(){
   if(liftState==='alarm'){const a=0.08+0.06*Math.sin(T*8);F(`rgba(200,30,20,${a})`,0,0,W,4);F(`rgba(200,30,20,${a})`,0,H-4,W,4);F(`rgba(200,30,20,${a})`,0,0,4,H);F(`rgba(200,30,20,${a})`,W-4,0,4,H);}
   if(levelTimer>0)txt('LOCKDOWN  '+fmtT(levelTimer),W/2,6,Math.sin(T*8)>0?'#ff6050':'#a03020','center',16);
   else if(purgeGas)txt('PURGE GAS   get to the lift',W/2,6,Math.sin(T*6)>0?'#a0e060':'#608030','center');
+  let ty=liftState==='alarm'||liftState==='ready'||levelTimer>0?24:18;
+  if(liftState==='alarm'&&cores.length){const lc=cores.filter(c=>!c.dead).length;txt(lc?lc+' breach'+(lc>1?'es':'')+' open':'breaches sealed',W/2,ty,lc?'#ff8a9a':'#9fcf9a','center');ty+=10;}
+  if(waves&&!testMode||waves&&waves.phase!=='wait'){const w=waves;let drew=true;
+    if(w.phase==='wait')txt('movement below: '+Math.ceil(w.trigT)+'s, or at '+Math.round(w.trigPct*100)+'% explored ('+Math.round(w.pct*100)+'%)',W/2,ty,'#8e978b','center');
+    else if(w.phase==='warn'){if(Math.sin(T*8)>-0.2)txt('SOMETHING IS COMING',W/2,ty,'#ff8070','center');}
+    else if(w.phase==='active')txt('WAVE '+w.wave+' / '+w.n+(w.wave<w.n?'   next in '+Math.ceil(w.t)+'s':''),W/2,ty,'#ff8070','center');else drew=false;
+    if(drew)ty+=10;}
+  const msgY=Math.max(26,ty);
   {let ry=H-40;
     const cds=[['strike',p.mcd,p.mcdMax,'#e8dcb0'],['fire',p.weapon?p.cd:0,p.cdMax,'#ffd98a'],['shove',p.shoveCd,p.shoveMax,'#c9b48a']];
     for(const [n,rem,mx,c] of cds){if(!(rem>0.02)||!(mx>0.05))continue;const f=1-Math.min(1,rem/mx);txt(n,6,ry-2,'#6f7a6a');F('#141817',40,ry,54,2);F(c,40,ry,Math.round(54*f),2);ry-=8;}
@@ -27,16 +33,25 @@ function hud(){
     if(p.guard<(p.guardMax||40)-0.5){txt('guard',6,ry-2,'#6f7a6a');F('#101820',40,ry,54,2);F('#bfe4ff',40,ry,Math.round(54*p.guard/(p.guardMax||40)),2);ry-=8;}
     for(const [k,n,c] of [['frz','cold','#9fd8ff'],['brn','burn','#ff8a3a'],['slk','slick','#b09060'],['rad','rads','#c9a8ff'],['stk','sticky','#c8d070'],['psn','poison','#8fcf40'],['shk','shock','#8fc3ff'],['stn','stun','#e8dcb0'],['szr','seizing','#c89ae8'],['irr','irritated','#e8e4be'],['wet','wet','#4a9ad0']]){const v=p.st[k];if(!(v>=1))continue;
     const lb=k==='frz'&&p.frozenT>0?'frozen':n;txt(lb,6,ry-2,c);ctx.font='8px '+FONT;const bx=Math.max(40,Math.ceil(8+(ctx.measureText(lb).width||0)+4)),bw=94-bx;F('#141817',bx,ry,bw,3);F(c,bx,ry,Math.round(bw*v/100),3);ry-=9;}}
-  if(archive&&archive.unstT>0)txt('POWER FAILS IN '+Math.ceil(archive.unstT)+'s',W/2+20,H-64,Math.sin(T*6)>0?'#ff8a5a':'#c06040','center');
-  if(p.frozenT>0)txt('FROZEN',W/2+20,H-54,'#cfe8ff','center');else if(p.dazeT>0)txt('DAZED',W/2+20,H-54,'#e8dcb0','center');
-  if(p.cloakT>0){txt('CLOAKED '+Math.ceil(p.cloakT)+'s',W/2+20,H-64,'#9fc3ff','center');const a=0.05+0.03*Math.sin(T*4);F(`rgba(120,170,255,${a})`,0,0,W,3);F(`rgba(120,170,255,${a})`,0,H-3,W,3);}
+  // bottom centre (v1.14.4): the player's states stack upward from just above the hotbar, one row each, in this order
+  // from the bottom; hudStackTop is where the stack ends, and the hover tip and V-look box sit above it
+  {const rows=[];
+    if(p.creeping)rows.push(['CREEPING','#9fc3e0']);else if(p.stamLock)rows.push(['winded','#8a7a50']);
+    if(p.liq>=2)rows.push([LIQNAME[p.liq],'#8fc3cf']);
+    if(p.liq===4)rows.push(['no weapons, shove only','#8fc3cf']);
+    if(p.frozenT>0)rows.push(['FROZEN','#cfe8ff']);else if(p.dazeT>0)rows.push(['DAZED','#e8dcb0']);
+    if(p.cloakT>0)rows.push(['CLOAKED '+Math.ceil(p.cloakT)+'s','#9fc3ff']);
+    if(archive&&archive.unstT>0)rows.push(['POWER FAILS IN '+Math.ceil(archive.unstT)+'s',Math.sin(T*6)>0?'#ff8a5a':'#c06040']);
+    if(p.aiming&&p.moveMul<0.95)rows.push(['backpedal slowed','#8e978b']);
+    if(depth===1&&hintT>0)rows.push(['1-2 armaments  3+ items  Q next item  E F skills  TAB pack','#7f8a7c',Math.min(1,hintT/2)]);
+    rows.forEach(([s0,c,al],k)=>{if(al!=null)ctx.globalAlpha=al;txt(s0,W/2+20,H-34-k*10,c,'center');ctx.globalAlpha=1;});
+    hudStackTop=rows.length?H-34-(rows.length-1)*10-2:H-38;}
+  if(p.cloakT>0){const a=0.05+0.03*Math.sin(T*4);F(`rgba(120,170,255,${a})`,0,0,W,3);F(`rgba(120,170,255,${a})`,0,H-3,W,3);}
   if(p.stimT>0)txt('stim '+Math.ceil(p.stimT)+'s',102,H-56,'#9fe0b0');
-  if(p.liq===4)txt('no weapons, shove only',W/2+20,H-54,'#8fc3cf','center');
-  if(p.liq>=2)txt(LIQNAME[p.liq],W/2+20,H-44,'#8fc3cf','center');
-  if(p.creeping)txt('CREEPING',W/2+20,H-34,'#9fc3e0','center');
-  else if(p.stamLock)txt('winded',W/2+20,H-34,'#8a7a50','center');
-  if(p.aiming&&p.moveMul<0.95)txt('backpedal slowed',W/2+20,H-74,'#8e978b','center');
   if(p.weapon==='ray'&&p.charge>0){F('#0a1a10',W-71,H-44,64,3);F('#8fffa8',W-71,H-44,Math.round(64*p.charge/1.2),3);}
+  // the LMB / RMB / ammo lines sit beside the hotbar; on a narrow view with a long hotbar they would cover its last
+  // slots, so they move up above it (v1.14.4)
+  const rLift=hotbarX()+hotCount()*HUD_SW+3>W-86?-26:0;if(rLift){ctx.save();ctx.translate(0,rLift);}
   {const set=p.arms[p.armSet],two=set.main&&ARM[set.main].hand==='two';
     const qsHud=p.hotSel>=2,qid=qsHud?p.quick[selQuick()]:null,qq=qInfo(qid);
     if(qsHud&&p.actMode){const ak=p.actMode==='sling'?p.slingbar[selQuick()]:p.actbar[selQuick()],an=ak?(p.actMode==='sling'?SLING[ak]:ACTS[ak]).name:null;txt(an?'LMB '+an.toLowerCase():'LMB empty slot',W-6,H-30,'#c9cfc2','right');}
@@ -51,6 +66,7 @@ function hud(){
     else if(w)txt(p.inv[w.ammo]+' '+w.ammo,W-6,H-12,p.inv[w.ammo]>0?AMBER:'#b84a3e','right');
     else if(set.off==='tank'){const T0=p.tank||{n:0};txt('tank: '+(T0.kind||'empty')+' '+T0.n+'/'+TANKMAX,W-6,H-12,T0.n?(FLASKCOL[T0.kind]==='#3a3020'?'#b8a070':FLASKCOL[T0.kind]||AMBER):'#5d655f','right');}
     else txt('guard '+Math.round(p.guard)+'/'+Math.round(p.guardMax||40),W-6,H-12,'#bfe4ff','right');}
+  if(rLift)ctx.restore();
   {const n=hotCount(),sw=HUD_SW,x0=hotbarX(),y0=H-16;drawSkillIcons();
     for(let i=0;i<n;i++){const x=x0+i*sw+(i>=2?3:0),sel=i===p.hotSel;box(x,y0,sw-1,15,sel?'#1c2220':'#0a0d0c',sel?AMBER:'#2a302e');txt(''+(i+1),x+2,y0-8,sel?AMBER:'#3f4642');
       if(i<2){const st=p.arms[i],show=st.off&&ARM[st.off].gun?st.off:st.main||st.off;if(show)drawItem({x:x+8+camX,y:y0+7+camY,type:'weapon',w:show,ph:0,icon:true});else{ctx.fillStyle='#c9c1a0';circ(x+8,y0+7,2.5);}continue;}
@@ -68,8 +84,7 @@ function hud(){
     ctx.strokeStyle=col;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ex-5,ey);ctx.quadraticCurveTo(ex,ey-[0.5,2,3.5,5][st],ex+5,ey);ctx.quadraticCurveTo(ex,ey+[0.5,2,3.5,5][st],ex-5,ey);ctx.stroke();
     if(st>0){ctx.fillStyle=col;circ(ex,ey,st);if(st===3&&Math.sin(T*8)>0){ctx.fillStyle='#fff';circ(ex,ey,1);}}
     txt(alertLock?'dampened':'disturbance '+Math.floor(a*100)+'%',ex+9,ey-4,alertLock?'#7fd8e0':col);}
-  msgs.forEach((m,i)=>{ctx.globalAlpha=Math.min(1,m.t);txt(m.s,W/2,26+i*10,'#e8dcb0','center');ctx.globalAlpha=1;});
-  if(depth===1&&hintT>0){ctx.globalAlpha=Math.min(1,hintT/2);txt('1-2 armaments  3+ items  Q next item  E F skills  TAB pack',W/2,H-46,'#7f8a7c','center');ctx.globalAlpha=1;}
+  msgs.forEach((m,i)=>{ctx.globalAlpha=Math.min(1,m.t);txt(m.s,W/2,msgY+i*10,'#e8dcb0','center');ctx.globalAlpha=1;});
   if(transitToast>0&&state==='play'){transitToast-=1/60;const a=Math.min(1,transitToast);ctx.globalAlpha=a;box(W/2-80,H/2-58,160,14,'#0a0d0c','#d9a441');txt('found something on the ride down',W/2,H/2-54,'#e8dcb0','center');ctx.globalAlpha=1;}
   if(bannerBoss>0){bannerBoss-=1/60;const B=bossRef?BOSSES[bossRef.boss||0]:null;if(B){ctx.globalAlpha=Math.min(1,bannerBoss);txt(B.name.toUpperCase(),W/2,H/2-58,'#e05040','center',16);ctx.globalAlpha=1;}}
   if(bannerT>0){ctx.globalAlpha=Math.min(1,bannerT);txt(arcadeMode?'ARCADE':testMode&&!testDeck?'TEST RANGE':'DEPTH '+depth,W/2,H/2-30,AMBER,'center',16);txt(arcadeMode?'insert coin':levelLabel&&!(testMode&&!testDeck)?sector(depth)+'  /  '+levelLabel:sector(depth),W/2,H/2-12,'#c9cfc2','center');if(condText(cond)&&!testMode)txt(condText(cond),W/2,H/2-1,'#d07a60','center');ctx.globalAlpha=1;}
