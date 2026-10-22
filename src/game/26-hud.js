@@ -48,25 +48,30 @@ function hud(){
     hudStackTop=rows.length?H-34-(rows.length-1)*10-2:H-38;}
   if(p.cloakT>0){const a=0.05+0.03*Math.sin(T*4);F(`rgba(120,170,255,${a})`,0,0,W,3);F(`rgba(120,170,255,${a})`,0,H-3,W,3);}
   if(p.stimT>0)txt('stim '+Math.ceil(p.stimT)+'s',102,H-56,'#9fe0b0');
-  if(p.weapon==='ray'&&p.charge>0){F('#0a1a10',W-71,H-44,64,3);F('#8fffa8',W-71,H-44,Math.round(64*p.charge/1.2),3);}
-  // the LMB / RMB / ammo lines sit beside the hotbar; on a narrow view with a long hotbar they would cover its last
-  // slots, so they move up above it (v1.14.4)
-  const rLift=hotbarX()+hotCount()*HUD_SW+3>W-86?-26:0;if(rLift){ctx.save();ctx.translate(0,rLift);}
+  // bottom right, drawn upward from H-12, one 9 px line each (v1.14.6): ammo in reserve (or the tank, or guard), the
+  // magazine on its own line above it, then RMB and LMB. The block is only as wide as its longest line; when the hotbar
+  // would reach it on a narrow view it moves up above the hotbar (rLift)
   {const set=p.arms[p.armSet],two=set.main&&ARM[set.main].hand==='two';
-    const qsHud=p.hotSel>=2,qid=qsHud?p.quick[selQuick()]:null,qq=qInfo(qid);
-    if(qsHud&&p.actMode){const ak=p.actMode==='sling'?p.slingbar[selQuick()]:p.actbar[selQuick()],an=ak?(p.actMode==='sling'?SLING[ak]:ACTS[ak]).name:null;txt(an?'LMB '+an.toLowerCase():'LMB empty slot',W-6,H-30,'#c9cfc2','right');}
-    else if(qsHud){txt('LMB '+(qq?(qid==='flask'?'fill or drink':'use '+qq.name):'empty slot'),W-6,H-30,'#c9cfc2','right');}
-    else txt('LMB '+(set.main?ARM[set.main].name:'Fists'),W-6,H-30,'#c9cfc2','right');
-    const w=p.weapon?WPN[p.weapon]:null;
-    if(qsHud&&p.actMode)txt('RMB aim',W-6,H-21,'#e3e6dc','right');else if(qsHud)txt('RMB '+(qid==='flask'?'throw':qq?'drop':'-'),W-6,H-21,'#e3e6dc','right');else txt('RMB '+(two?'Block':set.off?ARM[set.off].name:'Block'),W-6,H-21,'#e3e6dc','right');
-    if(w&&MAGS[p.weapon]){const m=magLeft(p.weapon),cap=magCap(p.weapon);txt(m+'/'+cap+'  '+p.inv[w.ammo]+' '+w.ammo,W-6,H-12,m>0?AMBER:'#b84a3e','right');
-      if(p.reloadT>0||p.arFlash>0){const k=p.reloadT>0?1-p.reloadT/p.reloadMax:1,bx=W-60,by=H-5,bw=54;F('#141817',bx,by,bw,4);F(p.arFail>0?'#a07050':'#d9a441',bx,by,Math.round(bw*k),4);
-        if(p.arPos!=null&&p.reloadT>0){const mx=bx+Math.round(bw*p.arPos),mw=Math.max(2,Math.round(bw*p.arW));F('rgba(255,240,180,0.35)',mx,by-1,mw,6);F('#fff4c8',mx,by-1,1,6);F('#fff4c8',mx+mw-1,by-1,1,6);}
-        if(p.arFlash>0)F(`rgba(255,250,220,${p.arFlash/ACTIVE_RELOAD.flash*0.9})`,bx-1,by-2,bw+2,8);}else if(m===0&&p.inv[w.ammo]>0&&Math.sin(T*6)>0)txt('R reload',W-6,H-39,'#ff8a7a','right');}
-    else if(w)txt(p.inv[w.ammo]+' '+w.ammo,W-6,H-12,p.inv[w.ammo]>0?AMBER:'#b84a3e','right');
-    else if(set.off==='tank'){const T0=p.tank||{n:0};txt('tank: '+(T0.kind||'empty')+' '+T0.n+'/'+TANKMAX,W-6,H-12,T0.n?(FLASKCOL[T0.kind]==='#3a3020'?'#b8a070':FLASKCOL[T0.kind]||AMBER):'#5d655f','right');}
-    else txt('guard '+Math.round(p.guard)+'/'+Math.round(p.guardMax||40),W-6,H-12,'#bfe4ff','right');}
-  if(rLift)ctx.restore();
+    const qsHud=p.hotSel>=2,qid=qsHud?p.quick[selQuick()]:null,qq=qInfo(qid),w=p.weapon?WPN[p.weapon]:null,L=[];
+    let lmb,rmb;
+    if(qsHud&&p.actMode){const ak=p.actMode==='sling'?p.slingbar[selQuick()]:p.actbar[selQuick()],an=ak?(p.actMode==='sling'?SLING[ak]:ACTS[ak]).name:null;lmb=an?'LMB '+an.toLowerCase():'LMB empty slot';rmb='RMB aim';}
+    else if(qsHud){lmb='LMB '+(qq?(qid==='flask'?'fill or drink':'use '+qq.name):'empty slot');rmb='RMB '+(qid==='flask'?'throw':qq?'drop':'-');}
+    else{lmb='LMB '+(set.main?ARM[set.main].name:'Fists');rmb='RMB '+(two?'Block':set.off?ARM[set.off].name:'Block');}
+    const mags=w&&MAGS[p.weapon],m=mags?magLeft(p.weapon):0;
+    if(w)L.push([p.inv[w.ammo]+' '+w.ammo,p.inv[w.ammo]>0?(mags?'#c9a860':AMBER):'#b84a3e']);
+    else if(set.off==='tank'){const T0=p.tank||{n:0};L.push(['tank: '+(T0.kind||'empty')+' '+T0.n+'/'+TANKMAX,T0.n?(FLASKCOL[T0.kind]==='#3a3020'?'#b8a070':FLASKCOL[T0.kind]||AMBER):'#5d655f']);}
+    else L.push(['guard '+Math.round(p.guard)+'/'+Math.round(p.guardMax||40),'#bfe4ff']);
+    if(mags)L.push([m+'/'+magCap(p.weapon),m>0?AMBER:'#b84a3e']);
+    L.push([rmb,'#e3e6dc'],[lmb,'#c9cfc2']);
+    ctx.font='8px '+FONT;const bw=Math.max(...L.map(l=>ctx.measureText(l[0]).width||0));
+    const rLift=hotbarX()+hotCount()*HUD_SW+3>W-6-bw-4?-26:0;if(rLift){ctx.save();ctx.translate(0,rLift);}
+    L.forEach(([t0,c],k)=>txt(t0,W-6,H-12-k*9,c,'right'));const topY=H-12-(L.length-1)*9;
+    if(mags){if(p.reloadT>0||p.arFlash>0){const k=p.reloadT>0?1-p.reloadT/p.reloadMax:1,bx=W-60,by=H-4,bw2=54;F('#141817',bx,by,bw2,4);F(p.arFail>0?'#a07050':'#d9a441',bx,by,Math.round(bw2*k),4);
+        if(p.arPos!=null&&p.reloadT>0){const mx=bx+Math.round(bw2*p.arPos),mw=Math.max(2,Math.round(bw2*p.arW));F('rgba(255,240,180,0.35)',mx,by-1,mw,6);F('#fff4c8',mx,by-1,1,6);F('#fff4c8',mx+mw-1,by-1,1,6);}
+        if(p.arFlash>0)F(`rgba(255,250,220,${p.arFlash/ACTIVE_RELOAD.flash*0.9})`,bx-1,by-2,bw2+2,8);}
+      else if(m===0&&p.inv[w.ammo]>0&&Math.sin(T*6)>0)txt('R reload',W-6,topY-9,'#ff8a7a','right');}
+    if(p.weapon==='ray'&&p.charge>0){F('#0a1a10',W-71,topY-5,64,3);F('#8fffa8',W-71,topY-5,Math.round(64*p.charge/1.2),3);}
+    if(rLift)ctx.restore();}
   {const n=hotCount(),sw=HUD_SW,x0=hotbarX(),y0=H-16;drawSkillIcons();
     for(let i=0;i<n;i++){const x=x0+i*sw+(i>=2?3:0),sel=i===p.hotSel;box(x,y0,sw-1,15,sel?'#1c2220':'#0a0d0c',sel?AMBER:'#2a302e');txt(''+(i+1),x+2,y0-8,sel?AMBER:'#3f4642');
       if(i<2){const st=p.arms[i],show=st.off&&ARM[st.off].gun?st.off:st.main||st.off;if(show)drawItem({x:x+8+camX,y:y0+7+camY,type:'weapon',w:show,ph:0,icon:true});else{ctx.fillStyle='#c9c1a0';circ(x+8,y0+7,2.5);}continue;}
