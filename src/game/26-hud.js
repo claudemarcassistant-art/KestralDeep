@@ -3,7 +3,7 @@ function hud(){
   const p=player;
   txt('DEPTH '+depth,6,5,AMBER);txt(levelLabel||sector(depth),6,14,'#7f8a7c');{const ct=condText(cond);if(ct&&(!testMode||testDeck))txt(ct+(hazOff&&cond.haz?' (purged)':''),6,23,'#b8665a');}
   txt('HP',6,H-22,'#9aa39a');
-  if(p.ghost>0){const gw=Math.min(72,Math.round(72*p.ghost/maxHp()));F('#1a1e26',22,H-25,72,3);F('#dfe8ff',22,H-25,gw,3);txt(''+Math.ceil(p.ghost),98,H-28,'#dfe8ff');}
+  if(p.ghost>0){const gw=Math.min(72,Math.round(72*p.ghost/maxHp()));F('#1a1e26',22,H-25,72,3);F('#dfe8ff',22,H-25,gw,3);txt(''+Math.ceil(p.ghost),6,H-31,'#dfe8ff');}  // the ghost health number sits above HP, left of the bars (v1.14.5), clear of the hotbar's Q icon
   {const bm=baseMaxHp(),mx=maxHp(),lost=Math.round(72*(bm-mx)/bm);F('#2a1512',22,H-21,72,6);F(p.hp>30?'#b84a3e':(Math.sin(T*10)>0?'#e0604e':'#8a3228'),22,H-21,Math.round(72*Math.min(1,p.hp/bm)),6);if(lost>0){F('#4a4a4a',22+72-lost,H-21,lost,6);for(let k=0;k<lost;k+=3)F('#3a3a3a',22+72-lost+k,H-21,1,6);}}
   if(p.stam<maxStam()||p.floating||p.sprinting){F('#1a1810',22,H-14,72,2);F(p.stamLock?'#6a5a30':'#c9b46a',22,H-14,Math.round(72*p.stam/maxStam()),2);}
   if(p.armor>0){txt('AR',6,H-12,'#9aa39a');F('#141c24',22,H-10,72,3);F('#6f93b3',22,H-10,Math.round(72*p.armor/50),3);}

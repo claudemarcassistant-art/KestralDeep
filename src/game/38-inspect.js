@@ -5,7 +5,7 @@
 // hazards: FIX_DESC and TILE_DESC (src/data/inspect.js).
 const HUD_SW=17;
 // left edge of the hotbar: nudged right of centre, and never so far left that the ability icons would meet the health bar
-function hotbarX(){return Math.max(Math.round(W/2-hotCount()*HUD_SW/2)+10,172);}
+function hotbarX(){return Math.max(Math.round(W/2-hotCount()*HUD_SW/2)+10,152);}
 const SKILL_COL={sonar:'#6fd0c0',adren:'#ff9a5a',cloak:'#9fc3ff',slam:'#d0a060',sling:'#c9b48a',psych:'#a88af0'};
 let hudTip=null,hudStackTop=0;
 const mouseIn=(x,y,w,h)=>mouse.sx>=x&&mouse.sx<x+w&&mouse.sy>=y&&mouse.sy<y+h;
