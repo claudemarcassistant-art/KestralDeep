@@ -85,10 +85,11 @@ function hud(){
   {const ss='score '+(runScore+liveLevelScore());txt(ss,W-6,14,'#8e978b','right');ctx.font='8px '+FONT;const sw=ctx.measureText(ss).width||60;
     // clearance waiting to be spent on crew files, beside the score (green when there is any)
     txt('clearance '+(p.clear||0)+'   ',W-6-sw,14,p.clear?'#9fe0b0':'#5d655f','right');}
-  if(alertOn()||alertLock&&depth>=3){const a=alertLock?0:Math.min(1,alertM/100),st=a<0.25?0:a<0.5?1:a<0.75?2:3,ex=10,ey=36,col=['#6f7a6a','#c9b46a','#e0904a','#ff5a4a'][st];
+  // disturbance: the third line on the right, under the score, with its eye just left of the text (v1.14.7)
+  if(alertOn()||alertLock&&depth>=3){const a=alertLock?0:Math.min(1,alertM/100),st=a<0.25?0:a<0.5?1:a<0.75?2:3,col=['#6f7a6a','#c9b46a','#e0904a','#ff5a4a'][st],dt0=alertLock?'dampened':'disturbance '+Math.floor(a*100)+'%';ctx.font='8px '+FONT;const ex=Math.round(W-6-(ctx.measureText(dt0).width||80)-9),ey=27;
     ctx.strokeStyle=col;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ex-5,ey);ctx.quadraticCurveTo(ex,ey-[0.5,2,3.5,5][st],ex+5,ey);ctx.quadraticCurveTo(ex,ey+[0.5,2,3.5,5][st],ex-5,ey);ctx.stroke();
     if(st>0){ctx.fillStyle=col;circ(ex,ey,st);if(st===3&&Math.sin(T*8)>0){ctx.fillStyle='#fff';circ(ex,ey,1);}}
-    txt(alertLock?'dampened':'disturbance '+Math.floor(a*100)+'%',ex+9,ey-4,alertLock?'#7fd8e0':col);}
+    txt(dt0,W-6,ey-4,alertLock?'#7fd8e0':col,'right');}
   msgs.forEach((m,i)=>{ctx.globalAlpha=Math.min(1,m.t);txt(m.s,W/2,msgY+i*10,'#e8dcb0','center');ctx.globalAlpha=1;});
   if(transitToast>0&&state==='play'){transitToast-=1/60;const a=Math.min(1,transitToast);ctx.globalAlpha=a;box(W/2-80,H/2-58,160,14,'#0a0d0c','#d9a441');txt('found something on the ride down',W/2,H/2-54,'#e8dcb0','center');ctx.globalAlpha=1;}
   if(bannerBoss>0){bannerBoss-=1/60;const B=bossRef?BOSSES[bossRef.boss||0]:null;if(B){ctx.globalAlpha=Math.min(1,bannerBoss);txt(B.name.toUpperCase(),W/2,H/2-58,'#e05040','center',16);ctx.globalAlpha=1;}}
