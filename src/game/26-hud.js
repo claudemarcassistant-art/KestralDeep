@@ -1,51 +1,51 @@
 // ---------- HUD ----------
 function hud(){
   const p=player;
-  txt('DEPTH '+depth,6,5,AMBER);txt(levelLabel||sector(depth),6,14,'#7f8a7c');{const ct=condText(cond);if(ct&&(!testMode||testDeck))txt(ct+(hazOff&&cond.haz?' (purged)':''),6,23,'#b8665a');}
+  txt('DEPTH '+depth,6,5,AMBER);txt(levelLabel||sector(depth),6,14,'#7f8a7c');const ctL=condText(cond)&&(!testMode||testDeck)?condText(cond)+(hazOff&&cond.haz?' (purged)':''):'';if(ctL)txt(ctL,6,23,'#b8665a');
+  hudCornerRects(ctL);
   txt('HP',6,H-22,'#9aa39a');
   if(p.ghost>0){const gw=Math.min(72,Math.round(72*p.ghost/maxHp()));F('#1a1e26',22,H-25,72,3);F('#dfe8ff',22,H-25,gw,3);txt(''+Math.ceil(p.ghost),6,H-31,'#dfe8ff');}  // the ghost health number sits above HP, left of the bars (v1.14.5), clear of the hotbar's Q icon
   {const bm=baseMaxHp(),mx=maxHp(),lost=Math.round(72*(bm-mx)/bm);F('#2a1512',22,H-21,72,6);F(p.hp>30?'#b84a3e':(Math.sin(T*10)>0?'#e0604e':'#8a3228'),22,H-21,Math.round(72*Math.min(1,p.hp/bm)),6);if(lost>0){F('#4a4a4a',22+72-lost,H-21,lost,6);for(let k=0;k<lost;k+=3)F('#3a3a3a',22+72-lost+k,H-21,1,6);}}
   if(p.stam<maxStam()||p.floating||p.sprinting){F('#1a1810',22,H-14,72,2);F(p.stamLock?'#6a5a30':'#c9b46a',22,H-14,Math.round(72*p.stam/maxStam()),2);}
   if(p.armor>0){txt('AR',6,H-12,'#9aa39a');F('#141c24',22,H-10,72,3);F('#6f93b3',22,H-10,Math.round(72*p.armor/50),3);}
-  // top centre, top down (v1.14.4): the lift or lockdown banner, the breach count, the wave line, then messages, each
-  // on its own row so none print over another
-  if(liftState==='alarm'){txt('LIFT INBOUND  '+fmtT(alarmT),W/2,6,Math.sin(T*8)>0?'#ff6050':'#a03020','center',16);}
-  else if(liftState==='ready'){if(Math.sin(T*5)>-0.3)txt('LIFT READY',W/2,6,'#9fe0b0','center',16);}
-  else if(liftState==='arena')txt('clear the arena: '+arenaFoes().length+' left',W/2,6,'#e8c070','center');
-  else if(liftState==='locked')txt(liftCard?'':'objective: find the lift keycard',W/2,6,'#e8c070','center');
-  else if(liftState==='idle')txt('objective: call the lift and hold out',W/2,6,'#e8c070','center');
-  if(liftState==='alarm'){const a=0.08+0.06*Math.sin(T*8);F(`rgba(200,30,20,${a})`,0,0,W,4);F(`rgba(200,30,20,${a})`,0,H-4,W,4);F(`rgba(200,30,20,${a})`,0,0,4,H);F(`rgba(200,30,20,${a})`,W-4,0,4,H);}
-  if(levelTimer>0)txt('LOCKDOWN  '+fmtT(levelTimer),W/2,6,Math.sin(T*8)>0?'#ff6050':'#a03020','center',16);
-  else if(purgeGas)txt('PURGE GAS   get to the lift',W/2,6,Math.sin(T*6)>0?'#a0e060':'#608030','center');
-  let ty=liftState==='alarm'||liftState==='ready'||levelTimer>0?24:18;
-  if(liftState==='alarm'&&cores.length){const lc=cores.filter(c=>!c.dead).length;txt(lc?lc+' breach'+(lc>1?'es':'')+' open':'breaches sealed',W/2,ty,lc?'#ff8a9a':'#9fcf9a','center');ty+=10;}
-  if(waves&&!testMode||waves&&waves.phase!=='wait'){const w=waves;let drew=true;
-    if(w.phase==='wait')txt('movement below: '+Math.ceil(w.trigT)+'s, or at '+Math.round(w.trigPct*100)+'% explored ('+Math.round(w.pct*100)+'%)',W/2,ty,'#8e978b','center');
-    else if(w.phase==='warn'){if(Math.sin(T*8)>-0.2)txt('SOMETHING IS COMING',W/2,ty,'#ff8070','center');}
-    else if(w.phase==='active')txt('WAVE '+w.wave+' / '+w.n+(w.wave<w.n?'   next in '+Math.ceil(w.t)+'s':''),W/2,ty,'#ff8070','center');else drew=false;
-    if(drew)ty+=10;}
-  const msgY=Math.max(26,ty);
+  // left column, bottom up: recharge bars, combo, air, guard, then the status meters. Each bar starts after its label
+  // and count, measured (v1.17), so two-digit counts never sit under the bar.
   {let ry=H-40;
+    const lbx=lb=>{ctx.font='8px '+FONT;return Math.max(40,Math.ceil(8+(ctx.measureText(lb).width||0)+4));};
+    const bar=(lb,lc,bg,c,f,h,marks)=>{txt(lb,6,ry-2,lc);const bx=lbx(lb),bw=94-bx;F(bg,bx,ry,bw,h);F(c,bx,ry,Math.round(bw*Math.max(0,Math.min(1,f))),h);if(marks)for(const q of marks)F('#050607',bx+Math.round(bw*q),ry,1,h);};
     const cds=[['strike',p.mcd,p.mcdMax,'#e8dcb0'],['fire',p.weapon?p.cd:0,p.cdMax,'#ffd98a'],['shove',p.shoveCd,p.shoveMax,'#c9b48a']];
-    for(const [n,rem,mx,c] of cds){if(!(rem>0.02)||!(mx>0.05))continue;const f=1-Math.min(1,rem/mx);txt(n,6,ry-2,'#6f7a6a');F('#141817',40,ry,54,2);F(c,40,ry,Math.round(54*f),2);ry-=8;}
-    if(p.combo>=1){const t=comboTier(),col=t?COMBO_T[3-t][2]:'#8e978b';txt('combo '+Math.floor(p.combo),6,ry-2,col);F('#141817',40,ry,54,2);F(col,40,ry,Math.round(54*p.combo/20),2);for(const q of [5,10,15])F('#050607',40+Math.round(54*q/20),ry,1,2);ry-=8;}
-    if((p.o2==null?100:p.o2)<99.5){const o=p.o2/100;txt('air',6,ry-2,o<0.25?'#ff8a7a':'#6f7a6a');F('#141817',40,ry,54,2);F(o<0.25?(Math.sin(T*10)>0?'#ff8a7a':'#a04040'):'#9fd8ff',40,ry,Math.round(54*o),2);ry-=8;}
-    if(p.guard<(p.guardMax||40)-0.5){txt('guard',6,ry-2,'#6f7a6a');F('#101820',40,ry,54,2);F('#bfe4ff',40,ry,Math.round(54*p.guard/(p.guardMax||40)),2);ry-=8;}
+    for(const [n,rem,mx,c] of cds){if(!(rem>0.02)||!(mx>0.05))continue;bar(n,'#6f7a6a','#141817',c,1-Math.min(1,rem/mx),2);ry-=8;}
+    if(p.combo>=1){const t=comboTier(),col=t?COMBO_T[3-t][2]:'#8e978b';bar('combo '+Math.floor(p.combo),col,'#141817',col,p.combo/20,2,[.25,.5,.75]);ry-=8;}
+    if((p.o2==null?100:p.o2)<99.5){const o=p.o2/100;bar('air',o<0.25?'#ff8a7a':'#6f7a6a','#141817',o<0.25?(Math.sin(T*10)>0?'#ff8a7a':'#a04040'):'#9fd8ff',o,2);ry-=8;}
+    if(p.guard<(p.guardMax||40)-0.5){bar('guard','#6f7a6a','#101820','#bfe4ff',p.guard/(p.guardMax||40),2);ry-=8;}
     for(const [k,n,c] of [['frz','cold','#9fd8ff'],['brn','burn','#ff8a3a'],['slk','slick','#b09060'],['rad','rads','#c9a8ff'],['stk','sticky','#c8d070'],['psn','poison','#8fcf40'],['shk','shock','#8fc3ff'],['stn','stun','#e8dcb0'],['szr','seizing','#c89ae8'],['irr','irritated','#e8e4be'],['wet','wet','#4a9ad0']]){const v=p.st[k];if(!(v>=1))continue;
-    const lb=k==='frz'&&p.frozenT>0?'frozen':n;txt(lb,6,ry-2,c);ctx.font='8px '+FONT;const bx=Math.max(40,Math.ceil(8+(ctx.measureText(lb).width||0)+4)),bw=94-bx;F('#141817',bx,ry,bw,3);F(c,bx,ry,Math.round(bw*v/100),3);ry-=9;}}
-  // bottom centre (v1.14.4): the player's states stack upward from just above the hotbar, one row each, in this order
-  // from the bottom; hudStackTop is where the stack ends, and the hover tip and V-look box sit above it
-  {const rows=[];
-    if(p.creeping)rows.push(['CREEPING','#9fc3e0']);else if(p.stamLock)rows.push(['winded','#8a7a50']);
-    if(p.liq>=2)rows.push([LIQNAME[p.liq],'#8fc3cf']);
-    if(p.liq===4)rows.push(['no weapons, shove only','#8fc3cf']);
-    if(p.frozenT>0)rows.push(['FROZEN','#cfe8ff']);else if(p.dazeT>0)rows.push(['DAZED','#e8dcb0']);
-    if(p.cloakT>0)rows.push(['CLOAKED '+Math.ceil(p.cloakT)+'s','#9fc3ff']);
-    if(archive&&archive.unstT>0)rows.push(['POWER FAILS IN '+Math.ceil(archive.unstT)+'s',Math.sin(T*6)>0?'#ff8a5a':'#c06040']);
-    if(p.aiming&&p.moveMul<0.95)rows.push(['backpedal slowed','#8e978b']);
-    if(depth===1&&hintT>0)rows.push(['1-2 armaments  3+ items  Q next item  E F skills  TAB pack','#7f8a7c',Math.min(1,hintT/2)]);
-    rows.forEach(([s0,c,al],k)=>{if(al!=null)ctx.globalAlpha=al;txt(s0,W/2+20,H-34-k*10,c,'center');ctx.globalAlpha=1;});
-    hudStackTop=rows.length?H-34-(rows.length-1)*10-2:H-38;}
+    bar(k==='frz'&&p.frozenT>0?'frozen':n,c,'#141817',c,v/100,3);ry-=9;}
+    hudLeft=ry<H-40?{x1:98,y0:ry+4,y1:H-36}:null;}
+  // top centre, top down (v1.14.4; placed round the corners in v1.17): the lockdown or purge line, the lift line, the
+  // breach count, the wave line, then messages, each on its own row. topRow() moves a row down past any corner line it
+  // would touch; a big banner first tries the small font on its own row before dropping below the corners.
+  let ty=6;topW=0;
+  const bigRow=(s0,col,blink)=>{ctx.font='16px '+FONT;const w=ctx.measureText(s0).width||0;let y=topRow(w,14,ty),sz=16;
+    if(y!==ty||leftClash(w,y,14)){ctx.font='8px '+FONT;const w8=ctx.measureText(s0).width||0,y8=topRow(w8,8,ty);if(y8===ty||leftClash(w,y,14)){y=y8;sz=8;}}
+    ctx.font=sz+'px '+FONT;topW=Math.max(topW,ctx.measureText(s0).width||0);if(!blink)txt(s0,W/2,y,col,'center',sz);ty=y+(sz===16?18:10);};
+  const smallRow=(s0,col,show)=>{for(const l of leftWrap(s0,ty)){ctx.font='8px '+FONT;const w=ctx.measureText(l).width||0;topW=Math.max(topW,w);const y=topRow(w,8,ty);if(show!==false)txt(l,W/2,y,col,'center');ty=y+10;}};
+  if(levelTimer>0)bigRow('LOCKDOWN  '+fmtT(levelTimer),Math.sin(T*8)>0?'#ff6050':'#a03020');
+  else if(purgeGas)smallRow('PURGE GAS   get to the lift',Math.sin(T*6)>0?'#a0e060':'#608030');
+  if(liftState==='alarm')bigRow('LIFT INBOUND  '+fmtT(alarmT),Math.sin(T*8)>0?'#ff6050':'#a03020');
+  else if(liftState==='ready')bigRow('LIFT READY','#9fe0b0',!(Math.sin(T*5)>-0.3));
+  else if(liftState==='arena')smallRow('clear the arena: '+arenaFoes().length+' left','#e8c070');
+  else if(liftState==='locked'&&!liftCard)smallRow('objective: find the lift keycard','#e8c070');
+  else if(liftState==='idle')smallRow('objective: call the lift and hold out','#e8c070');
+  if(liftState==='alarm'){const a=0.08+0.06*Math.sin(T*8);F(`rgba(200,30,20,${a})`,0,0,W,4);F(`rgba(200,30,20,${a})`,0,H-4,W,4);F(`rgba(200,30,20,${a})`,0,0,4,H);F(`rgba(200,30,20,${a})`,W-4,0,4,H);}
+  ty=Math.max(ty,18);
+  if(liftState==='alarm'&&cores.length){const lc=cores.filter(c=>!c.dead).length;smallRow(lc?lc+' breach'+(lc>1?'es':'')+' open':'breaches sealed',lc?'#ff8a9a':'#9fcf9a');}
+  if(waves&&!testMode||waves&&waves.phase!=='wait'){const w=waves;
+    if(w.phase==='wait')smallRow('movement below: '+Math.ceil(w.trigT)+'s, or at '+Math.round(w.trigPct*100)+'% explored ('+Math.round(w.pct*100)+'%)','#8e978b');
+    else if(w.phase==='warn')smallRow('SOMETHING IS COMING','#ff8070',Math.sin(T*8)>-0.2);
+    else if(w.phase==='active')smallRow('WAVE '+w.wave+' / '+w.n+(w.wave<w.n?'   next in '+Math.ceil(w.t)+'s':''),'#ff8070');}
+  // messages keep their old top (26) and each takes the next free row
+  ty=Math.max(26,ty);const msgRows=msgs.map(m=>leftWrap(m.s,ty).map(l=>{ctx.font='8px '+FONT;const w=ctx.measureText(l).width||0;topW=Math.max(topW,w);const y=topRow(w,8,ty);ty=y+10;return [l,y];}));
+  const stackBottom=ty;
   if(p.cloakT>0){const a=0.05+0.03*Math.sin(T*4);F(`rgba(120,170,255,${a})`,0,0,W,3);F(`rgba(120,170,255,${a})`,0,H-3,W,3);}
   if(p.stimT>0)txt('stim '+Math.ceil(p.stimT)+'s',102,H-56,'#9fe0b0');
   // bottom right, drawn upward from H-12, one 9 px line each (v1.14.6): ammo in reserve (or the tank, or guard), the
@@ -71,7 +71,23 @@ function hud(){
         if(p.arFlash>0)F(`rgba(255,250,220,${p.arFlash/ACTIVE_RELOAD.flash*0.9})`,bx-1,by-2,bw2+2,8);}
       else if(m===0&&p.inv[w.ammo]>0&&Math.sin(T*6)>0)txt('R reload',W-6,topY-9,'#ff8a7a','right');}
     if(p.weapon==='ray'&&p.charge>0){F('#0a1a10',W-71,topY-5,64,3);F('#8fffa8',W-71,topY-5,Math.round(64*p.charge/1.2),3);}
-    if(rLift)ctx.restore();}
+    if(rLift)ctx.restore();
+    hudBR={x0:W-6-bw,y0:topY-(mags||p.weapon==='ray'?10:1)+rLift,y1:H};}
+  // bottom centre (v1.14.4): the player's states stack upward from just above the hotbar, one row each, in this order
+  // from the bottom; hudStackTop is where the stack ends, and the hover tip and V-look box sit above it
+  {const rows=[];
+    if(p.creeping)rows.push(['CREEPING','#9fc3e0']);else if(p.stamLock)rows.push(['winded','#8a7a50']);
+    if(p.liq>=2)rows.push([LIQNAME[p.liq],'#8fc3cf']);
+    if(p.liq===4)rows.push(['no weapons, shove only','#8fc3cf']);
+    if(p.frozenT>0)rows.push(['FROZEN','#cfe8ff']);else if(p.dazeT>0)rows.push(['DAZED','#e8dcb0']);
+    if(p.cloakT>0)rows.push(['CLOAKED '+Math.ceil(p.cloakT)+'s','#9fc3ff']);
+    if(archive&&archive.unstT>0)rows.push(['POWER FAILS IN '+Math.ceil(archive.unstT)+'s',Math.sin(T*6)>0?'#ff8a5a':'#c06040']);
+    if(p.aiming&&p.moveMul<0.95)rows.push(['backpedal slowed','#8e978b']);
+    if(depth===1&&hintT>0)rows.push(['1-2 armaments  3+ items  Q next item  E F skills  TAB pack','#7f8a7c',Math.min(1,hintT/2)]);
+    // a row that would reach the bottom-right block (or the left column) wraps onto two lines (v1.17)
+    let k=0;const cx=W/2+20;for(const [s0,c,al] of rows){const y=H-34-k*10,R=hudBR,right=R&&y+8>R.y0&&y<R.y1?R.x0-6:W-6,maxW=2*Math.min(right-cx,cx-100);
+      const L=wrapLines(s0,maxW);if(al!=null)ctx.globalAlpha=al;for(let q=L.length-1;q>=0;q--){txt(L[q],cx,H-34-k*10,c,'center');k++;}ctx.globalAlpha=1;}
+    hudStackTop=k?H-34-(k-1)*10-2:H-38;}
   {const n=hotCount(),sw=HUD_SW,x0=hotbarX(),y0=H-16;drawSkillIcons();
     for(let i=0;i<n;i++){const x=x0+i*sw+(i>=2?3:0),sel=i===p.hotSel;box(x,y0,sw-1,15,sel?'#1c2220':'#0a0d0c',sel?AMBER:'#2a302e');txt(''+(i+1),x+2,y0-8,sel?AMBER:'#3f4642');
       if(i<2){const st=p.arms[i],show=st.off&&ARM[st.off].gun?st.off:st.main||st.off;if(show)drawItem({x:x+8+camX,y:y0+7+camY,type:'weapon',w:show,ph:0,icon:true});else{ctx.fillStyle='#c9c1a0';circ(x+8,y0+7,2.5);}continue;}
@@ -90,29 +106,65 @@ function hud(){
     ctx.strokeStyle=col;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ex-5,ey);ctx.quadraticCurveTo(ex,ey-[0.5,2,3.5,5][st],ex+5,ey);ctx.quadraticCurveTo(ex,ey+[0.5,2,3.5,5][st],ex-5,ey);ctx.stroke();
     if(st>0){ctx.fillStyle=col;circ(ex,ey,st);if(st===3&&Math.sin(T*8)>0){ctx.fillStyle='#fff';circ(ex,ey,1);}}
     txt(dt0,W-6,ey-4,alertLock?'#7fd8e0':col,'right');}
-  msgs.forEach((m,i)=>{ctx.globalAlpha=Math.min(1,m.t);txt(m.s,W/2,msgY+i*10,'#e8dcb0','center');ctx.globalAlpha=1;});
-  if(transitToast>0&&state==='play'){transitToast-=1/60;const a=Math.min(1,transitToast);ctx.globalAlpha=a;box(W/2-80,H/2-58,160,14,'#0a0d0c','#d9a441');txt('found something on the ride down',W/2,H/2-54,'#e8dcb0','center');ctx.globalAlpha=1;}
-  if(bannerBoss>0){bannerBoss-=1/60;const B=bossRef?BOSSES[bossRef.boss||0]:null;if(B){ctx.globalAlpha=Math.min(1,bannerBoss);txt(B.name.toUpperCase(),W/2,H/2-58,'#e05040','center',16);ctx.globalAlpha=1;}}
-  if(bannerT>0){ctx.globalAlpha=Math.min(1,bannerT);txt(arcadeMode?'ARCADE':testMode&&!testDeck?'TEST RANGE':'DEPTH '+depth,W/2,H/2-30,AMBER,'center',16);txt(arcadeMode?'insert coin':levelLabel&&!(testMode&&!testDeck)?sector(depth)+'  /  '+levelLabel:sector(depth),W/2,H/2-12,'#c9cfc2','center');if(condText(cond)&&!testMode)txt(condText(cond),W/2,H/2-1,'#d07a60','center');ctx.globalAlpha=1;}
+  msgs.forEach((m,i)=>{ctx.globalAlpha=Math.min(1,m.t);for(const [l,y] of msgRows[i])txt(l,W/2,y,'#e8dcb0','center');ctx.globalAlpha=1;});
+  // banners (v1.17): the boss name, the ride-down line and the arrival banner (DEPTH, area, conditions) are one block of
+  // rows, never sharing a row. It sits where the arrival banner always did (DEPTH at H/2-30) unless the top-centre
+  // stack reaches it, then just below the stack. hudBanner is its rect, which the interaction prompt keeps clear of.
+  {const rows=[];
+    if(bannerBoss>0){bannerBoss-=1/60;const B=bossRef?BOSSES[bossRef.boss||0]:null;if(B)rows.push({h:16,a:Math.min(1,bannerBoss),w:0,d:y=>txt(B.name.toUpperCase(),W/2,y,'#e05040','center',16)});}
+    if(transitToast>0&&state==='play'){transitToast-=1/60;rows.push({h:16,a:Math.min(1,transitToast),w:160,d:y=>{box(W/2-80,y,160,14,'#0a0d0c','#d9a441');txt('found something on the ride down',W/2,y+4,'#e8dcb0','center');}});}
+    let arrive=-1;
+    if(bannerT>0){arrive=rows.length;const a=Math.min(1,bannerT),c=condText(cond)&&!testMode?condText(cond):'',ar=arcadeMode?'insert coin':levelLabel&&!(testMode&&!testDeck)?sector(depth)+'  /  '+levelLabel:sector(depth);
+      rows.push({h:18,a,d:y=>txt(arcadeMode?'ARCADE':testMode&&!testDeck?'TEST RANGE':'DEPTH '+depth,W/2,y,AMBER,'center',16)});rows.push({h:c?11:9,a,d:y=>txt(ar,W/2,y,'#c9cfc2','center')});if(c)rows.push({h:9,a,d:y=>txt(c,W/2,y,'#d07a60','center')});}
+    hudBanner=null;
+    if(rows.length){const above=rows.slice(0,arrive<0?rows.length:arrive).reduce((s0,r)=>s0+r.h,0),hb=rows.reduce((s0,r)=>s0+r.h,0);
+      let y=Math.max(stackBottom+4,Math.round((arrive<0?H/2-58:H/2-30)-above));
+      const bw=Math.max(160,...rows.map(r=>r.w||0));
+      hudBanner={x0:W/2-bw/2-90,x1:W/2+bw/2+90,y0:y,y1:y+hb};
+      for(const r of rows){ctx.globalAlpha=r.a;r.d(y);ctx.globalAlpha=1;y+=r.h;}}
+    // the whole top-centre area in use (stack and banners), which the interaction prompt keeps clear of
+    const tw=topW+8;hudTop=hudBanner?{x0:Math.min(hudBanner.x0,W/2-tw/2-90),x1:Math.max(hudBanner.x1,W/2+tw/2+90),y0:0,y1:hudBanner.y1}:stackBottom>26?{x0:W/2-tw/2-90,x1:W/2+tw/2+90,y0:0,y1:stackBottom}:null;}
   drawHudTip();
   const it=findInteract();
-  if(it){const x=Math.round(it.x-camX),y=Math.round(it.y-camY)-16;const has=p.inv.key>0;
-    if(it.k==='crawl')txt('R climb into the crawlway',x,y+4,'#e8c070','center');
-    else if(it.k==='pdrelease')txt(it.pd.holdT>0?'door held open':'R door release',x,y+4,'#e0c080','center');
-    else if(it.k==='panel')txt('R hack: '+HACKR[it.pn.reward].label,x,y+4,'#6fd0c0','center');
-    else if(it.k==='console')txt('R creature console',x,y-2,'#c9a8ff','center');
-    else if(it.k==='mdoor'){const m2=map[it.ty*MW+it.tx],ins=doorInside(it.md);txt(m2===0?'R close door':m2===6?(ins?'R lock door':'R open door'):(ins?'R unlock and open':'R unlock (key)'),x,y-2,'#c9cfc2','center');}
-    else if(it.k==='fix')txt(it.f.kind==='locker'?'R search locker':it.f.kind==='medstation'?'R use medstation':it.f.kind==='dispenser'?'R bang on the coin dispenser':it.f.kind==='grinder'?'R use the salvager':it.f.kind==='damper'?'R use the dampening terminal':it.f.kind==='freezer'?'R open the freezer':it.f.kind==='fountain'?'R drink from the fountain':it.f.kind==='closet'?(it.f.restroom?'R open the restroom door':it.f.janitor?'R open the janitor\'s closet':'R open the door'):it.f.kind==='stasis'?'R climb into the stasis pod':it.f.kind==='breaker'?'R use the breaker panel':it.f.kind==='liftdoor'?'R open the lift doors':it.f.kind==='npc'?'R talk to the '+NPCS[it.f.npc].name.toLowerCase():it.f.kind==='camera'?'R check the lift camera':it.f.kind==='psychic'?'R talk to the sensitive':'R play '+ARC[it.f.game||'rift'].name+' (1 scrap)',x,y-4,'#c9cfc2','center');
-    else if(it.k==='lift')txt('R call the lift (sets off the alarm)',x,y-2,'#ff8070','center');
-    else if(it.k==='liftgo')txt(stopMode?'R ride on':'R take the lift down',x,y-2,'#9fe0b0','center');
-    else if(it.k==='liftshut')txt(liftState==='arena'?'lift sealed':liftState==='locked'?'lift locked: needs the keycard':'lift on its way',x,y-2,'#c08070','center');
-    else if(it.k==='testlift')txt('R test lift',x,y-2,'#e8c070','center');
-    else if(it.k==='freight')txt('R ride the freight lift',x,y-2,'#e8c070','center');
-    else if(it.k==='arcexit')txt('R leave the arcade',x,y-2,'#e8c070','center');
-    else if(it.k==='hatch')txt('R climb down',x,y+6,'#c9b48a','center');
-    else if(it.k==='ladder')txt('R climb up',x,y+4,'#c9b48a','center');
-    else if(it.k==='lever')txt(it.l.effect==='release'?'R raise the cage':'R pull the emergency lever',x,y+4,'#e08070','center');
-    else if(it.k==='vend'){const v=it.v,empty=!v.stock.some(o=>!o.sold);txt(v.state==='dead'?'out of order':empty?'sold out':'R use '+v.name,x,y+22,v.state==='dead'||empty?'#6a726c':'#ff9aa8','center');}
-    else txt((it.k==='chest'?'R open chest':'R unlock door')+(has?'':'  no key'),x,y,has?AMBER:'#b8665a','center');}
+  if(it){const x=Math.round(it.x-camX);let y=Math.round(it.y-camY)-16;const has=p.inv.key>0;
+    // the prompt is always readable: below the banner block when it would touch it (v1.17)
+    // (on a small view where that would reach the state rows above the hotbar, it stays put on a dark backing instead)
+    promptBack=false;{const R=hudTop;if(R&&x>R.x0&&x<R.x1&&y+12>R.y0&&y-2<R.y1){if(R.y1+16<(hudStackTop||H-38))y=R.y1+6;else promptBack=true;}}
+    if(it.k==='crawl')ptxt('R climb into the crawlway',x,y+4,'#e8c070','center');
+    else if(it.k==='pdrelease')ptxt(it.pd.holdT>0?'door held open':'R door release',x,y+4,'#e0c080','center');
+    else if(it.k==='panel')ptxt('R hack: '+HACKR[it.pn.reward].label,x,y+4,'#6fd0c0','center');
+    else if(it.k==='console')ptxt('R creature console',x,y-2,'#c9a8ff','center');
+    else if(it.k==='mdoor'){const m2=map[it.ty*MW+it.tx],ins=doorInside(it.md);ptxt(m2===0?'R close door':m2===6?(ins?'R lock door':'R open door'):(ins?'R unlock and open':'R unlock (key)'),x,y-2,'#c9cfc2','center');}
+    else if(it.k==='fix')ptxt(it.f.kind==='locker'?'R search locker':it.f.kind==='medstation'?'R use medstation':it.f.kind==='dispenser'?'R bang on the coin dispenser':it.f.kind==='grinder'?'R use the salvager':it.f.kind==='damper'?'R use the dampening terminal':it.f.kind==='freezer'?'R open the freezer':it.f.kind==='fountain'?'R drink from the fountain':it.f.kind==='closet'?(it.f.restroom?'R open the restroom door':it.f.janitor?'R open the janitor\'s closet':'R open the door'):it.f.kind==='stasis'?'R climb into the stasis pod':it.f.kind==='breaker'?'R use the breaker panel':it.f.kind==='liftdoor'?'R open the lift doors':it.f.kind==='npc'?'R talk to the '+NPCS[it.f.npc].name.toLowerCase():it.f.kind==='camera'?'R check the lift camera':it.f.kind==='psychic'?'R talk to the sensitive':'R play '+ARC[it.f.game||'rift'].name+' (1 scrap)',x,y-4,'#c9cfc2','center');
+    else if(it.k==='lift')ptxt('R call the lift (sets off the alarm)',x,y-2,'#ff8070','center');
+    else if(it.k==='liftgo')ptxt(stopMode?'R ride on':'R take the lift down',x,y-2,'#9fe0b0','center');
+    else if(it.k==='liftshut')ptxt(liftState==='arena'?'lift sealed':liftState==='locked'?'lift locked: needs the keycard':'lift on its way',x,y-2,'#c08070','center');
+    else if(it.k==='testlift')ptxt('R test lift',x,y-2,'#e8c070','center');
+    else if(it.k==='freight')ptxt('R ride the freight lift',x,y-2,'#e8c070','center');
+    else if(it.k==='arcexit')ptxt('R leave the arcade',x,y-2,'#e8c070','center');
+    else if(it.k==='hatch')ptxt('R climb down',x,y+6,'#c9b48a','center');
+    else if(it.k==='ladder')ptxt('R climb up',x,y+4,'#c9b48a','center');
+    else if(it.k==='lever')ptxt(it.l.effect==='release'?'R raise the cage':'R pull the emergency lever',x,y+4,'#e08070','center');
+    else if(it.k==='vend'){const v=it.v,empty=!v.stock.some(o=>!o.sold);ptxt(v.state==='dead'?'out of order':empty?'sold out':'R use '+v.name,x,y+22,v.state==='dead'||empty?'#6a726c':'#ff9aa8','center');}
+    else ptxt((it.k==='chest'?'R open chest':'R unlock door')+(has?'':'  no key'),x,y,has?AMBER:'#b8665a','center');}
 }
 
+
+// the six corner lines as rects (top left: depth, area, conditions; top right: keys and materials, clearance and score,
+// disturbance with its eye), so top-centre rows can keep clear of them (topRow())
+let hudCorners=[],hudLeft=null,hudBanner=null,hudBR=null,hudTop=null,topW=0;
+function hudCornerRects(ctL){const p=player,R=[],m=s0=>{ctx.font='8px '+FONT;return ctx.measureText(s0).width||0;};
+  R.push([6,5,m('DEPTH '+depth)],[6,14,m(levelLabel||sector(depth))]);if(ctL)R.push([6,23,m(ctL)]);
+  const rs='scrap '+p.inv.scrap+' pwd '+p.inv.powder+' pipe '+p.inv.pipe+' batt '+p.inv.battery+' cloth '+p.inv.cloth;R.push([W-6-m(rs)-m('keys '+p.inv.key+'   '),5,0,true]);
+  const ss='score '+(runScore+liveLevelScore());R.push([W-6-m(ss)-m('clearance '+(p.clear||0)+'   '),14,0,true]);
+  if(alertOn()||alertLock&&depth>=3){const d0=alertLock?'dampened':'disturbance '+Math.floor(Math.min(1,alertM/100)*100)+'%';R.push([W-6-m(d0)-15,22,0,true]);}
+  hudCorners=R.map(([x,y,w,right])=>right?{x0:x,x1:W-6,y0:y,y1:y+(y===22?10:8)}:{x0:x,x1:x+w,y0:y,y1:y+8});}
+// the first free y at or below y for a centred row w wide and h tall, 4 px clear of every corner line
+function topRow(w,h,y){const x0=W/2-w/2-4,x1=W/2+w/2+4;for(let k=0;k<8;k++){let moved=false;for(const r of hudCorners)if(x0<r.x1&&x1>r.x0&&y<r.y1+1&&y+h>r.y0-1){y=r.y1+2;moved=true;}if(!moved)break;}return y;}
+// an interaction prompt: as txt(), on a dark backing when promptBack is set (it overlaps a banner)
+let promptBack=false;
+function ptxt(s0,x,y,col,align){if(promptBack){ctx.font='8px '+FONT;const w=ctx.measureText(s0).width||0;const A0=ctx.globalAlpha;ctx.globalAlpha=A0*.88;F('#050607',Math.round(x-w/2-3),y-2,Math.ceil(w+6),11);ctx.globalAlpha=A0;}txt(s0,x,y,col,align);}
+// the left column of meters (hudLeft, set as it is drawn): a centred row w wide at y would touch it
+function leftClash(w,y,h){const L=hudLeft;return !!L&&W/2-w/2-4<L.x1&&y+h>L.y0&&y<L.y1;}
+// a top-centre line split into lines narrow enough to clear the left column, if the row at y would reach it
+function leftWrap(s0,y){ctx.font='8px '+FONT;const w=ctx.measureText(s0).width||0;if(!leftClash(w,y,8))return [s0];return wrapLines(s0,2*(W/2-hudLeft.x1-4));}
