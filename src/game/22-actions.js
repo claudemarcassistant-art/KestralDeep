@@ -108,20 +108,27 @@ function fireRay(c){const p=player;if(!useMag('ray'))return;breakCloak();const a
 function sawMelee(){const p=player;p.sawN=(p.sawN||0)+1;
   if(p.inv.cells>0){if(p.sawN%9===0)p.inv.cells--;noise(p.x,p.y,150);if(p.sawN%3===0){sfx('nail');for(let k=0;k<2;k++)parts.push({x:p.x+Math.cos(p.ang)*12,y:p.y+Math.sin(p.ang)*12,vx:rr(-40,40),vy:rr(-40,40),t:0.2,m:0.2,c:'#ffd070',s:1});}return ARM.chainsaw.melee;}
   if(p.sawN%12===1)say('the chainsaw coughs. it needs power cells');return {dmg:2,cd:0.55,range:14,arc:0.7,kb:120};}
-function inLash(p,x,y,r,m){const ca=Math.cos(p.ang),sa=Math.sin(p.ang),rx=x-p.x,ry=y-p.y,t=rx*ca+ry*sa;if(t<4||t>m.range+2)return false;return Math.abs(rx*sa-ry*ca)<r+1.5;}
+function inLash(p,x,y,r,m){const ca=Math.cos(p.ang),sa=Math.sin(p.ang),rx=x-p.x,ry=y-p.y,t=rx*ca+ry*sa;if(t<4||t>m.range+2)return false;return Math.abs(rx*sa-ry*ca)<(r+1.5)*(m.lane||1);}
 function inJab(p,x,y,r,m){const ca=Math.cos(p.ang),sa=Math.sin(p.ang),ox=p.x-sa*3,oy=p.y+ca*3,rx=x-ox,ry=y-oy,t=rx*ca+ry*sa;if(t<2||t>m.range+2)return false;return Math.abs(rx*sa-ry*ca)<r+3;}
 function fireBow(c,perfect){const p=player,w=WPN.bow;if(p.liq===4){say('you cannot draw a bow while swimming');return;}if(p.inv.bolts<=0){sfx('deny');say('out of bolts');p.mcd=0.3;return;}p.inv.bolts--;breakCloak();
   const mult=(1+1.5*c)*(perfect?1.4:1),sp=w.speed*(0.8+0.6*c),a=p.ang+rr(-w.spread,w.spread)*(1-c*0.8);
   bullets.push({x:p.x,y:p.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:0.9,dmg:w.dmg*mult*(1+0.08*U('pen')),cc:critChance('bow')+(perfect?0.25:0),p:true,kb:w.kb*(1+0.5*c),pierce:perfect,kind:'bow',vk:c>0?'bowc':'bow',perfect,hits:perfect?new Set():null});
   p.mcd=w.cd*(1+0.3*c);p.mcdMax=p.mcd;sfx('whoosh');noise(p.x,p.y,35);if(perfect){float(p.x,p.y-12,'perfect','#fff0a0');sfx('crunch_bow');}else if(c>=1)sfx('thud');}
+// the chain is a little more common in Pump Hall and Sorting Floor (CHAIN_LOOT)
+function chainSecMul(){return CHAIN_LOOT.sectors.includes(kitIdx())?CHAIN_LOOT.mul:1;}
+function chainBias(list){return wpick(list.map(k=>[k,k==='chain'?chainSecMul():1]));}
 function releaseCharge(k){const p=player,c=Math.min(1,p.chg),full=p.chg>=1,perfect=full&&p.chgFull>0&&p.chgFull<=0.2;
   if(k==='bow'){p.chg=0;p.chgFull=0;return fireBow(c<0.12?0:c,perfect);}
   const base=ARM[k].melee;p.chg=0;p.chgFull=0;
   if(c<0.12){primaryAttack(base);return;}
   const mult=(1+1.5*c)*(perfect?1.4:1);const m=Object.assign({},base,{dmg:base.dmg*mult,kb:base.kb*(1+0.6*c)*(perfect?1.3:1),range:base.range*(1+0.12*c),perfect,mult});
+  // a perfect release gives each lash weapon the shape it otherwise lacks: the whip swings flat through a wide cone,
+  // the chain strikes long and straight in a lane wider than the whip's. A full chain charge sweeps wider.
+  if(k==='whip'&&perfect){const W=ARM.whip.perfect;Object.assign(m,{lash:false,arc:W.arc,range:W.range,wsweep:true,stunK:1});}
+  if(k==='chain'){if(perfect){const C=ARM.chain.strike;Object.assign(m,{lash:true,range:C.range,lane:C.lane,kb:m.kb*C.kb,stunK:C.stunK,cstrike:true});}else m.arc=base.arc*(1+ARM.chain.chargeArc*c);}
   if(k==='spear'&&full){const ca=Math.cos(p.ang),sa=Math.sin(p.ang);p.vx=ca*250;p.vy=sa*250;p.dashT=0.12;p.iframeT=Math.max(p.iframeT||0,0.12);}
   primaryAttack(m);p.mcd=base.cd*(1+0.4*c)*(p.whiff?2:comboCd());p.mcdMax=p.mcd;shake=Math.max(shake,2+3*c);
-  if(perfect){float(p.x,p.y-12,'perfect','#fff0a0');sfx('crunch_'+(k==='spear'||k==='whip'?k:'bat'));for(let q=0;q<12;q++){const a=p.ang+rr(-0.5,0.5);parts.push({x:p.x+Math.cos(p.ang)*10,y:p.y+Math.sin(p.ang)*10,vx:Math.cos(a)*rr(60,140),vy:Math.sin(a)*rr(60,140),t:0.3,m:0.3,c:'#fff0a0',s:1});}}
+  if(perfect){float(p.x,p.y-12,'perfect','#fff0a0');sfx('crunch_'+(k==='spear'||k==='whip'?k:k==='chain'&&perfect?'whip':'bat'));for(let q=0;q<12;q++){const a=p.ang+rr(-0.5,0.5);parts.push({x:p.x+Math.cos(p.ang)*10,y:p.y+Math.sin(p.ang)*10,vx:Math.cos(a)*rr(60,140),vy:Math.sin(a)*rr(60,140),t:0.3,m:0.3,c:'#fff0a0',s:1});}}
   else if(full)sfx('thud');}
 function comboTier(){const c=player.combo||0;for(let i=0;i<COMBO_T.length;i++)if(c>=COMBO_T[i][0])return 3-i;return 0;}
 function comboDmg(){return [1,1,1.2,1.35][comboTier()];}
@@ -130,7 +137,7 @@ function comboAdd(n){const P=player,before=comboTier();P.combo=Math.min(20,(P.co
   if(t>before){const T0=COMBO_T[3-t];float(P.x,P.y-14,T0[1],T0[2]);sfx('hackok');}}
 function comboBreak(){const P=player;if((P.combo||0)<1)return;if(perk('secondnature')&&!P.comboShield&&P.combo>=5){P.comboShield=true;float(P.x,P.y-12,'combo held','#e8dcb0');return;}if(P.combo>=5)float(P.x,P.y-12,'combo broken','#ff8a7a');P.combo=0;P.comboShield=false;}
 function primaryAttack(m){return asMelee(()=>primaryAttack0(m));}
-function primaryAttack0(m){const p=player;p.mcd=m.cd;p.mcdMax=m.cd;p.swingT=m.jab||m.lash?0:0.12;if(ARM_SWING[p.arms[p.armSet].main]&&p.swingT>0)p.swingDir=(p.combo||0)>0?-(p.swingDir||1):1;p.jabT=m.jab?0.16:0;if(m.lash){p.lashT=0.24;p.lashS=Math.random()<0.5?1:-1;}p.swingR=m.range;p.swingA=m.arc;if(m!==ARM.chainsaw.melee)sfx('shove');
+function primaryAttack0(m){const p=player;p.mcd=m.cd;p.mcdMax=m.cd;const mainK=p.arms[p.armSet].main;p.swingT=m.jab||m.lash||m.wsweep?0:0.12;if(ARM_ALT[mainK]&&p.swingT>0)p.swingDir=(p.combo||0)>0?-(p.swingDir||1):1;p.sweepT=m.wsweep?0.3:0;if(mainK==='chain'&&!m.lash)p.chainT=0.4;if(m.noise){noise(p.x,p.y,m.noise);sfx('chain');}p.jabT=m.jab?0.16:0;if(m.lash){p.lashT=0.24;p.lashS=Math.random()<0.5?1:-1;}p.swingR=m.range;p.swingA=m.arc;if(m!==ARM.chainsaw.melee)sfx('shove');
   const cloaked=p.cloakT>0,bonus=S.meleeDmg||0;let connected=0;p.flurryN=p.flurryN||0;
   for(const e of enemies){if(e.dead||ET[e.type].ghost)continue;const dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy);
     if(m.lash?inLash(p,e.x,e.y,e.r,m):m.jab?inJab(p,e.x,e.y,e.r,m):(d<m.range+e.r&&Math.abs(angDiff(Math.atan2(dy,dx),p.ang))<m.arc)){
@@ -138,7 +145,7 @@ function primaryAttack0(m){const p=player;p.mcd=m.cd;p.mcdMax=m.cd;p.swingT=m.ja
       // one roll: damage range, crit or glance (perfect releases, ambushes and flurry crits never glance)
       const hr=hitRoll(mk,flurry?1:critChance(mk),e,amb||m.perfect||flurry);
       if(m.perfect&&!ET[e.type].dummy)e.stun=Math.max(e.stun||0,0.9);
-      if(m.lash&&!ET[e.type].dummy&&!hr.glance){e.stunB=(e.stunB||0)+(e.type==='brute'?28:45)*(m.mult||1);if(e.stunB>=100){e.stunB=0;e.stun=Math.max(e.stun||0,1.4);float(e.x,e.y-8,'reeling','#e8dcb0');}sfx('hit');}if(amb){float(e.x,e.y,'ambush','#ff9a7a');if(lvl)lvl.ambush++;}
+      const sk=m.stunK!=null?m.stunK:m.lash?1:0;if(sk>0&&!ET[e.type].dummy&&!hr.glance){addStunB(e,(e.type==='brute'?28:45)*(m.mult||1)*sk,1.4);sfx('hit');}if(amb){float(e.x,e.y,'ambush','#ff9a7a');if(lvl)lvl.ambush++;}
       {connected++;if(connected===1&&perk('flurry')&&comboTier()>=2)p.flurryN++;let md=(m.dmg+bonus)*(amb?(perk('ambusher')?4:3):1)*comboDmg()*hr.mul;if(hr.crit)critFx(e,md);if(hr.glance)glanceFx(e);damageEnemy(e,md,dx,dy,(e.type==='brute'?m.kb*0.35:m.kb)*(hr.glance?GLANCE_CFG.kbMul:1));}}}
   for(const bb of barrels){if(bb.dead)continue;const dx=bb.x-p.x,dy=bb.y-p.y;if(m.lash?inLash(p,bb.x,bb.y,4,m):m.jab?inJab(p,bb.x,bb.y,4,m):(Math.hypot(dx,dy)<m.range+4&&Math.abs(angDiff(Math.atan2(dy,dx),p.ang))<m.arc)){if(bb.crate&&(m.mult||1)>=CRATE_CFG.heavyMult)breakCrate(bb);else hitBarrel(bb,m.dmg,dx,dy,m.kb*0.9);connected++;}}
   for(const pl of plants){if(pl.burst)continue;const dx=pl.x-p.x,dy=pl.y-p.y;if(Math.hypot(dx,dy)<m.range+4&&Math.abs(angDiff(Math.atan2(dy,dx),p.ang))<m.arc)burstPlant(pl);}
@@ -220,7 +227,7 @@ function interact(){
     if(m===7){if(inside){map[i]=0;openDoor[i]=1;paintArea(it.tx,it.ty);sfx('door');flowT=0;return;}
       if(player.inv.key<=0){say('locked from the other side. a key or an explosion would do it');sfx('click');return;}player.inv.key--;map[i]=0;openDoor[i]=1;paintArea(it.tx,it.ty);sfx('door');flowT=0;if(lvl)lvl.doors++;return;}}
   if(it.k==='fix'){const f=it.f;
-    if(f.kind==='locker'){f.used=true;sfx('door');const t=wpick(scenW([['food',3],['raw',1.5],['tuft',HERB_CFG.locker],['cloth',2],['scrap',2],['powder',1],['gear',0.7],['key',0.5],['emetic',0.5]],null,scen().locker));const q={x:f.tx*TS+6,y:(f.ty+1)*TS+4,type:t,ph:0,pop:0.35};if(t==='gear')q.gear=randomGear();if(t==='tuft')q.tuft=randHerb();if(t==='food')q.food=randFood();if(t==='raw')q.raw=randRaw();items.push(q);return;}
+    if(f.kind==='locker'){f.used=true;sfx('door');const t=wpick(scenW([['food',3],['raw',1.5],['tuft',HERB_CFG.locker],['cloth',2],['scrap',2],['powder',1],['gear',0.7],['key',0.5],['emetic',0.5],['chain',player.has.chain?0:CHAIN_LOOT.locker*chainSecMul()]],null,scen().locker));const q={x:f.tx*TS+6,y:(f.ty+1)*TS+4,type:t,ph:0,pop:0.35};if(t==='chain'){q.type='weapon';q.w='chain';}if(t==='gear')q.gear=randomGear();if(t==='tuft')q.tuft=randHerb();if(t==='food')q.food=randFood();if(t==='raw')q.raw=randRaw();items.push(q);return;}
     if(f.kind==='medstation'){f.used=true;if(cureInjury(false))say('the medstation sets your injury');player.hp=100;player.st.psn=0;player.st.rad=Math.max(0,player.st.rad-50);sfx('stim');say('the medstation patches you up. it powers down after');return;}
     if(f.kind==='stasis'){const P=player;f.used=true;const n=cureInjury(true);P.hp=maxHp();clearStatus();sfx('learn');say('the stasis pod hisses shut. you wake whole'+(n?', '+n+' injur'+(n>1?'ies':'y')+' mended':'')+'. the pod goes dark');return;}
     if(f.kind==='breaker'){openBreaker(f);return;}
@@ -324,7 +331,7 @@ function openChest(c){
   withSeed(c.ls!=null?c.ls:(realRandom()*4294967296)>>>0,()=>{const n=(c.tier==='rare'?3:2)+rnd(2)+S.chestBonus;
   for(let i=0;i<n;i++){const t=lootRoll(c.tier);let x=c.x,y=c.y;
     for(let k=0;k<8;k++){const a=Math.random()*6.283,d=rr(8,15),nx=c.x+Math.cos(a)*d,ny=c.y+Math.sin(a)*d;if(!blocked(nx,ny,2)){x=nx;y=ny;break;}}
-    const it={x,y,type:t,ph:0,pop:0.35};if(t==='gear'){const im=IMPLEMENTS.filter(k=>!player.has[k]);if(Math.random()<0.25&&im.length){it.type='weapon';it.w=im[rnd(im.length)];}else it.gear=randomGear();}if(t==='food')it.food=randFood();items.push(it);}});
+    const it={x,y,type:t,ph:0,pop:0.35};if(t==='gear'){const im=IMPLEMENTS.filter(k=>!player.has[k]);if(Math.random()<0.25&&im.length){it.type='weapon';it.w=chainBias(im);}else it.gear=randomGear();}if(t==='food')it.food=randFood();items.push(it);}});
   for(let i=0;i<12;i++)parts.push({x:c.x,y:c.y-3,vx:rr(-40,40),vy:rr(-70,-10),t:0.5,m:0.5,c:c.tier==='rare'?'#c9a8ff':'#ffd98a',s:1});
   lights.push({x:c.x,y:c.y,r:40,t:0.4,m:0.4,c:c.tier==='rare'?'190,150,255':'255,200,110'});
 }

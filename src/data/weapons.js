@@ -16,14 +16,22 @@ const ARM={
   spear:{name:'Spear',hand:'two',melee:{dmg:5,cd:0.7,range:30,arc:0.35,kb:180,jab:true},desc:'Two-handed. Long reach, narrow thrust. Tap to jab, or hold to charge up to 2.5x; a full charge lunges you forward, and releasing right as it fills is a perfect thrust. Right click blocks.'},
   soaker:{name:'Super soaker',hand:'main',melee:{dmg:1,cd:0.5,range:12,arc:0.8,kb:60},desc:'Main hand. Paired with a liquid tank in the off hand, hold left click to spray a stream of whatever the tank holds, leaving pools where it lands. Without a tank it is a plastic club.'},
   tank:{name:'Liquid tank',hand:'off',desc:'Off hand. A big flask on a strap: holds 12 measures of one liquid. R fills it from what you stand in, or pours your flask in. Right click drinks water from it. Feeds a super soaker.'},
-  whip:{name:'Cable whip',hand:'main',melee:{dmg:1.4,cd:0.55,range:38,arc:0.2,kb:40,lash:true},desc:'Main hand. A long, thin lash that reaches far and hits weakly, but every crack builds up stun. Tap to crack, or hold to charge a lash up to 2.5x as strong; release right as it fills for a perfect crack.'},
+  // perfect: a perfect release swings the cable flat through a wide cone instead of lashing (half-arc in rad, reach in px)
+  whip:{name:'Cable whip',hand:'main',melee:{dmg:1.4,cd:0.55,range:38,arc:0.2,kb:40,lash:true},perfect:{arc:1.18,range:30},desc:'Main hand. A long, thin lash that reaches far and hits weakly, but every crack builds up stun. Tap to crack, or hold to charge a lash up to 2.5x as strong; release right as it fills to swing it wide through everything in front of you.'},
+  // chain: a wide sweep (stunK: share of the whip's stun build-up per hit; noise: px). A full charge sweeps wider
+  // (chargeArc per unit of charge); a perfect release is a long straight strike: reach, lane (x the whip's lash width),
+  // kb (x the charged knockback at the tip), stunK
+  chain:{name:'Chain',hand:'main',melee:{dmg:2.2,cd:0.7,range:22,arc:1.5,kb:120,stunK:0.35,noise:90},chargeArc:0.12,strike:{range:40,lane:1.6,kb:1.5,stunK:0.7},desc:'Main hand. A heavy chain on a taped grip: wide sweeps that hit everything around in front of you and build a little stun, swinging back and forth in a combo. Loud. Hold to charge a stronger, wider sweep up to 2.5x; release right as it fills to whip it out in a long straight strike that hits everything along it.'},
   chainsaw:{name:'Chainsaw',hand:'main',melee:{dmg:1.3,cd:0.09,range:15,arc:0.5,kb:35},desc:'Main hand. Hold left click to rev and grind through anything in front of you. Burns power cells as it runs, and is very loud. Without cells it is a heavy club.'},
   blower:{name:'Industrial blower',hand:'off',gun:true,desc:'Off hand. Hold right click to aim, hold left click to blow a strong stream of air about 100 px ahead: it pushes gas clouds and thins them, blows out small fires close in, shoves barrels, crates, loose items and creatures (light ones far, heavy ones barely), and slows and turns slow projectiles. No damage of its own, but things slammed into walls get hurt. Loud, and burns a power cell every 4 seconds.'},
   stungun:{name:'Stun gun',hand:'main',melee:{dmg:0.8,cd:0.18,range:28,arc:0.45,kb:0},desc:'Main hand. Hold left click to zap the nearest creature just in front of you about 5 times a second: little damage, but each zap builds stun fast and most creatures reel in under a second. Wet creatures or ones in water stun twice as fast and pass the jolt to others in the same water. Machines take triple damage. Burns a power cell every 2 seconds; without cells it is a weak prod.'},
   shield:{name:'Riot shield',hand:'off',shield:80,desc:'Off hand. Right click blocks with an 80-point guard and less slowdown.'}
 };
 const FIST={dmg:1,cd:0.3,range:12,arc:0.8,kb:90};
-const IMPLEMENTS=['cutter','crowbar','bat','spear','shield','chainsaw','whip'];
+const IMPLEMENTS=['cutter','crowbar','bat','spear','shield','chainsaw','whip','chain'];
+// how often the chain turns up in lockers (a weight beside the locker's other finds), and the weight multiplier for
+// it among weapon finds in Pump Hall and Sorting Floor (sector indexes 1 and 2)
+const CHAIN_LOOT={locker:0.15,sectors:[1,2],mul:2.5};
 const WPN={
   pistol:{name:'SIDEARM',ammo:'rounds',dmg:2,cd:0.28,spread:0.04,speed:430,pellets:1,kb:40,noise:150,shake:1.5,sfx:'shot'},
   bow:{name:'BOW',ammo:'bolts',dmg:4,cd:0.6,spread:0.02,speed:330,pellets:1,kb:90,noise:35,shake:0.5,sfx:'whoosh'},
@@ -36,9 +44,9 @@ const WPN={
   blower:{name:'BLOWER',ammo:'cells',dmg:0,cd:0.05,spread:0,speed:0,pellets:0,kb:0,noise:210,shake:0,sfx:'whoosh'},
   bolt:{name:'BOLT DRIVER',ammo:'bolts',dmg:7,cd:0.9,spread:0,speed:720,pellets:1,kb:130,noise:80,shake:2.5,sfx:'bolt',pierce:true}
 };
-const WCRIT={kick:0.08,bow:0.15,knives:0.25,pistol:0.10,smg:0.04,scatter:0.03,nailer:0.06,bolt:0.20,ray:0.08,flamer:0,fists:0.05,cutter:0.18,crowbar:0.08,bat:0.06,spear:0.12,whip:0.15,chainsaw:0.02,stungun:0.05,shield:0.04};
+const WCRIT={kick:0.08,bow:0.15,knives:0.25,pistol:0.10,smg:0.04,scatter:0.03,nailer:0.06,bolt:0.20,ray:0.08,flamer:0,fists:0.05,cutter:0.18,crowbar:0.08,bat:0.06,spear:0.12,whip:0.15,chain:0.08,chainsaw:0.02,stungun:0.05,shield:0.04};
 const MAGS={pistol:[10,1.1],smg:[30,1.7],scatter:[4,2.2],nailer:[40,1.8],bolt:[1,1.4],ray:[8,1.6],flamer:[60,2.4]};
-const CHARGE=['bat','whip','spear','bow','crowbar'];
+const CHARGE=['bat','whip','spear','bow','crowbar','chain'];
 const COMBO_T=[[15,'frenzy','#ff7a5a'],[10,'momentum','#ffb050'],[5,'flow','#e8dcb0']];
 
 // Damage ranges (v0.99, batch 3 request 17). Every hit rolls its base damage within +-w of the listed value, with a gentle
@@ -47,7 +55,7 @@ const COMBO_T=[[15,'frenzy','#ff7a5a'],[10,'momentum','#ffb050'],[5,'flow','#e8d
 // (sling debris already rolls 1 to 5.5). The bow uses 'bowc' once drawn past a tap. Creature attacks use DMG_VAR_CREATURE.
 const DMG_CHAR={steady:{w:0.1,name:'steady'},reliable:{w:0.2,name:'reliable'},swingy:{w:0.3,name:'swingy'},wild:{w:0.5,name:'wild'},none:{w:0,name:'variable'}};
 const DMG_VAR={stungun:'steady',pistol:'steady',bolt:'steady',chainsaw:'steady',flamer:'steady',ray:'steady',
-  smg:'reliable',nailer:'reliable',cutter:'reliable',crowbar:'reliable',spear:'reliable',whip:'reliable',kick:'reliable',bowc:'reliable',
+  smg:'reliable',nailer:'reliable',cutter:'reliable',crowbar:'reliable',spear:'reliable',whip:'reliable',chain:'reliable',kick:'reliable',bowc:'reliable',
   bat:'swingy',fists:'swingy',knives:'swingy',bow:'swingy',
   scatter:'wild',explosion:'wild',debris:'none'};
 const DMG_VAR_CREATURE=0.15;
