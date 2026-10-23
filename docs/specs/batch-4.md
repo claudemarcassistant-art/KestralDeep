@@ -1,5 +1,7 @@
 # Kestrel Deep - Batch 4 change requests
 
+> **Moved, v1.14.7:** a Session 4 (Request 24, the chain, and Request 25, the cable whip's perfect release) was planned for this batch after Session 3 shipped. It never reached this file and now lives in **Batch 6, Session 2** (`docs/specs/batch-6.md`). This batch is finished as it stands (v1.04 to v1.06).
+
 Status: OPEN (collecting and refining; Batch 3 not yet sent)
 
 Save this file in the repository as `docs/specs/batch-4.md` when the batch is sent.
