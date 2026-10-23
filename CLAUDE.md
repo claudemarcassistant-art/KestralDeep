@@ -2,7 +2,7 @@
 
 A top-down survival roguelike that runs in the browser. Survey station Kestrel went quiet 41 days ago; the player rides a lift down through its decks, scavenging, crafting and fighting, to find out why. One life per run.
 
-Current version: **v1.17.1**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
+Current version: **v1.17.2**. The game was built iteratively in claude.ai chats up to v0.78 and moved to this repository then.
 
 ## Current state of the code
 
@@ -141,6 +141,8 @@ Current version: **v1.17.1**. The game was built iteratively in claude.ai chats 
 **Deck report reward (owner's request, v1.13.2):** `drawReport()` (04-state.js) draws the reward from just right of the grade letter (`gx`, measured in the 16px font) and wraps it with `wrapLines()` (38-inspect.js) to the panel's right edge; every line past two (`gExtra`, 9 px each) moves Run total, waves drawn and the panel's bottom down.
 
 **Wall corners (owner's request, v1.13.1):** light rays mark tiles `seen` as they pass (`castRay(...,true)` in `render()`), but an inside corner tile only touches the floor at one point, so rays almost never entered it and it stayed black between two lit walls. `revealCorners(x,y,r)` (23-vision.js) runs after the player's light rays each frame over the tiles within 300 px and marks an unseen non-floor tile seen when at least two of its four straight neighbours are seen walls and one diagonal neighbour is seen floor (never `kind` 3); rock behind walls and the walls of dark rooms stay hidden. Measured: inside corners of rooms on three test decks all seen (none before); busy Large deck unchanged.
+
+**Wall fixtures from the front (owner's request, v1.17.2):** cabinets, terminals, freezers, lockers, salvagers, hack panels, vending machines and the rest of the wall-mounted things live on a wall tile with open floor south of it. `wallFaceOK(tx,ty)` (22-actions.js) makes `findInteract()` offer them only when the player is out past that face (south when the floor below is open, otherwise any open side), so nothing is used through a thin wall or the free-standing cabinet rows in the arcade. The lift cab doors are exempt (you open them from inside the cab). Drawing: `proudY()` / `proudFoot()` (50-object-art.js) draw wall fixtures (`f.wall`), panels and vending machines 2 px lower than their tile with a thin contact shadow, so they stand just proud of the wall. Measured over 12 test decks: 90 of 90 reachable from the front, 0 of 6 from a floor tile behind (8 of 8 before).
 
 **Lifts use R (owner's decision, v0.89):** standing on `exitT` no longer does anything. `exitLiftAt()` (22-actions.js) returns `{k:'liftgo'|'liftshut'|'lift'|'testlift'|'arcexit'|'freight'}` while `onPad(c)` holds (the player's tile is in the 3x3 pad centred on `exitT` or `freightT`, v0.90), and `findInteract()` returns it before anything else, so the lift always wins R; `onPress()` also checks it before `activeReloadPress()`, so R at the lift never fumbles a reload. `liftgo` calls `finishLevel()`, `liftshut` says why (`liftShutMsg()`), `testlift` opens the test lift's deck builder, `arcexit` leaves the arcade. `freight` (v0.90; the freight lift no longer drops on contact) sets `pendingSkip` and calls `finishLevel()`. Both pads are drawn by `drawLiftPad()` (36-backtrack.js, called in `render()` before the lift graphic, with the state outline around the whole pad). To keep R unambiguous, `clearLiftArea()` (36-backtrack.js) runs at the end of `enterLevel()` and moves hack panels, vending machines, chests, fixtures, levers and hatches out of a ring of 2 tiles around each pad centre (`nearLift()`, `padDist()`), to the nearest spot at least 3 tiles away (a panel with nowhere to go is dropped). Before this ~9% of decks (mostly arenas) had a panel, chest or breaker beside the lift; after, 0 of 150, and everything stays usable from a spot more than 16 px from the lift.
 
@@ -372,6 +374,8 @@ To find anything else: `grep -n "function name(" src/game/*.js` or `grep -n "con
 - `player.floating` is recalculated every frame from the movement keys, so setting it in a test does nothing; test `weightAt()` directly.
 
 ## Ideas on the list (not yet started)
+
+- **Damage types (owner, v1.17.1; to be designed with the planning agent):** a real system of damage types (for example blunt, sharp, fire, electric) with resistances per creature. Today there is no such system: damage differs only by variance class (`DMG_VAR`), whether it can crit or glance (`hitRoll()` vs `dmgVar()` vs fixed), melee-only bonuses (`asMelee()`: frozen x1.6, combo, ambush), status build-up (burn, cold, shock, poison, nerve gas, stun) and target rules (snail shells and ET `armor`, kit armour `e.dr`, the armoured trait, ghosts only hurt by the ray gun and anomalies, barrels hurt by blows but not pushes).
 
 - A short tutorial deck or contextual first-run tips.
 - A sound pass: ambient deck hum per biome, better hit and reload sounds, maybe light music.

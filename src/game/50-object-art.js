@@ -147,10 +147,15 @@ function fixArt(f,x,y){const fn=FIX_ART[f.kind];return fn?fn(f,x,y):false;}
 // toward the floor over their body ([x, y, w, h] of the body within the tile)
 const FIX_SHADE={stasis:[1,-2,10,13],damper:[1,-1,10,12],shelf:[1,-1,10,12],bookshelf:[2,-2,8,13],cot:[0,3,12,7],closet:[1,1,10,10],washbasin:[2,2,8,10],planter:[2,4,8,6],
   table:[1,3,10,6],counter:[0,2,12,8],bucket:[3,4,6,6],bench:[1,2,10,6],booth:[1,1,10,10],toilet:[3,4,6,6],sink:[2,2,8,6],fountain:[3,6,6,3]};
-function drawFixture(f){const x=f.tx*TS-camX,y=f.ty*TS-camY;if(x<-14||y<-14||x>W+14||y>H+14)return;
+// wall-mounted things sit on the wall, not in it (v1.17.2): proudY() is how far they are drawn out over the floor
+// below (2 px, when the tile is a wall with open floor south of it), and proudFoot() is their thin contact shadow
+function proudY(tx,ty){return solid(tx,ty)&&!solid(tx,ty+1)?2:0;}
+function proudFoot(x,y){shadow(ctx,x+6,y+TS+1.5,5.6,1.4,.45);}
+function drawFixture(f){const x=f.tx*TS-camX,y0=f.ty*TS-camY;if(x<-14||y0<-14||x>W+14||y0>H+14)return;const o=f.wall?proudY(f.tx,f.ty):0,y=y0+o;
+  if(o)proudFoot(x,y0);
   if(FIX_ART[f.kind]){olDraw(olFixKey(f),ART_OLC[f.kind],x-2,y-8,16,24,()=>fixArt(f,x,y));return;}
   const sh=FIX_SHADE[f.kind];if(sh)shadow(ctx,x+sh[0]+sh[2]/2,y+sh[1]+sh[3]+.5,sh[2]/2+.5,1.3,.35);
-  drawFixture0(f);
+  if(o){ctx.save();ctx.translate(0,o);}drawFixture0(f);if(o)ctx.restore();
   if(sh)vshade(ctx,x+sh[0],y+sh[1],sh[2],sh[3],0,.22);}
 // outline cache keys: one per drawn shape (null = the shape keeps changing, so the ring is rebuilt every frame)
 function olFixKey(f){return f.kind==='grinder'?(f.spinT>0?null:'grinder'):f.kind==='locker'?'locker'+(f.used?1:0):f.kind==='toolbench'?'tb'+(f.part?1:0):f.kind;}

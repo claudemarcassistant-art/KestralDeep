@@ -47,7 +47,7 @@ function render(){
     if(flot[i])drawFlotsam(tx,ty);if(slime[i])drawSlime(tx,ty,slime[i],slimeK[i]);}
   drawTraps();drawToxicVents();drawCrawls();drawPlateDoors();drawIncense();drawArchive();drawCams();
   for(const pn of panels){if(!seen[pn.ty*MW+pn.tx])continue;const x=pn.tx*TS-camX,y=pn.ty*TS-camY;if(x<-14||y<-14||x>W+2||y>H+2)continue;
-    olDraw('panel',ART_OLC.panel,x,y,12,12,()=>panelArt(pn,x,y));}
+    const o=proudY(pn.tx,pn.ty);if(o)proudFoot(x,y);olDraw('panel',ART_OLC.panel,x,y+o,12,12,()=>panelArt(pn,x,y+o));}
   for(let ty=ty0;ty<=ty1;ty++)for(let tx=tx0;tx<=tx1;tx++){if(tx<0||ty<0||tx>=MW||ty>=MH||!seen[ty*MW+tx])continue;const hh=hz[ty*MW+tx];
     if(hh===1&&!hazOff){drawFireTile(tx,ty);}
     else if(hh===2&&Math.random()<0.03)parts.push({x:tx*TS+2+rnd(8),y:ty*TS+2+rnd(8),vx:0,vy:-6,t:0.6,m:0.6,c:'#b8e060',s:1});}
@@ -71,7 +71,7 @@ function render(){
     else{ctx.strokeStyle='rgba(190,225,255,0.9)';ctx.lineWidth=1;for(let k=0;k<2;k++){ctx.beginPath();let px=x+6,py=y+6;ctx.moveTo(px,py);for(let j=0;j<5;j++){px+=rr(-7,7);py+=rr(-7,7);ctx.lineTo(px,py);}ctx.stroke();}
       if(c.zone)for(const i of c.zone){if(!seen[i]||Math.random()<0.6)continue;F(Math.random()<.5?'#e0f0ff':'#6fa8ff',(i%MW)*TS-camX+rnd(TS),((i/MW)|0)*TS-camY+rnd(TS),1,1);}}}
   for(const b of barrels)if(!b.dead&&seen[b.ty*MW+b.tx])drawBarrel(b);
-  for(const v of vendors){if(!seen[v.ty*MW+v.tx])continue;const x=v.tx*TS-camX,y=v.ty*TS-camY;if(x<-16||y<-16||x>W+16||y>H+16)continue;drawVendor(v,x,y);}
+  for(const v of vendors){if(!seen[v.ty*MW+v.tx])continue;const x=v.tx*TS-camX,y=v.ty*TS-camY;if(x<-16||y<-16||x>W+16||y>H+16)continue;const o=proudY(v.tx,v.ty);if(o)proudFoot(x,y);drawVendor(v,x,y+o);}
   for(const lb of testLabels)if(seen[Math.floor(lb.y)*MW+Math.floor(lb.x)])txt(lb.s,Math.round(lb.x*TS-camX+(lb.c?0:0)),Math.round(lb.y*TS-camY),'#5d6a66',lb.c?'center':'left',lb.sz||8);
   const ex=exitT.x*TS-camX,ey=exitT.y*TS-camY,exSeen=seen[exitT.y*MW+exitT.x];
   drawLiftPad(exitT.x,exitT.y);if(freightT)drawLiftPad(freightT.x,freightT.y);

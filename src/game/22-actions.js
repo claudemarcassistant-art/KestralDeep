@@ -192,23 +192,28 @@ function exitLiftAt(){const p=player;if(!exitT||state!=='play'||!p)return null;
   if(testMode&&!testDeck&&!arcadeMode)return {k:'testlift',x:cx,y:cy};if(arcadeMode)return {k:'arcexit',x:cx,y:cy};
   if(liftState==='idle')return {k:'lift',x:cx,y:cy};return {k:liftState==='open'||liftState==='ready'?'liftgo':'liftshut',x:cx,y:cy};}
 function liftShutMsg(){return liftState==='arena'?'the lift is sealed until every creature here is dead ('+arenaFoes().length+' left)'+(arenaW&&!arenaW.done?'. more are still coming':''):liftState==='locked'?'the lift is locked out. find the lift keycard':'the lift is still on its way';}
+// things mounted on a wall tile (cabinets, terminals, panels, vending machines) are used from their open face only:
+// south when the floor below is open (how every wall fixture is placed), otherwise any open side. The player has to be
+// out past that face, so nothing can be reached through or over the wall from behind (owner's request, v1.17.2).
+function wallFaceOK(tx,ty){if(!solid(tx,ty))return true;const p=player,cx=tx*TS+6,cy=ty*TS+6,F=solid(tx,ty+1)?[[0,-1],[1,0],[-1,0]]:[[0,1]];
+  for(const [dx,dy] of F){if(solid(tx+dx,ty+dy))continue;if((p.x-cx)*dx+(p.y-cy)*dy>=TS/2)return true;}return false;}
 function findInteract(){
   const p=player;let best=null,bd=18;
   {const ex=exitLiftAt();if(ex)return ex;}
   {const r=pdReleaseAt(p);if(r&&r.d<bd){bd=r.d;best=r;}}
   {const h=crawlAt();if(h){const c=h.c[h.end],cx=c.tx*TS+6,cy=c.ty*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<bd){bd=d;best={k:'crawl',h,x:cx,y:cy};}}}
-  if(testMode&&testConsole){const cx=testConsole.tx*TS+6,cy=testConsole.ty*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<bd){bd=d;best={k:'console',x:cx,y:cy};}}
+  if(testMode&&testConsole&&wallFaceOK(testConsole.tx,testConsole.ty)){const cx=testConsole.tx*TS+6,cy=testConsole.ty*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<bd){bd=d;best={k:'console',x:cx,y:cy};}}
   for(const h of hatches){let cx=h.tx*TS+6,cy=h.ty*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<Math.min(bd,12)){bd=d;best={k:'hatch',h,x:cx,y:cy};}
     cx=h.lx*TS+6;cy=h.ly*TS+6;d=Math.hypot(cx-p.x,cy-p.y);if(d<Math.min(bd,13)){bd=d;best={k:'ladder',h,x:cx,y:cy};}}
   for(const l of levers){if(l.used)continue;const cx=l.tx*TS+6,cy=l.ty*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<bd){bd=d;best={k:'lever',l,x:cx,y:cy};}}
   for(const c of chests){if(c.opened||(c.caged&&!c.caged.open))continue;const d=Math.hypot(c.x-p.x,c.y-p.y);if(d<bd){bd=d;best={k:'chest',c,x:c.x,y:c.y};}}
-  for(const v of vendors){const cx=v.tx*TS+6,cy=v.ty*TS+8,d=Math.hypot(cx-p.x,cy-p.y);if(d<bd){bd=d;best={k:'vend',v,x:cx,y:cy};}}
-  for(const pn of panels){if(!pn.hack||pn.state!=='idle')continue;const cx=pn.tx*TS+6,cy=pn.ty*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<bd){bd=d;best={k:'panel',pn,x:cx,y:cy};}}
+  for(const v of vendors){if(!wallFaceOK(v.tx,v.ty))continue;const cx=v.tx*TS+6,cy=v.ty*TS+8,d=Math.hypot(cx-p.x,cy-p.y);if(d<bd){bd=d;best={k:'vend',v,x:cx,y:cy};}}
+  for(const pn of panels){if(!pn.hack||pn.state!=='idle'||!wallFaceOK(pn.tx,pn.ty))continue;const cx=pn.tx*TS+6,cy=pn.ty*TS+6,d=Math.hypot(cx-p.x,cy-p.y);if(d<bd){bd=d;best={k:'panel',pn,x:cx,y:cy};}}
   const tx=Math.floor(p.x/TS),ty=Math.floor(p.y/TS);
   for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=MW||y>=MH)continue;
     if(map[y*MW+x]===2){const cx=x*TS+TS/2,cy=y*TS+TS/2,d=Math.hypot(cx-p.x,cy-p.y);if(d<bd){bd=d;best={k:'door',tx:x,ty:y,x:cx,y:cy};}}
     const md=modDoors.get(y*MW+x);if(md&&!md.broken){const cx=x*TS+TS/2,cy=y*TS+TS/2,d=Math.hypot(cx-p.x,cy-p.y);if(d<bd&&!(Math.floor(p.x/TS)===x&&Math.floor(p.y/TS)===y)){bd=d;best={k:'mdoor',tx:x,ty:y,x:cx,y:cy,md};}}}
-  for(const f of fixtures){if(!(f.kind==='fountain'||f.kind==='closet'||f.kind==='stasis'&&!f.used||f.kind==='breaker'||f.kind==='liftdoor'||f.kind==='npc'||f.kind==='camera'||f.kind==='freezer'&&!f.used||f.kind==='locker'&&!f.used||f.kind==='medstation'&&!f.used||f.kind==='arcade'||f.kind==='dispenser'||f.kind==='grinder'||f.kind==='damper'||f.kind==='psychic'))continue;const cx=f.tx*TS+6,cy=f.ty*TS+(f.wall?8:6),d=Math.hypot(cx-p.x,cy-p.y)-(f.kind==='liftdoor'?14:0);if(d<bd){bd=d;best={k:'fix',f,x:cx,y:cy};}}
+  for(const f of fixtures){if(!(f.kind==='fountain'||f.kind==='closet'||f.kind==='stasis'&&!f.used||f.kind==='breaker'||f.kind==='liftdoor'||f.kind==='npc'||f.kind==='camera'||f.kind==='freezer'&&!f.used||f.kind==='locker'&&!f.used||f.kind==='medstation'&&!f.used||f.kind==='arcade'||f.kind==='dispenser'||f.kind==='grinder'||f.kind==='damper'||f.kind==='psychic')||f.kind!=='liftdoor'&&!wallFaceOK(f.tx,f.ty))continue;const cx=f.tx*TS+6,cy=f.ty*TS+(f.wall?8:6),d=Math.hypot(cx-p.x,cy-p.y)-(f.kind==='liftdoor'?14:0);if(d<bd){bd=d;best={k:'fix',f,x:cx,y:cy};}}
   return best;
 }
 function interact(){
