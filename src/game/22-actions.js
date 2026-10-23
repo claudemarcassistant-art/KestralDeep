@@ -65,7 +65,7 @@ function shove0(){
         damageEnemy(e,m.dmg*dmgVar('shove')*(amb?(perk('ambusher')?4:3):1),dx,dy,e.type==='brute'?m.kb*0.35:m.kb);e.cd=Math.max(e.cd,amb?1.2:0.6);}}}
   if(cloaked)breakCloak();
   for(const c of cores){if(c.dead)continue;const dx=c.x-player.x,dy=c.y-player.y;if(Math.hypot(dx,dy)<m.range+6&&Math.abs(angDiff(Math.atan2(dy,dx),player.ang))<m.arc)hitCore(c,m.dmg*2);}
-  for(const bb of barrels){if(bb.dead)continue;const dx=bb.x-player.x,dy=bb.y-player.y;if(Math.hypot(dx,dy)<m.range+4&&Math.abs(angDiff(Math.atan2(dy,dx),player.ang))<m.arc)hitBarrel(bb,m.dmg,dx,dy,m.kb*0.9);}
+  for(const bb of barrels){if(bb.dead)continue;const dx=bb.x-player.x,dy=bb.y-player.y;if(Math.hypot(dx,dy)<m.range+4&&Math.abs(angDiff(Math.atan2(dy,dx),player.ang))<m.arc)nudgeBarrel(bb,dx,dy,m.kb*0.9);}
   const ca=Math.cos(player.ang),sa=Math.sin(player.ang);
   for(let s=4;s<=m.range;s+=3){const tx=Math.floor((player.x+ca*s)/TS),ty=Math.floor((player.y+sa*s)/TS);
     if(solid(tx,ty)){if(map[ty*MW+tx]===3)damageSecret(tx,ty,m.dmg*2);else sfx('thud');break;}}

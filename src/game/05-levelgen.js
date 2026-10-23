@@ -105,6 +105,9 @@ function setDeckSize(k){if(!DECK_SIZES[k])k='m';deckSize=k;const D=DECK_SIZES[k]
 function resetHidden(){secCams=[];crawls=[];crawlAsk=null;deckSecured=false;secureT=0;fadeFx=null;gasJets=[];archive=null;incense=[];plateDoors=[];traps=[];darts=[];trapJets=[];falls=[];rubbleL=[];rubble=new Uint8Array(MW*MH);furn=new Uint8Array(MW*MH);lamps=[];arrival=null;trips=[];secT=0;molten=new Uint8Array(MW*MH);chasm=new Uint8Array(MW*MH);webs=new Uint8Array(MW*MH);ice=new Uint8Array(MW*MH);fans=[];plants=[];mists=[];sprinkT=0;sprWait=rr(25,45);freightT=null;pendingSkip=0;modules=[];fixtures=[];modDoors=new Map();flot=new Uint8Array(MW*MH);slime=new Uint8Array(MW*MH);oil=new Uint8Array(MW*MH);oilIgnite=[];slimeK=new Uint8Array(MW*MH);ventRooms=[];hatchRooms=[];hatches=[];levers=[];cages=[];openVent=new Uint8Array(MW*MH);cables=[];cableMap=new Map();barrels=[];risers=[];}
 function mkBarrel(tx,ty){return {tx,ty,x:tx*TS+6,y:ty*TS+6,vx:0,vy:0,hp:4,fuse:-1,dead:false,ph:Math.random()*6,roll:0};}
 function pushBarrel(b,dx,dy,f){if(!b||b.dead)return;const l=Math.hypot(dx,dy)||1;if(b.crate)f*=CRATE_CFG.push;b.vx+=dx/l*f;b.vy+=dy/l*f;}
+// a push that is not a blow (shove, tackle, repulse): moves the barrel or crate without damaging it, and for a moment
+// (safeT) its own crash into a wall or another barrel does no damage either, so shoving never sets a barrel off
+function nudgeBarrel(b,dx,dy,f){if(!b||b.dead)return;pushBarrel(b,dx,dy,f);b.safeT=T+1.5;sfx('thud');}
 function barrelWall(x,y){const tx=Math.floor(x/TS),ty=Math.floor(y/TS);if(tx<0||ty<0||tx>=MW||ty>=MH)return true;return map[ty*MW+tx]!==0;}
 function updateBarrels(dt){const R=4.5;
   for(const b of barrels){if(b.dead)continue;
@@ -113,7 +116,7 @@ function updateBarrels(dt){const R=4.5;
       if(barrelWall(nx+Math.sign(b.vx)*R,b.y)){b.vx*=-0.35;nx=b.x;hit=true;}
       if(barrelWall(b.x,ny+Math.sign(b.vy)*R)){b.vy*=-0.35;ny=b.y;hit=true;}
       b.x=nx;b.y=ny;b.roll+=sp*dt*0.4;
-      if(hit&&sp>150){sfx('thud');hitBarrel(b,1);}
+      if(hit&&sp>150){sfx('thud');if(!(b.safeT>T))hitBarrel(b,1);}
       for(const e of enemies){if(e.dead||sp<90)continue;const d=Math.hypot(e.x-b.x,e.y-b.y);if(d<e.r+R){damageEnemy(e,Math.min(6,sp/60),e.x-b.x,e.y-b.y,sp*0.6);b.vx*=0.4;b.vy*=0.4;}}
       const fr=Math.pow(ice[Math.floor(b.y/TS)*MW+Math.floor(b.x/TS)]||lowGrav()?0.5:b.crate?CRATE_CFG.fric:0.03,dt);b.vx*=fr;b.vy*=fr;}
     else{b.vx=0;b.vy=0;}
@@ -127,7 +130,7 @@ function updateBarrels(dt){const R=4.5;
       const ux=dx/d,uy=dy/d;if(!barrelWall(b.x+ux*(ov*0.7+R),b.y+uy*(ov*0.7+R))){b.x+=ux*ov*0.7;b.y+=uy*ov*0.7;}move(o,-ux*ov*0.3,-uy*ov*0.3);
       const ov2=Math.hypot(o.vx||0,o.vy||0),gm=lowGrav()?1.3:0.6;if(ov2>(lowGrav()?5:20)){const push=((o.vx||0)*ux+(o.vy||0)*uy);if(push>0){b.vx+=ux*push*gm;b.vy+=uy*push*gm;}}}}
   for(let i=0;i<barrels.length;i++){const a=barrels[i];if(a.dead)continue;for(let j=i+1;j<barrels.length;j++){const c=barrels[j];if(c.dead)continue;const dx=c.x-a.x,dy=c.y-a.y,d=Math.hypot(dx,dy)||0.01,ov=2*R-d;if(ov<=0)continue;
-    const ux=dx/d,uy=dy/d;a.x-=ux*ov/2;a.y-=uy*ov/2;c.x+=ux*ov/2;c.y+=uy*ov/2;const rv=(c.vx-a.vx)*ux+(c.vy-a.vy)*uy;if(rv<0){a.vx+=ux*rv*0.9;a.vy+=uy*rv*0.9;c.vx-=ux*rv*0.9;c.vy-=uy*rv*0.9;if(-rv>160){hitBarrel(a,1);hitBarrel(c,1);}}}}}
+    const ux=dx/d,uy=dy/d;a.x-=ux*ov/2;a.y-=uy*ov/2;c.x+=ux*ov/2;c.y+=uy*ov/2;const rv=(c.vx-a.vx)*ux+(c.vy-a.vy)*uy;if(rv<0){a.vx+=ux*rv*0.9;a.vy+=uy*rv*0.9;c.vx-=ux*rv*0.9;c.vy-=uy*rv*0.9;if(-rv>160&&!(a.safeT>T)&&!(c.safeT>T)){hitBarrel(a,1);hitBarrel(c,1);}}}}}
 function mkRiser(tx,ty,dir,cold){const R0=mkRiser0(tx,ty,dir);R0.cold=cold==null?Math.random()<(scen().coldRiser||0.25):cold;if(!R0.cold)R0.toxic=typeof cond!=='undefined'&&cond&&cond.haz==='toxic'?Math.random()<0.6:Math.random()<0.1;return R0;}
 let clouds=[];
 const CLOUD={steam:{col:'230,236,234',a:0.3},toxic:{col:'150,195,60',a:0.32},smoke:{col:'34,34,38',a:0.5},cryo:{col:'205,232,255',a:0.34},incense:{col:'205,210,200',a:0.16}};

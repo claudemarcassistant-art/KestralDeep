@@ -39,7 +39,7 @@ function repulse(){const P=player,R0=SPACE_STYLES.repulse;if(state!=='play'||pau
   if(P.grabbedBy)severTentacle(P.grabbedBy,'thrown off');
   const out=(x,y)=>{const dx=x-P.x,dy=y-P.y,d=Math.hypot(dx,dy)||1;return [dx/d,dy/d,d];};
   for(const e of enemies){if(e.dead||ET[e.type].ghost)continue;const [ux,uy,d]=out(e.x,e.y);if(d>R0.r+e.r)continue;damageEnemy(e,R0.dmg,ux,uy,(e.type==='brute'?200:360)*R0.kbMul);}
-  for(const bb of barrels){if(bb.dead)continue;const [ux,uy,d]=out(bb.x,bb.y);if(d<R0.r+4)pushBarrel(bb,ux,uy,380*R0.kbMul);}
+  for(const bb of barrels){if(bb.dead)continue;const [ux,uy,d]=out(bb.x,bb.y);if(d<R0.r+4)nudgeBarrel(bb,ux,uy,380*R0.kbMul);}
   for(const it of items){const [ux,uy,d]=out(it.x,it.y);if(d<R0.r&&d>1){it.kvx=ux*170;it.kvy=uy*170;}}
   for(const c of clouds){const [ux,uy,d]=out(c.x,c.y);if(d<R0.r+c.r){c.x+=ux*26;c.y+=uy*26;}}
   for(const pl of plants)if(!pl.burst&&Math.hypot(pl.x-P.x,pl.y-P.y)<R0.r)burstPlant(pl);
