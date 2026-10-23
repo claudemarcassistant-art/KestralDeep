@@ -11,7 +11,35 @@ function line(g,x1,y1,x2,y2,w,col){g.strokeStyle=col;g.lineWidth=w;g.lineCap='ro
 function pxl(g,x,y,col,s){s=s||1;g.fillStyle=col;g.fillRect(x-s/2,y-s/2,s,s);}
 // a colour given as an rgba() string is parsed on every fill (about ten times the cost of a hex colour in Chromium),
 // so translucent fills use a hex colour and globalAlpha instead
-function shadow(g,x,y,rx,ry,a){const A0=g.globalAlpha;g.globalAlpha=A0*(a==null?.35:a);ell(g,x,y,rx,ry,0,'#000');g.globalAlpha=A0;}
+// Contact shadow (batch 6, the study's shadow()): a dark core with a soft edge, alpha x1.75 (at most .78) over a
+// 1.18x larger ellipse, drawn from one cached gradient texture. shMode is set around a sprite by its caller
+// (drawCreature(), drawPlayerBody()): 0 normal, 1 none (wading, ghosts), 2 flying (lighter, smaller, further below),
+// 3 flying over water (a faint shadow on the surface, the study's shadowOnWater()).
+let shMode=0,shTexC=null;
+function shadowTex(){if(shTexC)return shTexC;const c=shTexC=document.createElement('canvas');c.width=c.height=32;const q=c.getContext('2d'),gr=q.createRadialGradient(16,16,0,16,16,16);
+  gr.addColorStop(0,'rgba(0,0,0,1)');gr.addColorStop(.62,'rgba(0,0,0,.8)');gr.addColorStop(1,'rgba(0,0,0,0)');q.fillStyle=gr;q.fillRect(0,0,32,32);return c;}
+function shadow(g,x,y,rx,ry,a){if(shMode===1)return;const A0=g.globalAlpha;let k=Math.min(.78,(a==null?.35:a)*1.75);
+  if(shMode===3){g.globalAlpha=A0*.3;ell(g,x,y+1,rx*.8,ry*.6,0,'#000a14');g.globalAlpha=A0;return;}
+  if(shMode===2){k*=.45;y+=2.5;rx*=.75;ry*=.75;}
+  rx*=1.18;ry*=1.18;const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=true;g.globalAlpha=A0*k;g.drawImage(shadowTex(),x-rx,y-ry,rx*2,ry*2);g.globalAlpha=A0;g.imageSmoothingEnabled=sm;}
+// Wading (batch 6, the study's wade() and waterline()): a walker in water of wading depth (liq 2-4) casts no floor
+// shadow; it is drawn into a small offscreen canvas, its own pixels below the waterline are tinted with the water
+// (source-atop, so the floor around it is never touched), and rings spread from it. fn draws with the global ctx in
+// screen coordinates; the caller's transform (hulking scale) still applies when the picture is copied back. Flyers
+// over water get the surface shadow instead. While an outline ring is being built (olPass) it just draws.
+const wdC=document.createElement('canvas'),wdG=wdC.getContext('2d');
+function wadeDraw(x,y,r,l,fly,ghost,fn){
+  if(ghost){const m=shMode;shMode=1;fn();shMode=m;return;}
+  if(fly){const m=shMode;shMode=l>=2?3:2;fn();shMode=m;return;}
+  if(l<2||olPass){if(l<2)return fn();const m=shMode;shMode=1;fn();shMode=m;return;}
+  const B=Math.ceil(Math.max(14,r*3+8)),S2=B*2;if(wdC.width<S2||wdC.height<S2){wdC.width=Math.max(wdC.width,S2);wdC.height=Math.max(wdC.height,S2);}
+  const x0=Math.round(x)-B,y0=Math.round(y)-B,g0=ctx,m=shMode;
+  wdG.setTransform(1,0,0,1,0,0);wdG.globalAlpha=1;wdG.globalCompositeOperation='source-over';wdG.clearRect(0,0,S2,S2);wdG.imageSmoothingEnabled=false;wdG.setTransform(1,0,0,1,-x0,-y0);
+  ctx=wdG;shMode=1;try{fn();}finally{ctx=g0;shMode=m;}
+  const wl=y+r*(l===2?.55:l===3?.1:-.45);wdG.globalCompositeOperation='source-atop';wdG.globalAlpha=l===4?.85:.66;wdG.fillStyle='#163e4e';wdG.fillRect(x0,wl,S2,y0+S2-wl);wdG.globalAlpha=1;wdG.globalCompositeOperation='source-over';
+  g0.drawImage(wdC,0,0,S2,S2,x0,y0,S2,S2);
+  const t=T+x*.013,A0=g0.globalAlpha;g0.strokeStyle='#aad7e1';g0.lineWidth=.6;g0.globalAlpha=A0*.55;g0.beginPath();g0.ellipse(x,wl,r*1.05+.5,r*.45+.3,0,0,Math.PI);g0.stroke();
+  for(let k=0;k<2;k++){const q=(t*.6+k*.5)%1;g0.globalAlpha=A0*.4*(1-q);g0.beginPath();g0.ellipse(x,wl+r*.05,r*(1.1+q*1.4)+.5,r*(.45+q*.55)+.3,0,0,TAU);g0.stroke();}g0.globalAlpha=A0;}
 function pxlA(g,x,y,col,a,s){const A0=g.globalAlpha;g.globalAlpha=A0*a;pxl(g,x,y,col,s);g.globalAlpha=A0;}
 // a fixed dab layout per key, made once and reused
 const DAB={};
@@ -63,11 +91,13 @@ function person(g,x,y,a,t,L,c,o){
   if(c.tails){const sw=Math.sin(t*2.6)*.7+(walk?Math.sin(w)*.6:0);g.fillStyle=c.tails;g.beginPath();g.moveTo(-.8,-3.4);g.quadraticCurveTo(-4.8,-2.8+sw*.4,-6.3,sw);g.quadraticCurveTo(-4.8,2.8+sw*.4,-.8,3.4);g.closePath();g.fill();}
   if(c.pack){ell(g,-2.7,0,1.7,2.7,0,c.pack);ell(g,-2.7+lx*.5,ly*.6,1,1.8,0,c.packHi);}
   // hands
-  let hR,hL,sw=0;
+  // a free hand swings against the steps (right hand forward with the left foot); o.hands entries that are null
+  // are free hands, so a person holding something in one hand swings only the other
+  let hR,hL,sw=0;const ka=walk?Math.sin(w):Math.sin(t*1.4)*.15,rR=[1+ka*1.6,3.9],rL=[1-ka*1.6,-3.9];
   if(o.arms==='aim'){hR=[4.7,1.0];hL=[3.9,-.5];}
   else if(o.arms==='swing'){const k=o.swingK!=null?o.swingK:(t%.9)/.9;sw=k<.3?-1.4+k/.3*2.8:1.4-(k-.3)/.7*2.8;hR=[Math.cos(sw)*4.3+.4,Math.sin(sw)*4.3+.8];hL=[1.3,-3.7];}
-  else{const k=walk?Math.sin(w):Math.sin(t*1.4)*.15;hR=[1-k*1.6,3.9];hL=[1+k*1.6,-3.9];}
-  if(o.hands){hR=o.hands[0]||hR;hL=o.hands[1]||hL;}
+  else{hR=rR;hL=rL;}
+  if(o.hands){hR=o.hands[0]||rR;hL=o.hands[1]||rL;}
   if(o.arms==='aim'&&!o.noGun){line(g,3.0,.25,9.4,.25,1.6,'#121514');pxl(g,9.4,.25,'#3a403c',1);}
   // torso
   ell(g,0,0,2.75,4.35,0,c.dark);ell(g,0,0,2.35,3.95,0,c.suit);

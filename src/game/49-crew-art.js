@@ -43,18 +43,22 @@ function drawCrew(f,x,y){const id=f.kind==='psychic'?'gambler':f.npc,cfg=CREW_CF
   return true;}
 
 // ---------- guards ----------
-// the body faces where the guard walks (or where it looks while standing); the head turns to e.look, which is what the
-// sight cone in drawActWorld() follows. Gun kits are drawn by drawKit() (noGun); an unarmed old-style guard keeps the
-// study's sidearm. The flashlight is a lit dot at the leading hand, drawn again after the dark by drawEmissives().
+// the whole body faces the guard's look direction (batch 6): guardTurn() (called from the guard branch of the enemy
+// loop) turns e._bd toward e.look, smoothed, and the sight cone (inCone() in 24-update.js, the cone in drawActWorld())
+// and the flashlight point straight ahead from e._bd, so the cone never leads the body. The head stays square to the
+// shoulders. Gun kits are drawn in the hand through person()'s wpn hook; an unarmed old-style guard keeps the study's
+// sidearm. The flashlight is a lit dot at the leading hand, drawn again after the dark by drawEmissives().
 const guardTint={};
 function guardCfg(e,riot){const k=(riot?'r':'g')+(e.flash>0?'f':'');if(!guardTint[k]){const c=Object.assign({},riot?PEOPLE.riot:PEOPLE.guard);if(e.flash>0)Object.assign(c,{suit:'#d8dce4',hi:'#ffffff',head:'#c8ccd4'});guardTint[k]=c;}return guardTint[k];}
-function guardBodyDir(e){const look=e.look||0;if(e._bd==null)e._bd=look;if(olPass)return e._bd;let target=look;
-  if((e._mv||0)>0.12&&e._px!=null){const dx=e.x-e._px,dy=e.y-e._py;if(dx*dx+dy*dy>0.0004)target=Math.atan2(dy,dx);}e._px=e.x;e._py=e.y;
-  let d=target-e._bd;while(d>Math.PI)d-=TAU;while(d<-Math.PI)d+=TAU;e._bd+=d*0.18;return e._bd;}
-function drawGuardBody(e,x,y,t,L){const b=ET[e.type],body=guardBodyDir(e);let head=(e.look||0)-body;while(head>Math.PI)head-=TAU;while(head<-Math.PI)head+=TAU;head=Math.max(-1.3,Math.min(1.3,head));
+function guardTurn(e,dt){const look=e.look||0;if(e._bd==null){e._bd=look;return;}let d=look-e._bd;while(d>Math.PI)d-=TAU;while(d<-Math.PI)d+=TAU;e._bd+=d*(1-Math.exp(-12*dt));}
+function guardBodyDir(e){if(e._bd==null)e._bd=e.look||0;return e._bd;}
+function drawGuardBody(e,x,y,t,L){const b=ET[e.type],body=guardBodyDir(e),head=0;
   const k=e.kit,gun=!k||k.gun,melee=k&&!k.gun&&!e.dry;
   const fn=k&&ARM_ART[k.main],down=e.reloadT>0||e.dry,wpn=fn?g=>{g.save();if(k.gun){if(down){g.translate(1.6,3.4);g.rotate(.5);}else g.translate(4,.4);}else{const sw=e.swingT>0?-.6:.55;g.translate(3.8,2.6);g.rotate(sw);}fn(g,kitArmState(e));g.restore();}:null;
-  person(ctx,x,y,body,t,L,guardCfg(e,b.riot),{arms:gun&&!(e.reloadT>0)?'aim':'rest',walk:(e._mv||0)>0.12,head,noGun:!!k,wpn,hands:melee?[[3.8,2.6],null]:k&&k.gun&&down?[[1.6,3.6],null]:null,
+  const walk=(e._mv||0)>0.12;if(!olPass)e._gs=(e._gs||0)+(e._mv||0)*.55;
+  // a pistol (or the old sidearm) is carried in the right hand while walking, so the left arm swings
+  const one=walk&&gun&&!down&&(!k||k.main==='pistol');
+  person(ctx,x,y,body,t,L,guardCfg(e,b.riot),{arms:gun&&!(e.reloadT>0)?'aim':'rest',walk,step:e._gs,head,noGun:!!k,wpn,hands:melee?[[3.8,2.6],null]:k&&k.gun&&down?[[1.6,3.6],null]:one?[[4.6,.9],null]:null,
     over(g){if(!b.riot&&gun){const A0=g.globalAlpha;g.globalAlpha=A0*.8;pxl(g,4.4,-.6,'#fff0c8',.9);g.globalAlpha=A0;}}});}
 
 // ---------- anomalies ----------

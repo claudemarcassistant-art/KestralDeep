@@ -87,8 +87,8 @@ src/
     42-gas.js               tear gas and nerve gas: player and creature effects, riot guard and riot drone canisters, V-look
     45-traits.js            creature traits: rolling, effects hooks, volatile bursts, marks, bestiary memory, console presets
     46-stattips.js          Stats tab: core and substat links, tooltips with sources, keyboard selection
-    47-sprites.js           art pass toolkit (ell, line, dabs, paint, person, HATS, glow, vshade, spriteLight) and the player's pose
-    48-creature-art.js      painted creatures: drawEnemy(), the study's creatures (CART), emissive parts after the darkness
+    47-sprites.js           art pass toolkit (ell, line, dabs, paint, shadow, wadeDraw, person, HATS, glow, vshade, spriteLight) and the player's pose
+    48-creature-art.js      painted creatures: drawEnemy(), drawCreature() (shadow and wading rules), the study's creatures (CART), emissive parts after the darkness
     49-crew-art.js          crew fixtures with props and idle activities, guard and riot guard bodies, anomalies (unstable and crackling)
     50-object-art.js        items (drawItem(), category pools, shine) and interactables (FIX_ART, barrels, chests, panels, vending, levers, hatches, fans)
     51-outlines.js          the Sprite outlines option: olDraw(), ring building and caching

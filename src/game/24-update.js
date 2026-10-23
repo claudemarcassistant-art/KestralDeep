@@ -200,9 +200,9 @@ function updatePlay(dt){
         if(e.cd<=0&&d<95&&seesPlayer(e)&&!enemies.some(o=>o!==e&&o.st==='wind'&&ET[o.type].wasp&&Math.hypot(o.x-e.x,o.y-e.y)<40)){e.cd=b.atk*rr(0.9,1.5);e.st='wind';e.wt=0.35;sfx('buzz');}}
       else{e.wan=(e.wan||0)-dt;if(e.wan<=0){e.wan=rr(0.6,1.4);e.wa=Math.random()*6.283;}move(e,Math.cos(e.wa)*b.spd*0.3*dt,Math.sin(e.wa)*b.spd*0.3*dt);}
       continue;}
-    if(b.guard){const ff=Math.pow(kbFr(),dt);move(e,e.vx*dt,e.vy*dt);e.vx*=ff;e.vy*=ff;e.cd=(e.cd==null?1:e.cd)-dt;e.walk=(e.walk||0);if(e.look==null)e.look=Math.random()*6.283;
+    if(b.guard){const ff=Math.pow(kbFr(),dt);move(e,e.vx*dt,e.vy*dt);e.vx*=ff;e.vy*=ff;e.cd=(e.cd==null?1:e.cd)-dt;e.walk=(e.walk||0);if(e.look==null)e.look=Math.random()*6.283;guardTurn(e,dt);
       if(kitPre(e,b,dt,d))continue;
-      const inCone=(tx,ty,range)=>{const ddx=tx-e.x,ddy=ty-e.y,dd=Math.hypot(ddx,ddy);if(dd>range)return false;let da=Math.atan2(ddy,ddx)-e.look;da=Math.atan2(Math.sin(da),Math.cos(da));return (Math.abs(da)<0.55||dd<22)&&hasLOS(e.x,e.y,tx,ty);};
+      const inCone=(tx,ty,range)=>{const ddx=tx-e.x,ddy=ty-e.y,dd=Math.hypot(ddx,ddy);if(dd>range)return false;let da=Math.atan2(ddy,ddx)-e._bd;da=Math.atan2(Math.sin(da),Math.cos(da));return (Math.abs(da)<0.55||dd<22)&&hasLOS(e.x,e.y,tx,ty);};
       const seeP=!(p.cloakT>0)&&(e.alert?d<190*sightMul(e)&&seesPlayer(e):inCone(p.x,p.y,150*sightMul(e))&&!smokeBlocks(e.x,e.y,p.x,p.y,masked(e),hasTr(e,'keen')));if(seeP)e.alert=true;
       let tgt=null;if(seeP)tgt=p;else{let bd=150;for(const o of enemies){if(o===e||o.dead)continue;const ob=ET[o.type];if(ob.guard||ob.dummy||ob.ghost||ob.plant)continue;const od=Math.hypot(o.x-e.x,o.y-e.y);if(od<bd&&inCone(o.x,o.y,150)){bd=od;tgt=o;}}if(!tgt&&e.foeC&&!e.foeC.dead&&hasLOS(e.x,e.y,e.foeC.x,e.foeC.y))tgt=e.foeC;}
       if(tgt&&tgt!==p)e.foeC=tgt;

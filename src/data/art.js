@@ -51,7 +51,7 @@ const ART_PAL={
   FLASH:['#bdb8ac','#d8d4c8','#ece8dc','#ffffff']
 };
 // dab counts: kept low enough that a busy Large deck holds 60 fps (Batch 5 session 2); cut these first if it slows
-const ART_DABS={husk:48,huskH:14,crawler:34,spitter:56,brute:90,bruteH:14,frog:50,wasp:26,waspT:12,slug:44,spider:34,spiderH:14,snakeH:16,charger:60,chargerH:16,lurker:40,grasper:56,plant:30,pod:20,drone:16,shell:22,warden:110,generic:40};
+const ART_DABS={husk:48,huskH:14,crawler:34,spitter:56,brute:90,bruteH:14,frog:50,wasp:26,waspT:12,slug:44,slugSeg:22,spider:34,spiderH:14,snakeH:16,charger:60,chargerH:16,lurker:40,grasper:56,plant:30,pod:20,drone:16,shell:22,warden:110,generic:40};
 // item categories (Batch 5 session 4): the soft pool under every item on the floor and its outline colour.
 // rgb is for the pool, ol for the optional outline. ITEM_CAT_OF maps an item type to its category (gear otherwise).
 const ITEM_CAT={ammo:{rgb:'217,164,65',ol:'#d9a441',name:'ammo'},material:{rgb:'143,182,208',ol:'#8fb6d0',name:'materials'},

@@ -20,12 +20,16 @@ function artPrep(e){if(e._to==null)e._to=((e.x*7.31+e.y*3.17)%10+10)%10;if(olPas
 const spitSwell=e=>{const m=(ET.spitter.atk||2)*1.2;return 1-Math.max(0,Math.min(1,(e.cd||0)/m));};
 
 // ---------- the study's creatures, as in its NEW object (pal() picks the flash tones) ----------
+const SLUG_SEG=[[-2.6,2.5,2.4],[-.2,2.9,2.8],[2.3,2.4,2.5]];
 const CART={
-  husk(g,x,y,a,t,L){const sw=Math.sin(t*1.8)*.7;shadow(g,x+.4,y+2.4,4.6,2.6);
-    g.save();g.translate(x,y);const aa=a+Math.sin(t*.9)*.15;g.rotate(aa);const Lr=L-aa;
-    ell(g,-2.9,-1.6,1.4,.9,0,'#1c1f19');ell(g,1+Math.max(0,Math.sin(t*1.8))*1.6,1.8,1.4,.9,0,'#1c1f19');
-    const r1=Math.sin(t*1.8)*.7,P=AP('husk');line(g,.3,-3,4.6+r1,-2.3,1.3,P[1]);line(g,.3,3,4.1-r1,2.1,1.3,P[1]);
-    ell(g,4.6+r1,-2.3,.8,.8,0,P[3]);ell(g,4.1-r1,2.1,.8,.8,0,P[3]);
+  // the study's shuffle (batch 6): w is the step phase, driven by the distance moved (a standing husk is still); one
+  // foot steps, the other drags behind; the reaching arms swing against the feet, stiff and a beat late. An armed
+  // husk (drawKit()) keeps its weapon hand on the grip.
+  husk(g,x,y,a,t,L,w,armed){w=w||0;const st=Math.sin(w),sw=st*.7;shadow(g,x+.4,y+2.4,4.6,2.6);
+    g.save();g.translate(x,y);const aa=a+st*.12;g.rotate(aa);const Lr=L-aa;
+    ell(g,.4+st*1.8,-1.7,1.4,.9,0,'#1c1f19');ell(g,-.6-st*1.1,1.8,1.4,.9,0,'#1c1f19');
+    const k=Math.sin(w-.5),P=AP('husk'),hR=armed?[2.4,2.4]:[4.2+k*1.3,2.2],hL=[4.4-k*1.3,-2.4];
+    line(g,.3,3,hR[0],hR[1],1.3,P[1]);line(g,.3,-3,hL[0],hL[1],1.3,P[1]);ell(g,hR[0],hR[1],.8,.8,0,P[3]);ell(g,hL[0],hL[1],.8,.8,0,P[3]);
     g.save();g.rotate(.28);paint(g,'husk',AD('husk'),0,sw*.3,2.7,4.3,P,Lr-.28,t,{wob:.15});g.restore();
     const A0=g.globalAlpha,b=.55+.35*Math.sin(t*2.3);g.globalAlpha=A0*b;for(const [bx,by] of [[-.6,-2.6],[.2,-3.1],[-1.2,-1.9],[.4,-2.2]])pxl(g,bx,by,'#e2dca4',.95);g.globalAlpha=A0;
     paint(g,'huskh',AD('huskH'),1.4,1.5+sw*.4,1.8,1.8,AP('huskH'),Lr,t,{wob:.1});
@@ -88,12 +92,13 @@ const CART={
     for(const s of[-1,1])ell(g,ca*1.4-sa*s*1.2,sa*1.4+ca*s*1.2,.55,.85,a,'#14202a');g.globalAlpha=A0;
     g.restore();},
   // slug and blight slug: a peristaltic body and a glistening trail
-  slug(g,x,y,a,t,L,key){shadow(g,x,y+1.5,5,2,.25);g.save();g.translate(x,y);g.rotate(a);const Lr=L-a,pe=Math.sin(t*2.2),P=AP(key),A0=g.globalAlpha;
-    for(let i=0;i<11;i++){g.globalAlpha=A0*.3*(1-i/11);ell(g,-4-i*1.3,Math.sin(i*.6)*.3,1.2,1.5-i*.06,0,P[3]);}g.globalAlpha=A0;
-    for(let k=0;k<3;k++){const gx=-4-((t*3+k*4.3)%13);pxlA(g,gx,-.4,'#ffffdc',.7,.8);}
-    paint(g,'slug',AD('slug'),pe*.3,0,4.6+pe*.4,2-pe*.12,P,Lr,t,{wob:.12});
-    for(let k=0;k<4;k++)pxl(g,-2+k*1.3+pe*.3,-.8,'#fffbd0',.6);
-    for(const s of[-1,1]){const wv=Math.sin(t*3+s)*.5;line(g,3.6,s*.7,5.8,s*(1.8+wv),.6,P[1]);pxl(g,5.8,s*(1.8+wv),'#26260c',1);}
+  // the study's slug (batch 6): three soft segments on a travelling wave, fatter; the head and eyestalks follow the
+  // front segment. No trail in the sprite: the only trail is the slime on the floor (drawSlime()).
+  slug(g,x,y,a,t,L,key){shadow(g,x,y+1.6,5.2,2.6,.32);g.save();g.translate(x,y);g.rotate(a);const Lr=L-a,P=AP(key);
+    for(let k=0;k<3;k++){const sx=SLUG_SEG[k][0],rx=SLUG_SEG[k][1],ry=SLUG_SEG[k][2],w=Math.sin(t*4.2-k*1.3),sq=Math.sin(t*2.6-k*.9);
+      paint(g,key+k,AD('slugSeg'),sx+sq*.35,w*.85,rx*(1+sq*.08),ry*(1-sq*.06),P,Lr,t,{wob:.1});}
+    for(let k=0;k<4;k++){const w=Math.sin(t*4.2-k*.9);pxl(g,-2.4+k*1.5,-1.2+w*.6,'#fffbd0',.6);}
+    const hw=Math.sin(t*4.2-2.6)*.85;for(const s2 of[-1,1]){const wv=Math.sin(t*3+s2)*.6;line(g,3.6,hw+s2*.8,5.9,hw+s2*(2+wv),.7,P[1]);pxl(g,5.9,hw+s2*(2+wv),'#26260c',1.1);}
     g.restore();},
   // legs step with the spider's own walk cycle (lg) and twitch now and then
   spider(g,x,y,a,t,L,lg){shadow(g,x,y+2,5,2.4,.3);g.save();g.translate(x,y);g.rotate(a);const Lr=L-a,tw=(t%3.2)<.25?Math.sin(t*60)*.7:0,P=AP('spider');
@@ -232,11 +237,13 @@ function drawEnemy(e){
   }else if(e.type==='crawler'){CART.crawler(g,x,y,a,t,L,(e._mv||0)>0.35);
   }else if(e.type==='brute'){CART.brute(g,x,y,a,t,L);
   }else if(e.type==='spitter'){CART.spitter(g,x,y,a,t,L,spitSwell(e));
-  }else if(e.type==='husk'){CART.husk(g,x,y,a,t,L);
+  }else if(e.type==='husk'){if(!olPass)e._hs=(e._hs||0)+(e._mv||0)*.3;CART.husk(g,x,y,a,t,L,e._hs,!!(e.kit&&ARM[e.kit.main]&&!e.dead));
   }else genericArt(g,e,x,y,a,t,L);
   artFlash=false;
   if(e.carrier&&!e.portrait){F(Math.sin(T*6)>0?AMBER:'#6b5220',x-1,y-e.r-4,3,2);}
   if(e.friendT>0&&!e.portrait){F('#9fe0b0',Math.round(x)-1,Math.round(y-e.r-4),3,1);F('#9fe0b0',Math.round(x),Math.round(y-e.r-5),1,3);}
   if(e.stun>0&&!e.portrait){for(let k=0;k<3;k++){const q=T*6+k*2.1;F('#e8dcb0',Math.round(x+Math.cos(q)*5),Math.round(y-e.r-2+Math.sin(q)*1.5),1,1);}}
-  if(!e.portrait&&!b.aquatic)wade(x,y,e.r,liqAt(e.x,e.y));
 }
+// a creature in the world: its shadow and wading follow ET (flyers, ghosts) and the water under it (wadeDraw() in
+// 47-sprites.js); with kit set, an armed creature's weapon is drawn inside the same picture
+function drawCreature(e,kit){const b=ET[e.type];wadeDraw(Math.round(e.x-camX),Math.round(e.y-camY),e.r,b.aquatic?0:liqAt(e.x,e.y),!!b.fly&&!b.ghost,!!b.ghost,()=>{drawEnemy(e);if(kit&&e.kit&&!e.dead)drawKit(e);});}

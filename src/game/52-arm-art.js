@@ -69,7 +69,7 @@ function armHold(){const p=player,set=p.arms[p.armSet],M=set.main,O=set.off,item
   const gunO=O&&ARM[O]&&ARM[O].gun&&O!=='knives'?O:null,lowered=gunO&&p.weapon!==gunO;
   if(M==='bow'){const c=Math.min(1,p.chg||0);hR=[3.6-c*3.6,.4];hL=[5.4,-.2];items.push({k:'bow',grip:[5.2,0],rot:0});return {hands:[hR,hL],items};}
   if(M==='spear'){const j=(p.jabT>0?Math.sin((1-p.jabT/0.16)*Math.PI):0)*7;hR=[3.2+j,1];hL=[6+j,-.2];items.push({k:'spear',grip:[3.4,.3],rot:0});return {hands:[hR,hL],items};}
-  if(ARM_SWING[M]){if(p.swingT>0){const q=Math.max(0,Math.min(1,(0.12-p.swingT)/0.12)),sw=-1.4+q*2.8;hR=[Math.cos(sw)*4.3+.4,Math.sin(sw)*4.3+.8];items.push({k:M,grip:hR,rot:sw});}
+  if(ARM_SWING[M]){if(p.swingT>0){const q=Math.max(0,Math.min(1,(0.12-p.swingT)/0.12)),sw=(p.swingDir||1)*(-1.4+q*2.8);hR=[Math.cos(sw)*4.3+.4,Math.sin(sw)*4.3+.8];items.push({k:M,grip:hR,rot:sw});}
     else{hR=[2.2,3.6];items.push({k:M,grip:hR,rot:.55});}}
   else if(M==='whip'||M==='chainsaw'||M==='soaker'||M==='stungun'){hR=[3.6,1.6];items.push({k:M,grip:[3.6,1.2],rot:0});if(M==='chainsaw'&&!O)hL=[3.6,-.8];}
   else if(!M&&p.swingT>0){const q=Math.max(0,Math.min(1,(0.12-p.swingT)/0.12)),pR=Math.sin(q*Math.PI)*3;hR=[2.6+pR,2.2];if(!O)hL=[2.6,-2.2];}

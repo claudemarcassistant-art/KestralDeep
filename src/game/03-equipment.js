@@ -171,7 +171,7 @@ function drawActWorld(){const P=player;
     const L=[...enemies.filter(e=>!e.dead&&!ET[e.type].dummy).map(e=>({x:e.x,y:e.y,r:e.r,c:e.friendT>0?'159,224,176':ET[e.type].plant?'200,170,90':'255,90,90'})),...fixtures.filter(f=>f.kind==='npc'||f.kind==='psychic').map(f=>({x:f.tx*TS+6,y:f.ty*TS+6,r:4,c:'240,230,220'}))];
     for(const q of L){if(Math.hypot(q.x-P.x,q.y-P.y)>320||Math.hypot(q.x-senseX,q.y-senseY)>senseR)continue;const x=q.x-camX,y=q.y-camY,pl=0.6+0.4*Math.sin(T*5+q.x*0.1);ctx.strokeStyle=`rgba(${q.c},${0.75*a*pl})`;ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,q.r+3+Math.sin(T*4+q.y)*1,0,6.283);ctx.stroke();F(`rgba(${q.c},${0.9*a})`,Math.round(x),Math.round(y),1,1);}}
   ctx.save();ctx.globalCompositeOperation='lighter';for(const e of enemies){if(e.dead||!ET[e.type].guard)continue;const ex=e.x,ey=e.y;if(Math.abs(ex-camX-W/2)>W/2+150||Math.abs(ey-camY-H/2)>H/2+150)continue;
-    const pts=[[ex-camX,ey-camY]];for(let k=0;k<=10;k++){const a=(e.look||0)-0.55+1.1*k/10,c=Math.cos(a),s2=Math.sin(a),dd=castRay(ex,ey,c,s2,150,false);pts.push([ex+c*dd-camX,ey+s2*dd-camY]);}
+    const pts=[[ex-camX,ey-camY]];for(let k=0;k<=10;k++){const a=(e._bd!=null?e._bd:e.look||0)-0.55+1.1*k/10,c=Math.cos(a),s2=Math.sin(a),dd=castRay(ex,ey,c,s2,150,false);pts.push([ex+c*dd-camX,ey+s2*dd-camY]);}
     const g=ctx.createRadialGradient(ex-camX,ey-camY,4,ex-camX,ey-camY,150);g.addColorStop(0,e.alert?'rgba(255,230,190,0.16)':'rgba(210,225,255,0.12)');g.addColorStop(1,'rgba(210,225,255,0)');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);for(const q of pts)ctx.lineTo(q[0],q[1]);ctx.closePath();ctx.fill();}
   drawCamCones();drawZaps();
   ctx.restore();

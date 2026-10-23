@@ -130,7 +130,7 @@ function comboAdd(n){const P=player,before=comboTier();P.combo=Math.min(20,(P.co
   if(t>before){const T0=COMBO_T[3-t];float(P.x,P.y-14,T0[1],T0[2]);sfx('hackok');}}
 function comboBreak(){const P=player;if((P.combo||0)<1)return;if(perk('secondnature')&&!P.comboShield&&P.combo>=5){P.comboShield=true;float(P.x,P.y-12,'combo held','#e8dcb0');return;}if(P.combo>=5)float(P.x,P.y-12,'combo broken','#ff8a7a');P.combo=0;P.comboShield=false;}
 function primaryAttack(m){return asMelee(()=>primaryAttack0(m));}
-function primaryAttack0(m){const p=player;p.mcd=m.cd;p.mcdMax=m.cd;p.swingT=m.jab||m.lash?0:0.12;p.jabT=m.jab?0.16:0;if(m.lash){p.lashT=0.24;p.lashS=Math.random()<0.5?1:-1;}p.swingR=m.range;p.swingA=m.arc;if(m!==ARM.chainsaw.melee)sfx('shove');
+function primaryAttack0(m){const p=player;p.mcd=m.cd;p.mcdMax=m.cd;p.swingT=m.jab||m.lash?0:0.12;if(ARM_SWING[p.arms[p.armSet].main]&&p.swingT>0)p.swingDir=(p.combo||0)>0?-(p.swingDir||1):1;p.jabT=m.jab?0.16:0;if(m.lash){p.lashT=0.24;p.lashS=Math.random()<0.5?1:-1;}p.swingR=m.range;p.swingA=m.arc;if(m!==ARM.chainsaw.melee)sfx('shove');
   const cloaked=p.cloakT>0,bonus=S.meleeDmg||0;let connected=0;p.flurryN=p.flurryN||0;
   for(const e of enemies){if(e.dead||ET[e.type].ghost)continue;const dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy);
     if(m.lash?inLash(p,e.x,e.y,e.r,m):m.jab?inJab(p,e.x,e.y,e.r,m):(d<m.range+e.r&&Math.abs(angDiff(Math.atan2(dy,dx),p.ang))<m.arc)){

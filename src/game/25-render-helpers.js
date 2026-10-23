@@ -12,10 +12,6 @@ const SLOTCOL={shoulders:'#8ab0a0',head:'#8fb6d0',body:'#8a9a7a',hands:'#c9a06a'
 // drawItem() moved to 50-object-art.js (Batch 5 session 4)
 function drawChest(c){const x=Math.round(c.x-camX),y=Math.round(c.y-camY);
   olDraw('chest'+c.tier+(c.opened?1:0),ART_OLC[c.tier==='rare'?'rare':'chest'],x-7,y-9,14,16,()=>chestArt(c,x,y));}
-function wade(x,y,r,l){if(l<2)return;const w=Math.sin(T*6+x)*0.7;
-  if(l===4){F('rgba(4,22,36,0.9)',x-r-2,y-2,r*2+5,r+5);F('rgba(4,22,36,0.55)',x-r-1,y-r,r*2+3,r-2);}
-  else if(l===3){F('rgba(15,50,65,0.82)',x-r-1,y,r*2+3,r+2);}
-  ctx.strokeStyle='rgba(170,220,225,0.45)';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(x,y+(l===3?0:r-1),r+2+w,2,0,0,6.283);ctx.stroke();}
 // drawEnemy() is in 48-creature-art.js (painted creatures, Batch 5 session 2)
 const GUNLEN={pistol:7,scatter:9,nailer:8,bolt:10,blower:9};
 function drawPlayer(){
@@ -30,12 +26,12 @@ function drawPlayerBody(){
   const p=player,x=Math.round(p.x-camX),y=Math.round(p.y-camY),ca=Math.cos(p.ang),sa=Math.sin(p.ang),len=GUNLEN[p.weapon]||4,set=p.arms[p.armSet];
   const o=playerPose(),as=armState();o.wpn=g=>drawHeldArms(g,o.held,as);
   if(as.rev&&!olPass&&Math.random()<0.12)parts.push({x:p.x+ca*15-sa*3,y:p.y+sa*15+ca*3,vx:ca*rr(20,60)+rr(-30,30),vy:sa*rr(20,60)+rr(-30,30),t:0.25,m:0.25,c:'#ffd070',s:1});
-  olDraw(p,p.cloakT>0?null:ART_OLC.player,x-24,y-24,48,48,()=>person(ctx,x,y,p.ang,T,spriteLight(p.x,p.y),playerCfg(),o));
+  olDraw(p,p.cloakT>0?null:ART_OLC.player,x-24,y-24,48,48,()=>wadeDraw(x,y,p.r||4,liqAt(p.x,p.y),!!p.floating,false,()=>person(ctx,x,y,p.ang,T,spriteLight(p.x,p.y),playerCfg(),o)));
   if(p.blocking){const g=p.guardMax?p.guard/p.guardMax:0;ctx.strokeStyle=`rgba(190,228,255,${0.35+0.5*g})`;ctx.lineWidth=set.off==='shield'?3:2;ctx.beginPath();ctx.arc(x,y,8,p.ang-1.1,p.ang+1.1);ctx.stroke();}
   if(S.beams.some(b=>b.r>170)){F('#d8dcd4',Math.round(x+ca*(len-2)),Math.round(y+sa*(len-2)),1,1);}
   if(p.shoveT>0){const m=melee(),tk=p.tackleT>0;ctx.strokeStyle=tk?'rgba(255,200,140,0.85)':'rgba(230,220,190,0.7)';ctx.lineWidth=tk?2:1;ctx.beginPath();ctx.arc(x,y,m.range-3+(tk?5:0),p.ang-m.arc*(tk?0.8:1),p.ang+m.arc*(tk?0.8:1));ctx.stroke();}
   if(p.chg>0){const c=Math.min(1,p.chg),win=p.chgFull>0&&p.chgFull<=0.2,col=win?(Math.sin(T*40)>0?'#ffffff':'#fff0a0'):c>=1?'#e0a040':'#d9a441';ctx.strokeStyle=col;ctx.lineWidth=win?2:1;ctx.beginPath();ctx.arc(x,y,9,-Math.PI/2,-Math.PI/2+6.283*c);ctx.stroke();}
-  if(p.swingT>0&&set.main!=='chainsaw'&&set.main!=='whip'){ctx.strokeStyle='rgba(255,240,210,0.8)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,p.swingR-2,p.ang-p.swingA,p.ang+p.swingA);ctx.stroke();}
+  if(p.swingT>0&&set.main!=='chainsaw'&&set.main!=='whip'){ctx.strokeStyle='rgba(255,240,210,0.8)';ctx.lineWidth=1;ctx.beginPath();if(ARM_SWING[set.main]){const d=p.swingDir||1,q=Math.max(.15,Math.min(1,(0.12-p.swingT)/0.12)),a0=p.ang-d*p.swingA;ctx.arc(x,y,p.swingR-2,a0,a0+d*2*p.swingA*q,d<0);}else ctx.arc(x,y,p.swingR-2,p.ang-p.swingA,p.ang+p.swingA);ctx.stroke();}
 }
 // drawPlayerWeapon() was replaced by the armament drawings in 52-arm-art.js (armHold(), ARM_ART)
 function circleR(){let r=S.lantern?108:BASE_R;if(cond.light==='lit')r=Math.max(r,170);else if(cond.light==='dark')r=S.lantern?85:22;if(S.nvg)r=Math.max(r,175);if(cond.haz==='fog'&&!hazOff)r=Math.min(r*0.55,100);return r;}
